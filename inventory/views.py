@@ -5272,6 +5272,7 @@ def pending_transactions_list(request):
         return HttpResponseForbidden("ليس لديك كليّة مرتبطة بحسابك.")
 
     faculty = user.profile.faculty
+    open_year = InventoryYear.get_open_year()
 
     # Get pending transactions for this faculty
     transactions = (

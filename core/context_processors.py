@@ -31,8 +31,12 @@ def settings_processor(request):
         faculty = getattr(getattr(user, "profile", None), "faculty", None)
         department_name = department.name if department else (faculty.name if faculty else "")
 
+    db_engine = settings.DATABASES["default"]["ENGINE"]
+    is_postgres = "postgresql" in db_engine.lower()
+
     return {
         "APPLICATION_NAME": settings.APPLICATION_NAME,
+        "is_postgres": is_postgres,
         "LOGIN_PAGE_TITLE": settings.LOGIN_PAGE_TITLE,
         "HOME_PAGE_TITLE": settings.HOME_PAGE_TITLE,
         "ORDER_PAGE_TITLE": settings.ORDER_PAGE_TITLE,

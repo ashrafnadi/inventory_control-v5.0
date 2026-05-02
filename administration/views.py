@@ -32,7 +32,13 @@ from django.views.decorators.http import require_GET
 from openpyxl import load_workbook
 from weasyprint import HTML
 
-from administration.models import Department, Faculty, InventoryYear, SystemSettings, UserProfile
+from administration.models import (
+    Department,
+    Faculty,
+    InventoryYear,
+    SystemSettings,
+    UserProfile,
+)
 from inventory.models import FacultyItemStock, Item, ItemCategory, SubWarehouse
 from inventory.utils import _has_related_transactions, create_pdf_report
 
@@ -41,9 +47,9 @@ from .forms import (
     EmployeeForm,
     FacultyDepartmentForm,
     FacultyForm,
+    SessionSettingsForm,
     UserAdminForm,
     UserPasswordChangeForm,
-    SessionSettingsForm,
 )
 
 logger = logging.getLogger(__name__)
@@ -1876,13 +1882,9 @@ def admin_user_list(request):
     users = User.objects.select_related(
         "profile__faculty", "profile__department"
     ).order_by("first_name")
-    db_engine = settings.DATABASES["default"]["ENGINE"]
-    is_postgres = "postgresql" in db_engine.lower()
-    return render(
-        request,
-        "administration/admin_user_list.html",
-        {"users": users, "is_postgres": is_postgres},
-    )
+    # db_engine = settings.DATABASES["default"]["ENGINE"]
+    # is_postgres = "postgresql" in db_engine.lower()
+    return render(request, "administration/admin_user_list.html", {"users": users})
 
 
 @login_required
