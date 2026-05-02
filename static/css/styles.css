@@ -1227,3 +1227,109 @@ embed[type='application/pdf'] {
     border-color: rgba(255, 193, 7, 0.4) !important;
     color: #ffda6a !important;
 }
+
+
+.user-dropdown .dropdown-menu {
+	background-color: var(--card-bg) !important;
+	color: var(--text-color) !important;
+	border: 1px solid var(--border-color) !important;
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Force dropdown items to use theme text color */
+.user-dropdown .dropdown-item,
+.user-dropdown .dropdown-item:link,
+.user-dropdown .dropdown-item:visited {
+	color: var(--text-color) !important;
+	background-color: transparent !important;
+}
+
+/* Hover state - light theme */
+.user-dropdown .dropdown-item:hover,
+.user-dropdown .dropdown-item:focus,
+.user-dropdown .dropdown-item:active {
+	color: var(--slack-color) !important;
+	background-color: rgba(97, 31, 105, 0.08) !important;
+}
+
+/* Ensure <li> elements don't interfere */
+.user-dropdown .dropdown-menu li {
+	color: var(--text-color) !important;
+}
+
+/* Divider styling */
+.user-dropdown .dropdown-divider {
+	border-color: var(--border-color) !important;
+}
+
+/* Dark theme overrides (keep your existing ones, just ensure they're specific) */
+[data-theme="dark"] .user-dropdown .dropdown-menu {
+	background-color: var(--card-bg) !important;
+	border-color: var(--border-color) !important;
+}
+
+[data-theme="dark"] .user-dropdown .dropdown-item {
+	color: var(--text-color) !important;
+}
+
+[data-theme="dark"] .user-dropdown .dropdown-item:hover {
+	color: #fff !important;
+	background-color: rgba(97, 31, 105, 0.25) !important;
+}
+
+/* ===== THEME DROPDOWN FIXES ===== */
+
+/* Ensure dropdown menu has proper background/text */
+.theme-dropdown .dropdown-menu {
+	background-color: var(--card-bg) !important;
+	color: var(--text-color) !important;
+	border: 1px solid var(--border-color) !important;
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+	min-width: 160px;
+}
+
+/* Force dropdown items to use theme text color */
+.theme-dropdown .dropdown-item,
+.theme-dropdown .dropdown-item:link,
+.theme-dropdown .dropdown-item:visited {
+	color: var(--text-color) !important;
+	background-color: transparent !important;
+	font-weight: 500;
+}
+
+/* Hover/focus states - light theme */
+.theme-dropdown .dropdown-item:hover,
+.theme-dropdown .dropdown-item:focus,
+.theme-dropdown .dropdown-item:active {
+	color: var(--slack-color) !important;
+	background-color: rgba(97, 31, 105, 0.08) !important;
+}
+
+/* Ensure icons inherit text color */
+.theme-dropdown .dropdown-item i {
+	color: inherit !important;
+}
+
+/* Divider styling */
+.theme-dropdown .dropdown-divider {
+	border-color: var(--border-color) !important;
+}
+
+/* ===== DARK THEME OVERRIDES ===== */
+[data-theme="dark"] .theme-dropdown .dropdown-menu {
+	background-color: var(--card-bg) !important;
+	border-color: var(--border-color) !important;
+}
+
+[data-theme="dark"] .theme-dropdown .dropdown-item {
+	color: var(--text-color) !important;
+}
+
+[data-theme="dark"] .theme-dropdown .dropdown-item:hover {
+	color: #fff !important;
+	background-color: rgba(97, 31, 105, 0.25) !important;
+}
+
+[data-theme="dark"] .theme-dropdown .dropdown-item i {
+	color: inherit !important;
+}

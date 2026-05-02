@@ -1,30 +1,55 @@
-<div class="theme-dropdown dropdown me-1">
-    <a class="theme-switcher dropdown-toggle d-flex align-items-center"
-       href="#"
-       role="button"
-       data-bs-toggle="dropdown"
-       aria-expanded="false">
-        <i class="bi bi-moon me-1"></i>
-        <span class="d-none d-xxl-inline"></span>
-    </a>
-    <ul class="dropdown-menu">
-        <li>
-            <a class="dropdown-item theme-option" href="#" data-theme="light">
-                <i class="bi bi-brightness-high me-2"></i>
-                Light
-            </a>
-        </li>
-        <li>
-            <a class="dropdown-item theme-option" href="#" data-theme="dark">
-                <i class="bi bi-moon me-2"></i>
-                Dark
-            </a>
-        </li>
-        <li>
-            <a class="dropdown-item theme-option" href="#" data-theme="system">
-                <i class="bi bi-laptop me-2"></i>
-                System
-            </a>
-        </li>
-    </ul>
+{% comment %} theme_toggle.html {% endcomment %}
+<div class="theme-toggle-wrapper mx-1">
+    <button id="theme-toggle-btn"
+            class="btn theme-switcher d-flex align-items-center"
+            type="button"
+            aria-label="تبديل الوضع الليلي"
+            title="تبديل الوضع">
+        <i id="theme-icon" class="bi bi-moon me-1"></i>
+        <!-- <span class="d-none d-xxl-inline">
+            {% if request.COOKIES.theme == 'dark' or not request.COOKIES.theme %}
+                الوضع الليلي
+            {% else %}
+                الوضع النهاري
+            {% endif %}
+        </span> -->
+    </button>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const toggleBtn = document.getElementById('theme-toggle-btn');
+    const themeIcon = document.getElementById('theme-icon');
+    const htmlEl = document.documentElement;
+    
+    // Get saved theme or default to 'light'
+    let currentTheme = localStorage.getItem('theme') || 'light';
+    
+    // Apply initial theme
+    applyTheme(currentTheme);
+    
+    // Toggle theme on click
+    toggleBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        currentTheme = currentTheme === 'light' ? 'dark' : 'light';
+        applyTheme(currentTheme);
+        localStorage.setItem('theme', currentTheme);
+    });
+    
+    function applyTheme(theme) {
+        if (theme === 'dark') {
+            htmlEl.setAttribute('data-theme', 'dark');
+            themeIcon.className = 'bi bi-brightness-high me-1'; // Sun icon for dark→light toggle
+            if (themeIcon.nextElementSibling) {
+                themeIcon.nextElementSibling.textContent = 'الوضع الليلي';
+            }
+        } else {
+            htmlEl.removeAttribute('data-theme');
+            themeIcon.className = 'bi bi-moon me-1'; // Moon icon for light→dark toggle
+            if (themeIcon.nextElementSibling) {
+                themeIcon.nextElementSibling.textContent = 'الوضع النهاري';
+            }
+        }
+    }
+});
+</script>
