@@ -14,16 +14,16 @@
     </a>
 
     <nav class="top-menu" aria-label="القائمة العلوية">
-        <a href="{% url 'home' %}"><i class="bi bi-house-door"></i><span>الرئيسية</span></a>
+        <!-- <a href="{% url 'home' %}"><i class="bi bi-house-door"></i><span>الرئيسية</span></a>
         <a href="{% url 'transaction_list' %}"><i class="bi bi-file-earmark-text"></i><span>السندات</span></a>
         <a href="{% url 'warehouse_inventory' %}"><i class="bi bi-box-seam"></i><span>المخزون</span></a>
         {% if request.user.is_superuser %}
             <a href="{% url 'system_settings' %}"><i class="bi bi-gear"></i><span>الإعدادات</span></a>
-        {% endif %}
+        {% endif %} -->
     </nav>
 
     <div class="topbar-actions">
-        {% include "partials/_theme_mode.html" %}
         {% include "partials/_user_menu.html" %}
+        {% include "partials/_theme_mode.html" %}
     </div>
 </header>
