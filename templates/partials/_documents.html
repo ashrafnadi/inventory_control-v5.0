@@ -1,0 +1,96 @@
+<!-- partials/_documents.html -->
+<li class="nav-item dropdown mx-1">
+    <a class="nav-link dropdown-toggle d-flex align-items-center"
+       href="#"
+       role="button"
+       data-bs-toggle="dropdown"
+       aria-expanded="false">
+        <i class="bi bi-file-text me-1"></i>النماذج
+    </a>
+    <ul class="dropdown-menu">
+        <!-- Submenu: الصرف والطلبات -->
+        <li class="dropdown-submenu dropright">
+            <a class="dropdown-item dropdown-toggle" href="#">
+                <i class="bi bi-box-arrow-up me-1"></i> الصرف والطلبات
+            </a>
+            <ul class="dropdown-menu">
+                <li>
+                    <a class="dropdown-item" href="{% url 'transaction_create_addition' %}"><i class="bi bi-plus-circle me-1"></i> نموذج 1: إذن إضافة</a>
+                </li>
+                <li>
+                    <a class="dropdown-item" href="{% url 'transaction_create' %}">
+                        <i class="bi bi-box-arrow-up me-1"></i>
+                    نموذج 2: طلب وإذن صرف</a>
+                </li>
+                <li>
+                    <a class="dropdown-item" href="{% url 'transaction_create_return' %}"><i class="bi bi-arrow-return-left me-1"></i> نموذج 8: طلب ارتجاع أصناف</a>
+                </li>
+                <li>
+                    <a class="dropdown-item" href="{% url 'transaction_create_transfer' %}"><i class="bi bi-arrow-left-right"></i> نقل عهدة</a>
+                </li>
+            </ul>
+        </li>
+        <!-- Submenu: الجرد والرقابة -->
+        <li class="dropdown-submenu dropright">
+            <a class="dropdown-item dropdown-toggle" href="#">
+                <i class="bi bi-clipboard-check me-1"></i> الجرد والرقابة
+            </a>
+            <ul class="dropdown-menu">
+                <li>
+                    <a class="dropdown-item" href="{% url 'employee_custody' %}"><i class="bi bi-clipboard-check me-1"></i> نموذج 6: محضر جرد أصناف</a>
+                </li>
+                <li>
+                    <a class="dropdown-item" href="{% url 'employee_custody' %}"><i class="bi bi-graph-up-arrow me-1"></i> نموذج 7: كشف الزيادة والعجز</a>
+                </li>
+                <li>
+                    <a class="dropdown-item" href="{% url 'employee_custody' %}"><i class="bi bi-exclamation-triangle me-1"></i> نموذج 9: الأصناف التالفة / المفقودة</a>
+                </li>
+                <li>
+                    <a class="dropdown-item" href="{% url 'employee_custody' %}"><i class="bi bi-file-person me-1"></i> نموذج 10: كشف عهدة</a>
+                </li>
+                <li>
+                    <a class="dropdown-item" href="{% url 'employee_list' %}"><i class="bi bi-archive me-1"></i> نموذج 3: دفتر عهدة مخزن</a>
+                </li>
+            </ul>
+        </li>
+        <!-- Submenu: التخطيط والتقارير -->
+        <li class="dropdown-submenu dropright">
+            <a class="dropdown-item dropdown-toggle" href="#">
+                <i class="bi bi-journal me-1"></i> التخطيط والتقارير
+            </a>
+            <ul class="dropdown-menu">
+                <li>
+                    <a class="dropdown-item" href="{% url 'employee_custody' %}"><i class="bi bi-journal me-1"></i> نموذج 5: يومية مخزن</a>
+                </li>
+                <li>
+                    <a class="dropdown-item" href="{% url 'employee_custody' %}"><i class="bi bi-journal-x me-1"></i> نموذج 4: دفتر شطب</a>
+                </li>
+                <li>
+                    <a class="dropdown-item" href="{% url 'employee_custody' %}"><i class="bi bi-calendar-range me-1"></i> نموذج 11: الاحتياجات السنوية</a>
+                </li>
+                <li>
+                    <a class="dropdown-item" href="{% url 'employee_custody' %}"><i class="bi bi-calendar-range me-1"></i> الرواكد</a>
+                </li>
+            </ul>
+        </li>
+    </ul>
+</li>
+<script>
+  document.querySelectorAll('.dropdown-submenu > a').forEach(function(el) {
+    el.addEventListener('click', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      const submenu = this.nextElementSibling;
+      submenu.classList.toggle('show');
+    });
+  });
+
+  // Close submenus when main dropdown closes
+  document.querySelectorAll('.dropdown').forEach(function(dropdown) {
+    dropdown.addEventListener('hidden.bs.dropdown', function () {
+      dropdown.querySelectorAll('.dropdown-menu.show').forEach(menu => {
+        menu.classList.remove('show');
+      });
+    });
+  });
+</script>

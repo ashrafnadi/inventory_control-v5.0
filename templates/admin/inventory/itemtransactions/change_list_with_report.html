@@ -1,0 +1,13 @@
+<!-- templates/admin/inventory/itemtransactions/change_list_with_report.html -->
+{% extends "admin/change_list.html" %}
+{% load i18n admin_urls %}
+{% block object-tools-items %}
+    {{ block.super }}
+    {% if request.user.is_superuser or request.user.is_staff %}
+        <li>
+            <a href="{% url 'admin:user_custody_report' %}" class="addlink">
+                📋 تقرير عهدة الموظفين
+            </a>
+        </li>
+    {% endif %}
+{% endblock object-tools-items %}

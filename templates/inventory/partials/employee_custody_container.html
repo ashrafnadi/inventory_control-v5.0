@@ -1,0 +1,221 @@
+<!-- templates/inventory/partials/employee_custody_container.html -->
+{% if selected_employee and employee_custody %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4>
+        عهدة: {{ selected_employee.get_full_name|default:selected_employee.username }}
+    </h4>
+    <div>
+        <a href="{% url 'export_employee_custody_excel' selected_employee.id %}" class="btn btn-success btn-sm me-2">
+            <i class="bi bi-file-earmark-excel"></i> Excel
+        </a>
+        <a href="{% url 'export_employee_custody_pdf' selected_employee.id %}" class="btn btn-danger btn-sm me-2">
+            <i class="bi bi-file-earmark-pdf"></i> PDF
+        </a>
+        {% if selected_department_id %}
+        <a href="{% url 'export_department_custody_pdf' selected_department_id %}" class="btn btn-primary btn-sm">
+            <i class="bi bi-file-earmark"></i> تصدير القسم كاملاً
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Warehouse Custody Table -->
+{% if employee_custody.warehouse.items %}
+<div class="card mb-4">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0">عهدة مخزنية</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead class="table-light">
+                    <tr>
+                        <th width="5%">#</th>
+                        <th width="30%">اسم الصنف</th>
+                        <th width="10%">الفئة</th>
+                        <th width="10%">الكمية</th>
+                        <th width="10%">سعر الوحدة</th>
+                        <th width="15%">القيمة الإجمالية</th>
+                        <th width="10%">رقم المستند</th>
+                        <th width="10%">التاريخ</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item_data in employee_custody.warehouse.items %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td>{{ item_data.item.name }}</td>
+                        <td>{{ item_data.item.category.name|default:"-" }}</td>
+                        <td><strong>{{ item_data.quantity }}</strong></td>
+                        <td>{% if item_data.latest_price %}{{ item_data.latest_price|floatformat:2 }}
+                            ج.م{% else %}-{% endif %}</td>
+                        <td><strong class="text-primary">{{ item_data.total_value|floatformat:2 }} ج.م</strong></td>
+                        <td>
+                            <span dir="ltr" style="display: inline-block;">
+                                {{ item_data.last_doc|default:"—" }}
+                            </span>
+                        </td>
+                        <td>{{ item_data.last_date|date:"Y-m-d"|default:"—" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot class="table-primary">
+                    <tr>
+                        <th colspan="3" class="text-end"><strong>المجموع:</strong></th>
+                        <th><strong>{{ employee_custody.warehouse.total_quantity }}</strong></th>
+                        <th colspan="2"><strong
+                                class="text-primary">{{ employee_custody.warehouse.total_value|floatformat:2 }}
+                                ج.م</strong></th>
+                        <th colspan="2"></th>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Personal Custody Table -->
+{% if employee_custody.personal.items %}
+<div class="card mb-4">
+    <div class="card-header bg-success text-white">
+        <h5 class="mb-0">عهدة شخصية</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead class="table-light">
+                    <tr>
+                        <th width="5%">#</th>
+                        <th width="30%">اسم الصنف</th>
+                        <th width="10%">الفئة</th>
+                        <th width="10%">الكمية</th>
+                        <th width="10%">سعر الوحدة</th>
+                        <th width="15%">القيمة الإجمالية</th>
+                        <th width="10%">رقم المستند</th>
+                        <th width="10%">التاريخ</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item_data in employee_custody.personal.items %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td>{{ item_data.item.name }}</td>
+                        <td>{{ item_data.item.category.name|default:"-" }}</td>
+                        <td><strong>{{ item_data.quantity }}</strong></td>
+                        <td>{% if item_data.latest_price %}{{ item_data.latest_price|floatformat:2 }}
+                            ج.م{% else %}-{% endif %}</td>
+                        <td><strong class="text-success">{{ item_data.total_value|floatformat:2 }} ج.م</strong></td>
+                        <td>
+                            <span dir="ltr" style="display: inline-block;">
+                                {{ item_data.last_doc|default:"—" }}
+                            </span>
+                        </td>
+                        <td>{{ item_data.last_date|date:"Y-m-d"|default:"—" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot class="table-success">
+                    <tr>
+                        <th colspan="3" class="text-end"><strong>المجموع:</strong></th>
+                        <th><strong>{{ employee_custody.personal.total_quantity }}</strong></th>
+                        <th colspan="2"><strong
+                                class="text-success">{{ employee_custody.personal.total_value|floatformat:2 }}
+                                ج.م</strong></th>
+                        <th colspan="2"></th>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Branch Custody Table -->
+{% if employee_custody.branch.items %}
+<div class="card mb-4">
+    <div class="card-header bg-warning text-dark">
+        <h5 class="mb-0">عهدة فرعية</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead class="table-light">
+                    <tr>
+                        <th width="5%">#</th>
+                        <th width="30%">اسم الصنف</th>
+                        <th width="10%">الفئة</th>
+                        <th width="10%">الكمية</th>
+                        <th width="10%">سعر الوحدة</th>
+                        <th width="15%">القيمة الإجمالية</th>
+                        <th width="10%">رقم المستند</th>
+                        <th width="10%">التاريخ</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item_data in employee_custody.branch.items %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td>{{ item_data.item.name }}</td>
+                        <td>{{ item_data.item.category.name|default:"-" }}</td>
+                        <td><strong>{{ item_data.quantity }}</strong></td>
+                        <td>{% if item_data.latest_price %}{{ item_data.latest_price|floatformat:2 }}
+                            ج.م{% else %}-{% endif %}</td>
+                        <td><strong class="text-warning">{{ item_data.total_value|floatformat:2 }} ج.م</strong></td>
+                        <td>
+                            <span dir="ltr" style="display: inline-block;">
+                                {{ item_data.last_doc|default:"—" }}
+                            </span>
+                        </td>
+                        <td>{{ item_data.last_date|date:"Y-m-d"|default:"—" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot class="table-warning">
+                    <tr>
+                        <th colspan="3" class="text-end"><strong>المجموع:</strong></th>
+                        <th><strong>{{ employee_custody.branch.total_quantity }}</strong></th>
+                        <th colspan="2"><strong
+                                class="text-warning">{{ employee_custody.branch.total_value|floatformat:2 }}
+                                ج.م</strong></th>
+                        <th colspan="2"></th>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Grand Total Summary -->
+{% if employee_custody.warehouse.items or employee_custody.personal.items or employee_custody.branch.items %}
+<div class="card mb-4 bg-light">
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6 text-center">
+                <h6 class="text-muted">إجمالي الأصناف</h6>
+                <h3 class="text-primary">
+                    {{ employee_custody.warehouse.total_quantity|add:employee_custody.personal.total_quantity|add:employee_custody.branch.total_quantity }}
+                </h3>
+            </div>
+            <div class="col-md-6 text-center">
+                <h6 class="text-muted">إجمالي القيمة</h6>
+                <h3 class="text-success">
+                    {{ employee_custody.warehouse.total_value|add:employee_custody.personal.total_value|add:employee_custody.branch.total_value|floatformat:2 }}
+                    ج.م
+                </h3>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% if not employee_custody.warehouse.items and not employee_custody.personal.items and not employee_custody.branch.items %}
+<div class="alert alert-info">لا يوجد عهدة لهذا الموظف.</div>
+{% endif %}
+
+{% elif selected_department_id and not selected_employee %}
+<div class="alert alert-info">اختر موظفاً لعرض عهدته.</div>
+{% else %}
+<div class="alert alert-info">اختر قسماً ثم موظفاً لعرض العهدة.</div>
+{% endif %}

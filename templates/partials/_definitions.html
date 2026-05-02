@@ -1,0 +1,32 @@
+<!-- Definitions Dropdown -->
+<li class="nav-item dropdown mx-1">
+    <a class="nav-link dropdown-toggle d-flex align-items-center"
+       href="#"
+       role="button"
+       data-bs-toggle="dropdown"
+       aria-expanded="false">
+        <i class="bi bi-journal-bookmark me-1"></i>التعريفات
+    </a>
+    <ul class="dropdown-menu">
+        <li>
+            <a class="dropdown-item" href="{% url 'warehouse_list' %}">
+                <i class="bi bi-house-door me-1"></i> المخازن
+            </a>
+        </li>
+        <li>
+            <a class="dropdown-item" href="{% url 'subwarehouse_list' %}">
+                <i class="bi bi-house-door me-1"></i> المخازن الفرعية
+            </a>
+        </li>
+        <li>
+            <a class="dropdown-item" href="{% url 'itemcategory_list' %}">
+                <i class="bi bi-tags me-1"></i> فئات البنود
+            </a>
+        </li>
+        <li>
+            <a class="dropdown-item" href="{% url 'supplier_list' %}">
+                <i class="bi bi-person-workspace me-1"></i> الموردين
+            </a>
+        </li>
+    </ul>
+</li>

@@ -1,0 +1,34 @@
+<nav class="navbar navbar-expand-lg navbar-dark fixed-top">
+    <div class="container-fluid">
+        <!-- Title on the right (start in RTL) -->
+        <a class="navbar-brand d-flex align-items-center" href="#">{{ APPLICATION_NAME }}</a>
+        <!-- Mobile toggle button - MUST be before collapse -->
+        <button class="navbar-toggler"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#navbarNav"
+                aria-controls="navbarNav"
+                aria-expanded="false"
+                aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <!-- Middle menu -->
+        {% if request.session.user_type == 'admin' %}
+            {% include "partials/_navbar_menu.html" %}
+        {% elif request.session.user_type == 'inventory_employee' %}
+            {% include "partials/_navbar_menu_inventory_employee.html" %}
+        {% elif request.session.user_type == 'administration_manager' %}
+            {% include "partials/_navbar_menu_administration_manager.html" %}
+        {% elif request.session.user_type == 'faculty_manager' %}
+            {% include "partials/_navbar_menu_faculty_manager.html" %}
+        {% elif request.session.user_type == 'inventory_manager' %}
+            {% include "partials/_navbar_menu_inventory_manager.html" %}
+        {% elif request.session.user_type == 'user' %}
+            {% include "partials/_navbar_menu_user.html" %}
+        {% endif %}
+        <!-- User dropdown menu -->
+        {% include "partials/_user_menu.html" %}
+        <!-- Theme switcher -->
+        {% include "partials/_theme_mode.html" %}
+    </div>
+</nav>

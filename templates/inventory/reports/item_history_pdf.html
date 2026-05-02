@@ -1,0 +1,808 @@
+<!-- templates/inventory/reports/item_history_pdf.html -->
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <meta name="description" content="سجل حركة الصنف: {{ item.name }}" />
+        <meta name="keywords" content="سجل حركة الصنف, {{ item.name }}" />
+        <title>سجل حركة الصنف: {{ item.name }}</title>
+        <style>
+            @page {
+                size: A4 landscape;
+                margin: 1.5cm;
+
+                @bottom-right {
+                    content: "الصفحة " counter(page) " من " counter(pages);
+                    font-size: 9px;
+                    color: #666;
+                }
+
+                @top-center {
+                    content: "سجل حركة الصنف: {{ item.name }}";
+                    font-size: 12px;
+                    font-weight: bold;
+                    color: #333;
+                }
+            }
+
+            body {
+                font-family: 'Traditional Arabic', 'Tahoma', 'Arial', sans-serif;
+                font-size: 9px;
+                line-height: 1.3;
+                color: #333;
+                margin: 0;
+                padding: 0;
+                direction: rtl;
+                text-align: right;
+            }
+
+            /* ── Header ── */
+            .header {
+                text-align: center;
+                margin-bottom: 15px;
+                border-bottom: 1px solid #333;
+                padding-bottom: 10px;
+            }
+
+            .header h1 {
+                font-size: 14px;
+                margin: 0;
+            }
+
+            .company-info {
+                text-align: center;
+                margin-bottom: 8px;
+                font-size: 12px;
+                font-weight: bold;
+            }
+
+            .report-info {
+                display: flex;
+                justify-content: space-between;
+                margin-bottom: 12px;
+                font-size: 9px;
+                color: #666;
+                padding: 8px 0;
+                border-bottom: 1px solid #ddd;
+            }
+
+            /* ── Item details table ── */
+            .item-details-table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-bottom: 15px;
+                background-color: #f9f9f9;
+                border: 1px solid #ddd;
+            }
+
+            .item-details-table td {
+                padding: 8px 10px;
+                border: 1px solid #eee;
+                width: 25%;
+                font-size: 10px;
+            }
+
+            .detail-label {
+                font-weight: bold;
+                color: #333;
+                font-size: 9px;
+                display: inline-block;
+                min-width: 85px;
+            }
+
+            /* ── Main table ── */
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-bottom: 15px;
+                font-size: 9px;
+                direction: rtl;
+            }
+
+            th,
+            td {
+                border: 1px solid #ddd;
+                padding: 5px 4px;
+                text-align: right;
+            }
+
+            th {
+                background-color: #f5f5f5;
+                font-weight: bold;
+                color: #333;
+            }
+
+            /* ── Quantity colours ── */
+            .qty-in {
+                color: #28a745;
+                font-weight: bold;
+            }
+
+            .qty-out {
+                color: #dc3545;
+                font-weight: bold;
+            }
+
+            /* ── Balance column ── */
+            .balance-column {
+                background-color: #e3f2fd;
+                font-weight: bold;
+                color: #1565c0;
+            }
+
+            /* ── Row states ── */
+            tr.cancelled-row {
+                background-color: #f5f5f5;
+                opacity: 0.7;
+            }
+
+            tr.pending-row {
+                background-color: #fff3cd;
+                opacity: 0.85;
+            }
+
+            tr.total-row {
+                background-color: #f9f9f9;
+                font-weight: bold;
+            }
+
+            /* ── Section title rows ── */
+            tr.section-title td {
+                background-color: #4e73df;
+                color: white;
+                padding: 6px 8px;
+                font-weight: bold;
+                font-size: 10px;
+            }
+
+            tr.section-cancelled td {
+                background-color: #6c757d;
+                color: white;
+                padding: 6px 8px;
+                font-weight: bold;
+                font-size: 10px;
+            }
+
+            tr.section-pending td {
+                background-color: #ffc107;
+                color: #000;
+                padding: 6px 8px;
+                font-weight: bold;
+                font-size: 10px;
+            }
+
+            /* ── Badges ── */
+            .badge {
+                font-size: 8px;
+                padding: 2px 5px;
+                border-radius: 3px;
+                font-weight: bold;
+                display: inline-block;
+                margin-right: 2px;
+            }
+
+            .badge-approved {
+                background: #d4edda;
+                color: #155724;
+            }
+
+            .badge-cancelled {
+                background: #dee2e6;
+                color: #495057;
+            }
+
+            .badge-pending {
+                background: #fff3cd;
+                color: #856404;
+            }
+
+            /* ── Summary table ── */
+            .summary-section {
+                margin-top: 15px;
+                border-top: 2px solid #333;
+                padding-top: 10px;
+                page-break-before: always;
+            }
+
+            .summary-table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-top: 5px;
+                font-size: 11px;
+            }
+
+            .summary-table th {
+                background-color: #4e73df;
+                color: white;
+                font-weight: bold;
+                padding: 8px;
+                text-align: center;
+                border: 1px solid #ddd;
+            }
+
+            .summary-table td {
+                border: 1px solid #ddd;
+                padding: 8px;
+                text-align: center;
+            }
+
+            .cell-final {
+                background-color: #28a745;
+                color: white;
+                font-size: 12px;
+                font-weight: bold;
+            }
+
+            /* ── Warning banner ── */
+            .mismatch-warning {
+                background: #f8d7da;
+                border: 1px solid #f5c6cb;
+                color: #721c24;
+                padding: 8px 12px;
+                margin-bottom: 12px;
+                border-radius: 3px;
+                font-weight: bold;
+            }
+
+            /* ── Footer ── */
+            .footer {
+                text-align: center;
+                margin-top: 20px;
+                padding-top: 10px;
+                border-top: 1px solid #ddd;
+                font-size: 8px;
+                color: #666;
+            }
+        </style>
+    </head>
+    <body>
+        <!-- Header -->
+        <div class="header">
+            <div class="company-info">
+                {{ request.user.profile.faculty.name }} — سجل حركة الصنف
+            </div>
+            <h1>
+                سجل حركة الصنف: {{ item.name }}
+            </h1>
+        </div>
+        <div class="report-info">
+            <div>
+                تاريخ التقرير: {{ current_date|date:"Y-m-d H:i" }}
+            </div>
+            <div>
+                المستخدم: {{ request.user.get_full_name }}
+            </div>
+            <div>
+                الكود: {{ item.code|default:"-" }}
+            </div>
+            <div>
+                إجمالي الحركات: {{ all_transactions_count }}
+            </div>
+        </div>
+        <!-- Mismatch warning -->
+        {% if not balance_matches %}
+            <div class="mismatch-warning">
+                ⚠ تحذير: الرصيد المحسوب ({{ final_balance }}) لا يطابق الكمية المخزنة ({{ current_quantity }}).
+                يُرجى إعادة حساب الكميات.
+            </div>
+        {% endif %}
+        <!-- Item details -->
+        <table class="item-details-table">
+            <tr>
+                <td>
+                    <span class="detail-label">الفئة:</span> {{ item.category.name|default:"-" }}
+                </td>
+                <td>
+                    <span class="detail-label">الكمية الحالية:</span> {{ current_quantity }}
+                </td>
+                <td>
+                    <span class="detail-label">الفئة:</span> {{ item.category.name }}
+                </td>
+                <td>
+                    <span class="detail-label">الوحدة:</span> {{ item.get_unit_display }}
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <span class="detail-label">الكمية الأولية:</span> 0
+                </td>
+                <td>
+                    <span class="detail-label">الكمية الحالية:</span> {{ current_quantity }}
+                </td>
+                <td>
+                    <span class="detail-label">الحد الأدنى:</span> {{ item.limit_quantity }}
+                </td>
+                <td>
+                    <span class="detail-label">حالة المخزون:</span> {{ item.get_stock_status }}
+                </td>
+            </tr>
+        </table>
+        {% if transactions_with_balance %}
+            <!-- SECTION 1 — ACTIVE APPROVED TRANSACTIONS (affect balance) -->
+            <table>
+                <thead>
+                    <tr>
+                        <th width="7%">
+                            التاريخ
+                        </th>
+                        <th width="10%">
+                            رقم المستند
+                        </th>
+                        <th width="8%">
+                            النوع
+                        </th>
+                        <th width="7%">
+                            الكمية
+                        </th>
+                        <th width="7%">
+                            الحالة
+                        </th>
+                        <th width="14%">
+                            المصدر / الوجهة
+                        </th>
+                        <th width="8%">
+                            موظف المخزن
+                        </th>
+                        <th width="8%">
+                            القسم
+                        </th>
+                        <th width="13%">
+                            الملاحظات
+                        </th>
+                        <th width="8%" class="balance-column">
+                            الرصيد
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="section-title">
+                        <td colspan="10">
+                            الحركات المعتمدة الفعّالة (تؤثر على الرصيد)
+                        </td>
+                    </tr>
+                    {% for t in transactions_with_balance %}
+                        {% if t.affects_balance %}
+                            <tr>
+                                <td>
+                                    {{ t.transaction.created_at|date:"Y-m-d" }}
+                                </td>
+                                <td dir="ltr" style="unicode-bidi:embed;">
+                                    {{ t.transaction.document_number }}
+                                </td>
+                                <td>
+                                    {{ t.transaction.get_transaction_type_display|truncatechars:8 }}
+                                </td>
+                                <td class="{% if t.signed_qty > 0 %}qty-in{% else %}qty-out{% endif %}">
+                                    {% if t.signed_qty > 0 %}
+                                        +
+                                    {% endif %}
+                                    {{ t.signed_qty }}
+                                </td>
+                                <td>
+                                    <span class="badge badge-approved">معتمد</span>
+                                </td>
+                                <td>
+                                    {% if t.transaction.castody_type == 'W' %}
+                                        {% if t.transaction.from_sub_warehouse %}
+                                            م: {{ t.transaction.from_sub_warehouse.name }}
+                                        {% endif %}
+                                        {% if t.transaction.from_sub_warehouse and t.transaction.to_sub_warehouse %}
+                                            <br />
+                                        {% endif %}
+                                        {% if t.transaction.to_sub_warehouse %}
+                                            إ: {{ t.transaction.to_sub_warehouse.name }}
+                                        {% endif %}
+                                    {% else %}
+                                        {% if t.transaction.from_user %}
+                                            م: {{ t.transaction.from_user.get_full_name|default:t.transaction.from_user.username }}
+                                        {% endif %}
+                                        {% if t.transaction.from_user and t.transaction.to_user %}
+                                            <br />
+                                        {% endif %}
+                                        {% if t.transaction.to_user %}
+                                            إ: {{ t.transaction.to_user.get_full_name|default:t.transaction.to_user.username }}
+                                        {% endif %}
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {{ t.transaction.inventory_user.get_full_name|default:"-" }}
+                                </td>
+                                <td>
+                                    {% if t.transaction.from_department %}
+                                        {{ t.transaction.from_department.name }}
+                                    {% elif t.transaction.to_department %}
+                                        {{ t.transaction.to_department.name }}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {{ t.transaction.notes|truncatechars:25|default:"-" }}
+                                </td>
+                                <td class="balance-column">
+                                    <strong>{{ t.balance_after }}</strong>
+                                    <br />
+                                    <span style="font-size:8px;color:#666;">({{ t.balance_before }})</span>
+                                </td>
+                            </tr>
+                        {% endif %}
+                    {% endfor %}
+                </tbody>
+                <tfoot>
+                    <tr class="total-row">
+                        <td colspan="3" style="text-align:left;">
+                            إجمالي الوارد المعتمد:
+                        </td>
+                        <td class="qty-in">
+                            +{{ total_in }}
+                        </td>
+                        <td colspan="6">
+                            <small>إضافات + إرجاعات + نقل وارد</small>
+                        </td>
+                    </tr>
+                    <tr class="total-row">
+                        <td colspan="3" style="text-align:left;">
+                            إجمالي الصادر المعتمد:
+                        </td>
+                        <td class="qty-out">
+                            -{{ total_out }}
+                        </td>
+                        <td colspan="6">
+                            <small>صرف + نقل خارج</small>
+                        </td>
+                    </tr>
+                    <tr class="total-row" style="background:#d4edda;">
+                        <td colspan="3" style="text-align:left;">
+                            الصافي:
+                        </td>
+                        <td class="{% if net_qty >= 0 %}qty-in{% else %}qty-out{% endif %}">
+                            {% if net_qty >= 0 %}
+                                +
+                            {% endif %}
+                            {{ net_qty }}
+                        </td>
+                        <td colspan="6">
+                            <small>الوارد − الصادر = الرصيد النهائي</small>
+                        </td>
+                    </tr>
+                </tfoot>
+            </table>
+            <!-- SECTION 2 — CANCELLED ORIGINALS (is_reversed=True, audit trail only) -->
+            {% if total_cancelled_count > 0 %}
+                <table style="margin-top:10px;">
+                    <thead>
+                        <tr>
+                            <th width="9%">
+                                التاريخ
+                            </th>
+                            <th width="13%">
+                                رقم المستند
+                            </th>
+                            <th width="10%">
+                                النوع
+                            </th>
+                            <th width="8%">
+                                الكمية الأصلية
+                            </th>
+                            <th width="8%">
+                                الحالة
+                            </th>
+                            <th width="15%">
+                                المصدر / الوجهة
+                            </th>
+                            <th width="10%">
+                                موظف المخزن
+                            </th>
+                            <th width="27%">
+                                الملاحظات
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="section-cancelled">
+                            <td colspan="8">
+                                سندات ملغاة — {{ total_cancelled_count }} سند
+                                (الكمية الملغاة: {{ total_cancelled_qty }} {{ item.get_unit_display }})
+                                — لا تؤثر على الرصيد
+                            </td>
+                        </tr>
+                        {% for t in transactions_with_balance %}
+                            {% if t.is_cancelled %}
+                                <tr class="cancelled-row">
+                                    <td>
+                                        {{ t.transaction.created_at|date:"Y-m-d" }}
+                                    </td>
+                                    <td dir="ltr" style="unicode-bidi:embed;">
+                                        {{ t.transaction.document_number }}
+                                    </td>
+                                    <td>
+                                        {{ t.transaction.get_transaction_type_display|truncatechars:8 }}
+                                    </td>
+                                    <td style="text-decoration:line-through; color:#6c757d;">
+                                        {{ t.qty }}
+                                    </td>
+                                    <td>
+                                        <span class="badge badge-cancelled">ملغى</span>
+                                    </td>
+                                    <td>
+                                        {% if t.transaction.from_sub_warehouse %}
+                                            م: {{ t.transaction.from_sub_warehouse.name }}
+                                            <br />
+                                        {% endif %}
+                                        {% if t.transaction.to_sub_warehouse %}
+                                            إ: {{ t.transaction.to_sub_warehouse.name }}
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {{ t.transaction.inventory_user.get_full_name|default:"-" }}
+                                    </td>
+                                    <td>
+                                        {{ t.transaction.notes|truncatechars:40|default:"-" }}
+                                    </td>
+                                </tr>
+                            {% endif %}
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% endif %}
+            <!-- SUMMARY — page break before -->
+            <div class="summary-section">
+                <h3 style="margin-bottom:12px; text-align:center; color:#333;">
+                    ملخص الكميات الكلي
+                </h3>
+                <table class="summary-table">
+                    <thead>
+                        <tr>
+                            <th>
+                                الوارد المعتمد
+                            </th>
+                            <th>
+                                الصادر المعتمد
+                            </th>
+                            <th>
+                                الصافي المعتمد
+                            </th>
+                            {% if total_cancelled_count > 0 %}
+                                <th>
+                                    سندات ملغاة
+                                </th>
+                            {% endif %}
+                            {% if has_pending %}
+                                <th>
+                                    وارد معلق
+                                </th>
+                                <th>
+                                    صادر معلق
+                                </th>
+                                <th>
+                                    إجمالي معلق
+                                </th>
+                            {% endif %}
+                            <th class="cell-final">
+                                الرصيد النهائي
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="qty-in">
+                                <strong>+{{ total_in }}</strong>
+                                <br />
+                                <small>{{ item.get_unit_display }}</small>
+                            </td>
+                            <td class="qty-out">
+                                <strong>-{{ total_out }}</strong>
+                                <br />
+                                <small>{{ item.get_unit_display }}</small>
+                            </td>
+                            <td class="{% if net_qty >= 0 %}qty-in{% else %}qty-out{% endif %}">
+                                <strong>
+                                    {% if net_qty >= 0 %}
+                                        +
+                                    {% endif %}
+                                {{ net_qty }}</strong>
+                                <br />
+                                <small>{{ item.get_unit_display }}</small>
+                            </td>
+                            {% if total_cancelled_count > 0 %}
+                                <td style="color:#6c757d;">
+                                    <strong>{{ total_cancelled_count }} سند</strong>
+                                    <br />
+                                    <small>{{ total_cancelled_qty }} {{ item.get_unit_display }}</small>
+                                </td>
+                            {% endif %}
+                            {% if has_pending %}
+                                <td class="qty-in" style="opacity:0.7;">
+                                    <strong>+{{ pending_in }}</strong>
+                                    <br />
+                                    <small>{{ item.get_unit_display }}</small>
+                                </td>
+                                <td class="qty-out" style="opacity:0.7;">
+                                    <strong>-{{ pending_out }}</strong>
+                                    <br />
+                                    <small>{{ item.get_unit_display }}</small>
+                                </td>
+                                <td style="opacity:0.7;">
+                                    <strong>{{ total_pending_qty }}</strong>
+                                    <br />
+                                    <small>{{ item.get_unit_display }} — لم يعتمد بعد</small>
+                                </td>
+                            {% endif %}
+                            <td class="cell-final">
+                                <strong>{{ final_balance }}</strong>
+                                <br />
+                                <small>{{ item.get_unit_display }}</small>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                {% if not balance_matches %}
+                    <p style="color:#dc3545;
+                              font-weight:bold;
+                              margin-top:8px;
+                              font-size:10px">
+                        ⚠ الكمية المخزنة في النظام: {{ current_quantity }} — يوجد فارق، يُرجى مراجعة البيانات.
+                    </p>
+                {% endif %}
+            </div>
+            <!-- SECTION 3 — PENDING TRANSACTIONS (separate table after summary) -->
+            {% if has_pending %}
+                <table style="margin-top:20px;">
+                    <thead>
+                        <tr>
+                            <th width="9%">
+                                التاريخ
+                            </th>
+                            <th width="13%">
+                                رقم المستند
+                            </th>
+                            <th width="10%">
+                                النوع
+                            </th>
+                            <th width="8%">
+                                الكمية
+                            </th>
+                            <th width="8%">
+                                الاتجاه
+                            </th>
+                            <th width="15%">
+                                المصدر / الوجهة
+                            </th>
+                            <th width="10%">
+                                موظف المخزن
+                            </th>
+                            <th width="10%">
+                                القسم
+                            </th>
+                            <th width="17%">
+                                الملاحظات
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="section-pending">
+                            <td colspan="9">
+                                الحركات المعلقة — لم تعتمد بعد — لا تؤثر على الرصيد الحالي
+                                (وارد: +{{ pending_in }} | صادر: -{{ pending_out }} | إجمالي: {{ total_pending_qty }})
+                            </td>
+                        </tr>
+                        {% for t in transactions_with_balance %}
+                            {% if t.is_pending %}
+                                <tr class="pending-row">
+                                    <td>
+                                        {{ t.transaction.created_at|date:"Y-m-d" }}
+                                    </td>
+                                    <td dir="ltr" style="unicode-bidi:embed;">
+                                        {{ t.transaction.document_number }}
+                                    </td>
+                                    <td>
+                                        {{ t.transaction.get_transaction_type_display|truncatechars:8 }}
+                                    </td>
+                                    <td class="{% if t.signed_qty > 0 %}
+                                                   qty-in
+                                               {% else %}
+                                                   qty-out
+                                               {% endif %}"
+                                        style="opacity:0.7">
+                                        (
+                                        {% if t.signed_qty > 0 %}
+                                            +
+                                        {% endif %}
+                                        {{ t.signed_qty }})
+                                    </td>
+                                    <td>
+                                        {% if t.direction == "in" %}
+                                            <span style="color:#28a745;">▼ وارد</span>
+                                        {% elif t.direction == "out" %}
+                                            <span style="color:#dc3545;">▲ صادر</span>
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if t.transaction.castody_type == 'W' %}
+                                            {% if t.transaction.from_sub_warehouse %}
+                                                م: {{ t.transaction.from_sub_warehouse.name }}
+                                            {% endif %}
+                                            {% if t.transaction.from_sub_warehouse and t.transaction.to_sub_warehouse %}
+                                                <br />
+                                            {% endif %}
+                                            {% if t.transaction.to_sub_warehouse %}
+                                                إ: {{ t.transaction.to_sub_warehouse.name }}
+                                            {% endif %}
+                                        {% else %}
+                                            {% if t.transaction.from_user %}
+                                                م: {{ t.transaction.from_user.get_full_name|default:t.transaction.from_user.username }}
+                                            {% endif %}
+                                            {% if t.transaction.from_user and t.transaction.to_user %}
+                                                <br />
+                                            {% endif %}
+                                            {% if t.transaction.to_user %}
+                                                إ: {{ t.transaction.to_user.get_full_name|default:t.transaction.to_user.username }}
+                                            {% endif %}
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {{ t.transaction.inventory_user.get_full_name|default:"-" }}
+                                    </td>
+                                    <td>
+                                        {% if t.transaction.from_department %}
+                                            {{ t.transaction.from_department.name }}
+                                        {% elif t.transaction.to_department %}
+                                            {{ t.transaction.to_department.name }}
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {{ t.transaction.notes|truncatechars:25|default:"-" }}
+                                    </td>
+                                </tr>
+                            {% endif %}
+                        {% endfor %}
+                    </tbody>
+                    <tfoot>
+                        <tr class="total-row" style="background:#fff3cd;">
+                            <td colspan="3" style="text-align:left;">
+                                إجمالي الحركات المعلقة:
+                            </td>
+                            <td>
+                                {{ total_pending_qty }}
+                            </td>
+                            <td colspan="5">
+                                <small>لم تعتمد بعد — لا تؤثر على الرصيد الحالي</small>
+                            </td>
+                        </tr>
+                    </tfoot>
+                </table>
+            {% endif %}
+        {% else %}
+            <div style="text-align:center;
+                        padding:30px;
+                        border:1px solid #ddd;
+                        margin:20px 0">
+                <h3 style="color:#666;">
+                    لا يوجد سجل معاملات لهذا الصنف
+                </h3>
+                <p style="color:#666;">
+                    لم يتم تسجيل أي حركات لهذا الصنف حتى الآن.
+                </p>
+            </div>
+        {% endif %}
+        <!-- Footer -->
+        <div class="footer">
+            <div>
+                تم إنشاء التقرير في: {{ current_date|date:"Y-m-d H:i" }}
+            </div>
+            <div>
+                المستخدم: {{ request.user.get_full_name }}
+            </div>
+            <div style="margin-top:5px; font-size:7px; color:#999;">
+                ملاحظة: الرصيد يُحسب فقط من الحركات المعتمدة الفعّالة (is_reversed=False).
+                السندات الملغاة والمعلقة لا تؤثر على الرصيد.
+            </div>
+        </div>
+    </body>
+</html>

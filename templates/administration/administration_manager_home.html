@@ -1,0 +1,279 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}
+    لوحة تحكم الإدارة
+{% endblock title %}
+{% block content %}
+    <style>
+        .chart-container {
+            position: relative;
+            height: 280px;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: var(--card-bg);
+            /* Use your CSS variable */
+            border-radius: 4px;
+            border: 1px solid var(--border-color);
+            /* Use your CSS variable */
+        }
+
+        .chart-loader {
+            color: var(--text-color);
+            /* Use your CSS variable */
+            font-size: 1.2rem;
+        }
+
+        .stat-card {
+            transition: transform 0.2s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-3px);
+        }
+
+        .chart-container {
+            position: relative;
+            height: 280px;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: var(--card-bg);
+            border-radius: 4px;
+            border: 1px solid var(--border-color);
+        }
+    </style>
+    <h3 class="mb-4 text-center text-primary">
+        <i class="bi bi-diagram-3 me-2"></i>
+        نظرة عامة على المخزون - جميع الجهات
+    </h3>
+    <!-- Summary Cards -->
+    <div class="row g-4 mb-5">
+        <div class="col-md-3">
+            <div class="card stat-card shadow-sm text-center">
+                <div class="card-body">
+                    <i class="bi bi-building text-primary icon"></i>
+                    <h6 class="mt-2">
+                        إجمالي الجهات
+                    </h6>
+                    <p class="display-6 text-primary fw-bold mb-0">
+                        {{ total_faculties }}
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stat-card shadow-sm text-center">
+                <div class="card-body">
+                    <i class="bi bi-house-door-fill text-success icon"></i>
+                    <h6 class="mt-2">
+                        إجمالي المخازن
+                    </h6>
+                    <p class="display-6 text-success fw-bold mb-0">
+                        {{ total_warehouses }}
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stat-card shadow-sm text-center">
+                <div class="card-body">
+                    <i class="bi bi-grid-3x3-gap text-warning icon"></i>
+                    <h6 class="mt-2">
+                        إجمالي الأصناف
+                    </h6>
+                    <p class="display-6 text-warning fw-bold mb-0">
+                        {{ total_items }}
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stat-card shadow-sm text-center">
+                <div class="card-body">
+                    <i class="bi bi-exclamation-triangle text-danger icon"></i>
+                    <h6 class="mt-2">
+                        احتياطي منخفض
+                    </h6>
+                    <p class="display-6 text-danger fw-bold mb-0">
+                        {{ total_low_stock }}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Charts Row -->
+    <div class="row g-4 mb-5">
+        <div class="col-md-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-primary text-white text-center">
+                    الأصناف حسب الجهات
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <div class="chart-loader" id="itemsLoader">
+                            جارٍ التحميل...
+                        </div>
+                        <canvas id="chartItemsPerFaculty"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-success text-white text-center">
+                    المخازن حسب الجهات
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <div class="chart-loader" id="warehousesLoader">
+                            جارٍ التحميل...
+                        </div>
+                        <canvas id="chartWarehousesPerFaculty"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row g-4">
+        <div class="col-md-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-warning text-dark text-center">
+                    حالة المخزون (جميع الجهات)
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <div class="chart-loader" id="stockLoader">
+                            جارٍ التحميل...
+                        </div>
+                        <canvas id="chartStockStatus"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Faculty Details Table -->
+    <div class="mt-5">
+        <div class="card shadow-sm">
+            <div class="card-header bg-secondary text-white">
+                تفاصيل الجهات
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover text-center" dir="rtl">
+                        <thead class="table-light">
+                            <tr>
+                                <th>
+                                    الجهات
+                                </th>
+                                <th>
+                                    المخازن
+                                </th>
+                                <th>
+                                    الفئات
+                                </th>
+                                <th>
+                                    الأصناف
+                                </th>
+                                <th>
+                                    غير متوفر
+                                </th>
+                                <th>
+                                    احتياطي منخفض
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for stat in faculty_stats %}
+                                <tr>
+                                    <td>
+                                        {{ stat.faculty.name }}
+                                    </td>
+                                    <td>
+                                        {{ stat.warehouses }}
+                                    </td>
+                                    <td>
+                                        {{ stat.categories }}
+                                    </td>
+                                    <td>
+                                        {{ stat.items }}
+                                    </td>
+                                    <td class="text-danger fw-bold">
+                                        {{ stat.out_of_stock }}
+                                    </td>
+                                    <td class="text-warning fw-bold">
+                                        {{ stat.low_stock }}
+                                    </td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="6" class="text-muted">
+                                        لا توجد جهات مسجلة.
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock content %}
+{% block scripts %}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Render Items per Faculty Chart
+    const itemsCtx = document.getElementById('chartItemsPerFaculty').getContext('2d');
+    new Chart(itemsCtx, {
+        type: 'bar',
+        data: JSON.parse('{{ chart_items_per_faculty|escapejs }}'),
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true } },
+            rtl: true
+        }
+    });
+
+    // Render Warehouses per Faculty Chart
+    const warehousesCtx = document.getElementById('chartWarehousesPerFaculty').getContext('2d');
+    new Chart(warehousesCtx, {
+        type: 'pie',
+        data: JSON.parse('{{ chart_warehouses_per_faculty|escapejs }}'),
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { position: 'bottom', rtl: true } },
+            rtl: true
+        }
+    });
+
+    // Render Stock Status Chart
+    const stockCtx = document.getElementById('chartStockStatus').getContext('2d');
+    new Chart(stockCtx, {
+        type: 'doughnut',
+        data: JSON.parse('{{ chart_stock_status|escapejs }}'),
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { position: 'bottom', rtl: true } },
+            rtl: true
+        }
+    });
+
+    // Hide loaders
+    document.getElementById('itemsLoader').style.display = 'none';
+    document.getElementById('warehousesLoader').style.display = 'none';
+    document.getElementById('stockLoader').style.display = 'none';
+    
+    // Show charts
+    document.getElementById('chartItemsPerFaculty').style.display = 'block';
+    document.getElementById('chartWarehousesPerFaculty').style.display = 'block';
+    document.getElementById('chartStockStatus').style.display = 'block';
+});
+    </script>
+{% endblock scripts %}

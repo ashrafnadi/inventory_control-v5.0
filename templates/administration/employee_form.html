@@ -1,0 +1,137 @@
+<!--employee_form.html-->>
+{% extends "base.html" %}
+{% load widget_tweaks %}
+{% block title %}
+    {{ title }}
+{% endblock title %}
+{% block content %}
+    <div class="card">
+        <div class="card-header">
+            <h3>
+                {{ title }}
+            </h3>
+        </div>
+        <div class="card-body">
+            <form method="post" dir="rtl">
+                {% csrf_token %}
+                {{ form.username }}
+                {{ form.last_name }}
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">
+                            الاسم
+                        </label>
+                        {{ form.first_name|add_class:"form-control"|attr:"dir:rtl" }}
+                        {% if form.first_name.errors %}
+                            <div class="text-danger">
+                                {{ form.first_name.errors }}
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-12 mb-3">
+                        <label class="form-label">
+                            القسم
+                        </label>
+                        <!-- Search input (visual only) -->
+                        <input type="text"
+                               id="department-search"
+                               class="form-control mb-1"
+                               placeholder="ابحث عن القسم..."
+                               autocomplete="off"
+                               dir="rtl" />
+                        <!-- The actual select (always submitted) -->
+                        {{ form.department|add_class:"form-select"|attr:"id:id_department"|attr:"size:5" }}
+                        {% if form.department.errors %}
+                            <div class="text-danger">
+                                {{ form.department.errors }}
+                            </div>
+                        {% endif %}
+                        <!-- Shows currently selected department name -->
+                        <div id="selected-dept-display"
+                             class="form-text text-success fw-bold mt-1">
+                        </div>
+                    </div>
+                    {% if not editing %}
+                        <input type="hidden" name="password" value="1" />
+                        <input type="hidden" name="confirm_password" value="1" />
+                    {% endif %}
+                </div>
+                <div class="d-flex justify-content-between">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save"></i>
+                        {% if editing %}
+                            تحديث
+                        {% else %}
+                            إنشاء
+                        {% endif %}
+                    </button>
+                    <a href="{% url 'employee_list' %}" class="btn btn-secondary">
+                        <i class="bi bi-x-circle"></i> إلغاء
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock content %}
+{% block scripts %}
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const searchInput = document.getElementById('department-search');
+        const select = document.getElementById('id_department');
+        const display = document.getElementById('selected-dept-display');
+
+        // Store all original options once
+        const allOptions = Array.from(select.options).map(opt => ({
+            value: opt.value,
+            text: opt.text,
+            element: opt,
+        }));
+
+        // Show currently selected department on load (editing mode)
+        function updateDisplay() {
+            const selected = select.options[select.selectedIndex];
+            if (selected && selected.value) {
+                display.textContent = '✔ ' + selected.text;
+            } else {
+                display.textContent = '';
+            }
+        }
+        updateDisplay();
+
+        // Filter options as user types
+        searchInput.addEventListener('input', function () {
+            const query = this.value.trim().toLowerCase();
+
+            // Remove all options
+            select.innerHTML = '';
+
+            // Re-add only matching ones
+            allOptions.forEach(opt => {
+                if (!query || opt.text.toLowerCase().includes(query)) {
+                    select.appendChild(opt.element);
+                }
+            });
+
+            // Auto-select if only one result remains
+            if (select.options.length === 1 && select.options[0].value) {
+                select.options[0].selected = true;
+                updateDisplay();
+            }
+        });
+
+        // Update display label when user clicks an option
+        select.addEventListener('change', function () {
+            updateDisplay();
+            // Clear search so they can see the full list again if needed
+            searchInput.value = '';
+            // Restore all options while keeping selection
+            const currentValue = select.value;
+            select.innerHTML = '';
+            allOptions.forEach(opt => {
+                opt.element.selected = (opt.value === currentValue);
+                select.appendChild(opt.element);
+            });
+        });
+    });
+    </script>
+{% endblock scripts %}

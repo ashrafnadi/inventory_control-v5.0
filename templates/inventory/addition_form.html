@@ -1,0 +1,683 @@
+<!-- templates/inventory/addition_form.html -->
+{% extends "base.html" %}
+{% load static %}
+{% load widget_tweaks %}
+{% block content %}
+<form method="post" data-editing="{{ editing|default:'false'|lower }}">
+    {% csrf_token %}
+    <!-- Add hidden approval_status and created_by fields -->
+    <input type="hidden" name="approval_status"
+        value="{{ form.approval_status.value|default:form.approval_status.initial }}" />
+    <input type="hidden" name="created_by" value="{{ request.user.id }}" />
+    {% if form.non_field_errors or details_formset.non_form_errors %}
+    <div class="alert alert-danger">
+        <strong>أخطاء في النموذج:</strong>
+        {% for error in form.non_field_errors %}
+        <div>
+            {{ error }}
+        </div>
+        {% endfor %}
+        {% for error in details_formset.non_form_errors %}
+        <div>
+            {{ error }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    <!-- Parent Form: ItemTransactions -->
+    <div class="card mb-4 overflow-visible">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">
+                نموذج 1: إذن إضافة
+            </h5>
+        </div>
+        <div class="card-body overflow-visible">
+            <div class="row">
+                <!-- 1. document_number -->
+                <div class="col-md-3 mb-3">
+                    <label>
+                        رقم المستند
+                    </label>
+                    <input type="text" class="form-control"
+                        value="{{ form.instance.document_number|default:'سيتم الإنشاء تلقائياً' }}" readonly />
+                </div>
+                <!-- 2. document_type -->
+                <div class="col-md-3 mb-3">
+                    {{ form.document_type.label_tag }}
+                    {{ form.document_type|add_class:"form-select" }}
+                    {% if form.document_type.errors %}
+                    <div class="text-danger mt-1">
+                        {{ form.document_type.errors }}
+                    </div>
+                    {% endif %}
+                </div>
+                <!-- 3. to_sub_warehouse-->
+                <div class="col-md-3 mb-3">
+                    {{ form.to_sub_warehouse.label_tag }}
+                    <select name="to_sub_warehouse" id="id_to_sub_warehouse" class="form-select">
+                        <option value="">
+                            ---------
+                        </option>
+                        {% for value, label in form.to_sub_warehouse.field.choices %}
+                        {% if value %}
+                        <option value="{{ value }}" {% if form.to_sub_warehouse.value|default:"" == value|default:"" %}
+                            selected {% endif %}>
+                            {{ label }}
+                        </option>
+                        {% endif %}
+                        {% endfor %}
+                    </select>
+                    {% if form.to_sub_warehouse.errors %}
+                    <div class="text-danger mt-1">
+                        {{ form.to_sub_warehouse.errors }}
+                    </div>
+                    {% endif %}
+                </div>
+                <!-- 4. inventory_user -->
+                <div class="col-md-3 mb-3">
+                    <label class="form-label">موظف المخزن</label>
+                    <input type="text" class="form-control"
+                        value="{{ request.user.get_full_name|default:request.user.username }}" readonly />
+                </div>
+                <!-- 5. supplier -->
+                <div class="col-md-3 mb-3">
+                    {{ form.supplier.label_tag }}
+                    {{ form.supplier|add_class:"form-select" }}
+                    {% if form.supplier.errors %}
+                    <div class="text-danger mt-1">
+                        {{ form.supplier.errors }}
+                    </div>
+                    {% endif %}
+                </div>
+                {% for field in form %}
+                {% if field.name not in "document_number document_type to_sub_warehouse inventory_user castody_type transaction_type supplier notes approval_user created_by approval_status id" %}
+                <div class="col-md-3 mb-3">
+                    {{ field.label_tag }}
+                    {% if field.field.widget.input_type == 'select' %}
+                    {{ field|add_class:"form-select" }}
+                    {% else %}
+                    {{ field|add_class:"form-control" }}
+                    {% endif %}
+                    {% if field.errors %}
+                    <div class="text-danger mt-1">
+                        {{ field.errors }}
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+                {% endfor %}
+            </div>
+            <!-- Notes field on new line (full width) -->
+            <div class="row">
+                <div class="col-12 mb-3">
+                    {{ form.notes.label_tag }}
+                    {{ form.notes|add_class:"form-control" }}
+                    {% if form.notes.errors %}
+                    <div class="text-danger mt-1">
+                        {{ form.notes.errors }}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Child Formset: ItemTransactionDetails -->
+    <div class="card mb-4 overflow-visible">
+        {{ details_formset.management_form }}
+        <div id="formset-config" data-prefix="{{ details_formset.prefix }}" class="hide">
+        </div>
+        <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">
+                تفاصيل الأصناف
+            </h5>
+            <button type="button" id="add-row" class="btn btn-light btn-sm">
+                إضافة صنف +
+            </button>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive overflow-visible">
+                <table class="table table-bordered form-table" id="details-table">
+                    <thead class="table-light">
+                        <tr>
+                            <th width="600px">
+                                الصنف
+                            </th>
+                            <th width="150px">
+                                الكمية المضافة
+                            </th>
+                            <th width="150px">
+                                السعر
+                            </th>
+                            <th width="150px">
+                                الحالة
+                            </th>
+                            <th>
+                                ملاحظات
+                            </th>
+                            <th class="operations">
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for form in details_formset %}
+                        <tr class="form-row">
+                            <!-- Hidden id field -->
+                            {{ form.id }}
+                            <!-- Item -->
+                            <td>
+                                {{ form.item }} <!-- Required hidden field -->
+                                <input type="hidden" name="{{ details_formset.prefix }}-{{ forloop.counter0 }}-stock"
+                                    class="item-stock" value="{{ form.initial.stock|default:'' }}" />
+                                <input type="text" class="form-control form-control-sm item-search"
+                                    placeholder="ابحث عن الصنف..." autocomplete="off" value="{% if form.item.value %}
+                                                          {{ form.item.label }}
+                                                      {% endif %}" />
+                            </td>
+                            <!-- Approved Quantity -->
+                            <td>
+                                {{ form.approved_quantity|add_class:"form-control form-control-sm" }}
+                                {% if form.approved_quantity.errors %}
+                                <div class="text-danger small">
+                                    {{ form.approved_quantity.errors }}
+                                </div>
+                                {% endif %}
+                            </td>
+                            <!-- Price -->
+                            <td>
+                                {{ form.price|add_class:"form-control form-control-sm" }}
+                                {% if form.price.errors %}
+                                <div class="text-danger small mt-1">
+                                    <i class="bi bi-exclamation-circle"></i> {{ form.price.errors.0 }}
+                                </div>
+                                {% endif %}
+                            </td>
+                            <!-- Status -->
+                            <td>
+                                {{ form.status|add_class:"form-select form-select-sm" }}
+                            </td>
+                            <!-- Notes -->
+                            <td>
+                                {{ form.notes|add_class:"form-control form-control-sm border-0 bg-transparent shadow-none" }}
+                                {% if form.notes.errors %}
+                                <div class="text-danger small">
+                                    {{ form.notes.errors }}
+                                </div>
+                                {% endif %}
+                            </td>
+                            <!-- Delete -->
+                            <td class="text-center align-middle">
+                                <div class="hide-delete">
+                                    {{ form.DELETE }}
+                                </div>
+                                <button type="button" class="btn btn-sm btn-link text-danger delete-row"
+                                    title="حذف الصنف">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="d-flex justify-content-between">
+        <a href="{% url 'transaction_list' %}" class="btn btn-secondary">إلغاء</a>
+        <button type="submit" class="btn btn-primary">
+            حفظ
+        </button>
+    </div>
+</form>
+{% endblock content %}
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const configDiv = document.getElementById('formset-config');
+        if (!configDiv) {
+            console.error("Missing #formset-config");
+            return;
+        }
+        const prefix = configDiv.dataset.prefix;
+        const totalFormsInput = document.getElementById('id_' + prefix + '-TOTAL_FORMS');
+        if (!totalFormsInput) {
+            console.error(`Management field id_${prefix}-TOTAL_FORMS not found`);
+            return;
+        }
+
+        const form = document.querySelector('form');
+        const isEditing = form ? form.dataset.editing === 'true' : false;
+
+        // HTMX configuration and error handling
+        document.body.addEventListener('htmx:beforeRequest', function (event) {
+            console.log('HTMX request started:', event.detail.path);
+        });
+
+        document.body.addEventListener('htmx:afterRequest', function (event) {
+            console.log('HTMX request completed:', event.detail.path);
+        });
+
+        document.body.addEventListener('htmx:error', function (event) {
+            console.error('HTMX error:', event.detail.error);
+            alert('حدث خطأ أثناء التحميل. يرجى المحاولة مرة أخرى.');
+        });
+
+        // Initialize HTMX fallbacks for inventory user selection
+        /*
+        document.getElementById('id_to_sub_warehouse')?.addEventListener('change', function () {
+            if (window.htmx) return;
+            const warehouseId = this.value;
+            const container = document.getElementById('inventory-user-container');
+            const indicator = document.createElement('div');
+            indicator.className = 'htmx-indicator';
+            indicator.innerHTML = '<div class="spinner-border spinner-border-sm text-primary" role="status"><span class="visually-hidden">جاري التحميل...</span></div>';
+
+            if (!warehouseId || !container) return;
+
+            container.innerHTML = '';
+            container.appendChild(indicator);
+
+            fetch(`{% url 'inventory_user_select_addition' %}?to_sub_warehouse=${encodeURIComponent(warehouseId)}`, {
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Accept': 'text/html'
+                }
+            })
+                .then(response => {
+                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                    return response.text();
+                })
+                .then(html => {
+                    container.innerHTML = html;
+                    console.log(' Inventory users loaded successfully');
+                })
+                .catch(err => {
+                    console.error(' Failed to load inventory users:', err);
+                    container.innerHTML = '<div class="form-control text-muted" disabled>حدث خطأ في التحميل</div>';
+                    alert(`فشل تحميل موظفي المخزن: ${err.message}`);
+                });
+        });
+        */
+        const warehouseSelect = document.getElementById('id_to_sub_warehouse');
+        if (isEditing && warehouseSelect && warehouseSelect.value) {
+            warehouseSelect.dispatchEvent(new Event('change'));
+        }
+
+        // =============== FORMSET MANAGEMENT ===============
+        function updateDeleteButtons() {
+            const rows = document.querySelectorAll('#details-table tbody .form-row:not([style*="display: none"])');
+            const deleteButtons = document.querySelectorAll('.delete-row');
+            if (rows.length <= 1) {
+                deleteButtons.forEach(btn => {
+                    btn.disabled = true;
+                    btn.classList.add('disabled');
+                });
+            } else {
+                deleteButtons.forEach(btn => {
+                    btn.disabled = false;
+                    btn.classList.remove('disabled');
+                });
+            }
+        }
+
+        // Properly handle DELETE checkbox for Django formsets
+        function attachDeleteListener(button) {
+            button.addEventListener('click', function () {
+                const confirmed = confirm("هل أنت متأكد من حذف هذا الصنف؟");
+                if (!confirmed) return;
+
+                const row = this.closest('tr');
+                if (!row) return;
+
+                // Find the DELETE checkbox
+                const deleteCheckbox = row.querySelector('input[type="checkbox"][name$="-DELETE"]');
+
+                if (deleteCheckbox) {
+                    // For existing objects: Check DELETE checkbox and hide row
+                    deleteCheckbox.checked = true;
+                    row.style.display = 'none';  // Hide but keep in DOM for form submission
+                    row.classList.add('table-danger', 'deleted-row');
+                    console.log('DELETE checkbox checked for existing item');
+                } else {
+                    // For new objects (not yet saved): Remove from DOM and decrement count
+                    row.remove();
+                    let total = parseInt(totalFormsInput.value) || 0;
+                    totalFormsInput.value = Math.max(0, total - 1);
+                    console.log('New row removed from DOM');
+                }
+
+                updateDeleteButtons();
+            });
+        }
+
+        // =============== ITEM SEARCH ===============
+        function attachSearchToRow(row) {
+            const searchInput = row.querySelector('.item-search');
+            const hiddenInput = row.querySelector('input[name$="-item"]');
+            let searchTimeout;
+
+            if (!searchInput || !hiddenInput) {
+                console.warn('⚠️ Missing search input or hidden item input in row');
+                return;
+            }
+
+            const suggestionsContainer = document.createElement('div');
+            suggestionsContainer.className = 'search-dropdown';
+            searchInput.parentNode.style.position = 'relative';
+            searchInput.parentNode.appendChild(suggestionsContainer);
+
+            searchInput.addEventListener('input', function () {
+                clearTimeout(searchTimeout);
+                const query = this.value.trim();
+
+                const warehouseSelect = document.getElementById('id_to_sub_warehouse');
+                const warehouseId = warehouseSelect ? warehouseSelect.value : null;
+
+                if (!warehouseId) {
+                    suggestionsContainer.innerHTML = '<div class="search-suggestion"><span class="theme-text-muted">يرجى اختيار المخزن أولاً</span></div>';
+                    suggestionsContainer.style.display = 'block';
+                    return;
+                }
+
+                if (!query) {
+                    suggestionsContainer.style.display = 'none';
+                    return;
+                }
+
+                searchTimeout = setTimeout(() => {
+                    const url = `{% url 'item_search_addition' %}?q=${encodeURIComponent(query)}&warehouse=${encodeURIComponent(warehouseId)}`;
+                    fetch(url, {
+                        headers: {
+                            'X-CSRFToken': '{{ csrf_token }}',
+                            'Accept': 'application/json'
+                        }
+                    })
+                        .then(response => {
+                            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                            return response.json();
+                        })
+                        .then(data => {
+                            suggestionsContainer.innerHTML = '';
+                            if (data.results?.length) {
+                                data.results.forEach(item => {
+                                    const div = document.createElement('div');
+                                    div.className = 'search-suggestion';
+                                    div.textContent = item.name;
+                                    div.dataset.itemId = item.id;
+                                    div.addEventListener('click', () => {
+                                        hiddenInput.value = item.id;
+                                        searchInput.value = item.name;
+                                        suggestionsContainer.style.display = 'none';
+
+                                        const itemIdInput = row.querySelector('input[name$="-item"]');
+                                        if (itemIdInput) {
+                                            itemIdInput.value = item.id;
+                                            console.log('Item selected:', item.id, item.name);
+                                        }
+                                    });
+                                    div.addEventListener('mouseenter', () => div.style.backgroundColor = '#f8f9fa');
+                                    div.addEventListener('mouseleave', () => div.style.backgroundColor = '');
+                                    suggestionsContainer.appendChild(div);
+                                });
+                                suggestionsContainer.style.display = 'block';
+                            } else {
+                                suggestionsContainer.innerHTML = '<div class="search-suggestion"><span class="theme-text-muted">لا توجد أصناف</span></div>';
+                                suggestionsContainer.style.display = 'block';
+                            }
+                        })
+                        .catch(err => {
+                            console.error('Search error:', err);
+                            suggestionsContainer.innerHTML = `<div class="search-suggestion"><span class="theme-text-danger">خطأ في البحث: ${err.message}</span></div>`;
+                            suggestionsContainer.style.display = 'block';
+                        });
+                }, 300);
+            });
+
+            document.addEventListener('click', (e) => {
+                if (!row.contains(e.target)) {
+                    suggestionsContainer.style.display = 'none';
+                }
+            });
+        }
+
+        // =============== RESTORE ITEM NAMES ===============
+        function restoreItemNames() {
+            document.querySelectorAll('.form-row').forEach(row => {
+                const itemInput = row.querySelector('input[name$="-item"]');
+                const searchInput = row.querySelector('.item-search');
+
+                if (itemInput && itemInput.value && searchInput) {
+                    const itemId = itemInput.value.trim();
+                    if (itemId !== '' && !isNaN(itemId)) {
+                        fetch(`{% url 'get_item_name' %}?item_id=${encodeURIComponent(itemId)}`, {
+                            headers: {
+                                'X-CSRFToken': '{{ csrf_token }}'
+                            }
+                        })
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.name) {
+                                    searchInput.value = data.name;
+                                    console.log('Item name restored:', data.name);
+                                }
+                            })
+                            .catch(err => console.error('Failed to restore item name:', err));
+                    }
+                }
+            });
+        }
+
+        // =============== PRICE VALIDATION ===============
+        function validatePriceInputs() {
+            let hasError = false;
+            document.querySelectorAll('#details-table .form-row').forEach((row, index) => {
+                const itemInput = row.querySelector('input[name$="-item"]');
+                const qtyInput = row.querySelector('input[name$="-approved_quantity"]');
+                const priceInput = row.querySelector('input[name$="-price"]');
+                const errorContainer = row.querySelector('.price-error');
+
+                // Clear previous errors
+                if (errorContainer) errorContainer.remove();
+
+                const itemId = itemInput?.value?.trim();
+                const qty = parseInt(qtyInput?.value) || 0;
+                const price = parseFloat(priceInput?.value) || 0;
+
+                // Validate: if item selected AND qty > 0, price must be > 0
+                if (itemId && qty > 0 && (!priceInput?.value || price <= 0)) {
+                    hasError = true;
+                    priceInput.classList.add('is-invalid');
+                    
+                    // Add inline error message
+                    const errorDiv = document.createElement('div');
+                    errorDiv.className = 'price-error text-danger small mt-1';
+                    errorDiv.innerHTML = '<i class="bi bi-exclamation-circle"></i> يجب إدخال سعر للصنف';
+                    priceInput.closest('td').appendChild(errorDiv);
+                } else {
+                    priceInput.classList.remove('is-invalid');
+                }
+            });
+            return hasError;
+        }
+
+        // Validate on price input blur
+        document.addEventListener('blur', function(e) {
+            if (e.target?.name?.includes('-price')) {
+                validatePriceInputs();
+            }
+        }, true);
+
+        // Validate before form submit
+        if (form) {
+            const originalSubmit = form.onsubmit;
+            form.onsubmit = function(e) {
+                if (validatePriceInputs()) {
+                    e.preventDefault();
+                    alert('يرجى إدخال سعر لجميع الأصناف المضافة قبل الحفظ.');
+                    return false;
+                }
+                if (typeof originalSubmit === 'function') {
+                    return originalSubmit.apply(this, arguments);
+                }
+            };
+        }
+        // Initialize existing rows
+        document.querySelectorAll('#details-table .form-row').forEach(row => {
+            if (!row.querySelector('.item-stock')) {
+                const stockInput = document.createElement('input');
+                stockInput.type = 'hidden';
+                stockInput.className = 'item-stock';
+                const itemInput = row.querySelector('input[name$="-item"]');
+                if (itemInput) {
+                    stockInput.name = itemInput.name.replace('-item', '-stock');
+                }
+                row.querySelector('td:first-child').appendChild(stockInput);
+            }
+            attachSearchToRow(row);
+        });
+
+        restoreItemNames();
+
+        // =============== ADD NEW ROW ===============
+        document.getElementById('add-row')?.addEventListener('click', function () {
+            const tbody = document.querySelector('#details-table tbody');
+            const rows = tbody.querySelectorAll('.form-row');
+            if (rows.length === 0) {
+                console.error('No existing rows to clone');
+                return;
+            }
+
+            const newIndex = parseInt(totalFormsInput.value) || 0;
+            const lastRow = rows[rows.length - 1].cloneNode(true);
+
+            console.log(`Adding new row at index ${newIndex}`);
+
+            // Proper field name replacement
+            lastRow.querySelectorAll('input, select, textarea').forEach(el => {
+                if (el.name) {
+                    el.name = el.name.replace(new RegExp(`-(\\d+)-`, 'g'), `-${newIndex}-`);
+                }
+                if (el.id) {
+                    el.id = el.id.replace(/-(\d+)-/g, `-${newIndex}-`);
+                }
+
+                if (el.type === 'checkbox') {
+                    el.checked = false;
+                } else if (el.name && el.name.includes('price')) {
+                    el.value = el.value || '0.00';
+                } else if (el.name && el.name.includes('item')) {
+                    el.value = '';
+                } else if (el.name && el.name.includes('stock')) {
+                    el.value = '';
+                } else if (!el.name.includes('DELETE') && !el.name.includes('approved_quantity')) {
+                    el.value = '';
+                }
+            });
+
+            // Reset search input
+            const searchInput = lastRow.querySelector('.item-search');
+            if (searchInput) {
+                searchInput.value = '';
+                searchInput.placeholder = "ابحث عن الصنف...";
+            }
+
+            // Ensure hidden item field is properly configured
+            const itemInput = lastRow.querySelector('input[name$="-item"]');
+            if (itemInput) {
+                itemInput.value = '';
+                itemInput.name = `${prefix}-${newIndex}-item`;
+            }
+
+            // Reset quantity and price fields
+            const qtyInput = lastRow.querySelector('input[name$="-approved_quantity"]');
+            if (qtyInput) {
+                qtyInput.value = '';
+                qtyInput.placeholder = "الكمية المضافة";
+                qtyInput.min = "1";
+            }
+
+            const priceInput = lastRow.querySelector('input[name$="-price"]');
+            if (priceInput) {
+                priceInput.value = '0.00';
+                priceInput.placeholder = "سعر الصنف";
+                priceInput.min = "0";
+                priceInput.step = "0.01";
+            }
+
+            // Reset stock field
+            const stockInput = lastRow.querySelector('.item-stock');
+            if (stockInput) {
+                stockInput.name = `${prefix}-${newIndex}-stock`;
+                stockInput.value = '';
+            } else {
+                const newStockInput = document.createElement('input');
+                newStockInput.type = 'hidden';
+                newStockInput.className = 'item-stock';
+                newStockInput.name = `${prefix}-${newIndex}-stock`;
+                newStockInput.value = '';
+                lastRow.querySelector('td:first-child').appendChild(newStockInput);
+            }
+
+            // Reset delete functionality
+            const deleteCell = lastRow.querySelector('td:last-child');
+            if (deleteCell) {
+                deleteCell.innerHTML = '';
+                const hiddenDiv = document.createElement('div');
+                hiddenDiv.className = 'hide-delete';
+
+                const chk = document.createElement('input');
+                chk.type = 'checkbox';
+                chk.name = `${prefix}-${newIndex}-DELETE`;
+                chk.id = `id_${prefix}-${newIndex}-DELETE`;
+                chk.className = 'form-check-input';
+                hiddenDiv.appendChild(chk);
+
+                deleteCell.appendChild(hiddenDiv);
+
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'btn btn-sm btn-link text-danger delete-row';
+                btn.title = 'حذف الصنف';
+                btn.innerHTML = '<i class="bi bi-trash"></i>';
+                deleteCell.appendChild(btn);
+
+                attachDeleteListener(btn);  // Attach listener to new button
+            }
+
+            tbody.appendChild(lastRow);
+            attachSearchToRow(lastRow);
+            totalFormsInput.value = newIndex + 1;
+            updateDeleteButtons();
+
+            console.log('Row addition complete!');
+        });
+
+        // Initialize delete button listeners
+        document.querySelectorAll('.delete-row').forEach(attachDeleteListener);
+        updateDeleteButtons();
+
+        // DEBUG: Log initial form state
+        console.log('Initial form state:');
+        console.log(` TOTAL_FORMS: ${totalFormsInput.value}`);
+        console.log(` Formset prefix: ${prefix}`);
+
+        // DEBUG: Add form submission handler to log data
+        form?.addEventListener('submit', function (e) {
+            console.log('Form submission started');
+
+            // Log all price fields
+            document.querySelectorAll('input[name$="-price"]').forEach(priceInput => {
+                console.log(`Price field [${priceInput.name}]: ${priceInput.value}`);
+            });
+
+            // Log all item fields
+            document.querySelectorAll('input[name$="-item"]').forEach(itemInput => {
+                console.log(`Item field [${itemInput.name}]: ${itemInput.value}`);
+            });
+
+            // Log approval_status and created_by
+            console.log(`Approval status: ${document.querySelector('input[name="approval_status"]').value}`);
+            console.log(`Created by: ${document.querySelector('input[name="created_by"]').value}`);
+        });
+    });
+</script>
+{% endblock scripts %}

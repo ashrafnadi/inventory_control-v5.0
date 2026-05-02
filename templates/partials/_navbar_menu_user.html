@@ -1,0 +1,15 @@
+{% load static %}
+<div class="collapse navbar-collapse" id="navbarNav">
+    <ul class="navbar-nav mx-auto">
+        <li class="nav-item mx-2">
+            <a class="nav-link {% if page_title == 'I' %}active{% endif %}"
+               href="{% url 'client' %}"><i class="bi bi-house-door me-1"></i>الرئيسية</a>
+        </li>
+        <li class="nav-item mx-2">
+            <a class="nav-link {% if page_title == 'I' %}active{% endif %}" href="#"><i class="bi bi-calendar3"></i> خطة السداد</a>
+        </li>
+        <li class="nav-item mx-2">
+            <a class="nav-link {% if page_title == 'I' %}active{% endif %}" href="#"><i class="bi bi-calculator"></i> كشف حساب</a>
+        </li>
+    </ul>
+</div>

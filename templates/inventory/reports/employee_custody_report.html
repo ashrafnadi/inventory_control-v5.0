@@ -1,0 +1,476 @@
+{% load static %}
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <meta http-equiv="Content-Language" content="ar" />
+        <meta name="description" content="تقرير عهدة الموظف" />
+        <meta name="keywords" content="عهدة, موظف, تقرير, سعر, قيمة" />
+        <title>عهدة {{ employee.get_full_name|default:employee.username }}</title>
+        <style>
+            /* Base styles */
+            body {
+                font-family: "Arial", "Segoe UI", "Tahoma", "DejaVu Sans", sans-serif;
+                font-size: 11px;
+                margin: 0;
+                background: white;
+                position: relative;
+                line-height: 1.5;
+            }
+
+            /*  PAGE CONFIGURATION WITH REPEATING SIGNATURE FOOTER */
+            @page {
+                size: portrait;
+                margin-top: 15mm;
+                margin-bottom: 55mm;
+                /* Space reserved for repeating signature block */
+                margin-left: 15mm;
+                margin-right: 15mm;
+
+                @bottom-center {
+                    content: element(signature-footer);
+                    /* Clones to every page */
+                }
+            }
+
+            /*  REPEATING FOOTER ELEMENT */
+            .signature-footer {
+                position: running(signature-footer);
+                width: 100%;
+                font-size: 10px;
+                padding: 0 5px;
+                box-sizing: border-box;
+                border-top: 1px dashed #bdc3c7;
+                margin-top: 5px;
+            }
+
+            .signature-footer table {
+                width: 100%;
+                border-collapse: collapse;
+                margin: 0;
+                font-size: 10px;
+            }
+
+            .signature-footer td {
+                border: none;
+                padding: 0;
+                text-align: right;
+                vertical-align: bottom;
+            }
+
+            /* Each custody type gets its own page block */
+            .custody-page {
+                page-break-after: always;
+                break-after: page;
+            }
+
+            .custody-page:last-child {
+                page-break-after: avoid;
+                break-after: avoid;
+            }
+
+            /* Prevent header/employee info from being stranded */
+            .header-group {
+                page-break-inside: avoid;
+                break-inside: avoid;
+                page-break-after: avoid;
+                break-after: avoid;
+                margin-bottom: 15px;
+            }
+
+            /* Header styling */
+            .page-header {
+                width: 100%;
+                margin-bottom: 10px;
+                padding-bottom: 8px;
+                border-bottom: 2px solid #343a40;
+            }
+
+            .report-info {
+                text-align: center;
+            }
+
+            .report-title {
+                font-size: 16px;
+                font-weight: bold;
+                color: #343a40;
+                margin: 0;
+                line-height: 1.3;
+            }
+
+            /* Employee info styling */
+            .employee-info {
+                background: #f8f9fa;
+                padding: 12px 15px;
+                border-radius: 5px;
+                text-align: center;
+                border: 1px solid #dee2e6;
+            }
+
+            /* Table wrapper allows splitting if too long */
+            .table-wrapper {
+                page-break-inside: auto;
+                break-inside: auto;
+            }
+
+            table.data-table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-bottom: 15px;
+                font-size: 10.5px;
+            }
+
+            .data-table th,
+            .data-table td {
+                border: 1px solid #dee2e6;
+                padding: 6px 4px;
+                text-align: center;
+                vertical-align: middle;
+            }
+
+            .data-table th {
+                background-color: #343a40;
+                color: white;
+                font-weight: bold;
+                white-space: nowrap;
+            }
+
+            .price-col {
+                background-color: #e9f7ef;
+                font-weight: 500;
+            }
+
+            .value-col {
+                background-color: #fff3cd;
+                font-weight: 600;
+            }
+
+            .total-row {
+                font-weight: bold;
+                background-color: #e9ecef !important;
+            }
+
+            .custody-header {
+                font-size: 17px;
+                font-weight: bold;
+                margin: 20px 0 12px 0;
+                padding-bottom: 8px;
+                border-bottom: 2px solid;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+
+            .warehouse {
+                border-bottom-color: #007bff;
+                color: #007bff;
+            }
+
+            .personal {
+                border-bottom-color: #28a745;
+                color: #28a745;
+            }
+
+            .branch {
+                border-bottom-color: #ffc107;
+                color: #ffc107;
+            }
+
+            .section-summary {
+                background: #f8f9fa;
+                padding: 10px;
+                border-radius: 5px;
+                margin-top: 10px;
+                border-left: 3px solid #343a40;
+                font-size: 11px;
+            }
+
+            .price-missing {
+                color: #dc3545;
+                font-style: italic;
+            }
+
+            .no-custody {
+                text-align: center;
+                padding: 40px;
+                color: #6c757d;
+                font-size: 14px;
+                background: #f8f9fa;
+                border-radius: 8px;
+                margin-top: 20px;
+                border: 1px dashed #dee2e6;
+            }
+        </style>
+    </head>
+
+    <body>
+        <!-- REPEATING SIGNATURE FOOTER (Defined once, cloned by WeasyPrint to every page) -->
+        <div class="signature-footer">
+            <div style="margin-top: 5px; margin-bottom: 5px;">
+                أقر أنا /
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                بأن الأصناف التي بعهدتي والموضحة بعاليه موجودة حتى الآن فعلا وبحالة جيدة.
+            </div>
+            <div>روجع على كشف العهدة (نموذج 10 مخازن)</div>
+            <br />
+            <table>
+                <tbody>
+                    <tr height="40px">
+                        <td style="text-align: right; border: none; width: 50%;">توقيع كاتب العهدة</td>
+                        <td style="text-align: right; border: none; width: 50%;">توقيع صاحب العهدة</td>
+                    </tr>
+                    <tr height="40px">
+                        <td style="text-align: right; border: none;">تحريرا في : {{ current_date|date:"d-m-Y" }}</td>
+                        <td style="text-align: right; border: none;">مدير المخازن</td>
+                    </tr>
+                </tbody>
+            </table>
+            <div style="text-align: center; font-size: 9px; color: #6c757d; margin-top: 5px;">
+                تاريخ التقرير: {{ current_date|date:"Y-m-d" }} | {{ user.get_full_name|default:user.username }}
+            </div>
+        </div>
+
+        <div class="content-container">
+            {% if show_header or not show_header|default:False %}
+
+            <!-- WAREHOUSE CUSTODY -->
+            {% if custody_data.warehouse.items %}
+            <div class="custody-page">
+                <div class="header-group">
+                    <div class="page-header">
+                        <div class="report-info">
+                            <p class="report-title">إقرار بعهدة مخزنية طبقا للمادة (411) من لآئحة المخازن</p>
+                        </div>
+                    </div>
+                    <div class="employee-info">
+                        <strong>الموظف:</strong> {{ employee.get_full_name|default:employee.username }}<br />
+                        <strong>القسم:</strong> {{ employee.profile.department.name|default:"غير محدد" }}<br />
+                        <strong>التاريخ:</strong> {{ current_date|date:"Y-m-d H:i" }}<br />
+                        <strong>إجمالي العهدة المخزنية:</strong>
+                        <span style="font-size: 18px; font-weight: bold; color: #d32f2f;">
+                            {{ custody_data.warehouse.total_value|floatformat:2 }} ج.م
+                        </span>
+                    </div>
+                </div>
+                <div class="table-wrapper">
+                    <div class="custody-header warehouse">
+                        <span>بعهدة مخزنية طبقا للمادة (411) من لآئحة المخازن</span>
+                        <span style="font-size: 14px; font-weight: normal;">
+                            الإجمالي: {{ custody_data.warehouse.total_quantity }} وحدة |
+                            القيمة: {{ custody_data.warehouse.total_value|floatformat:2 }} ج.م
+                        </span>
+                    </div>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>اسم الصنف</th>
+                                <th>الكمية</th>
+                                <th>السعر (ج.م)</th>
+                                <th>القيمة (ج.م)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item_data in custody_data.warehouse.items %}
+                            <tr>
+                                <td>{{ item_data.item.name }}</td>
+                                <td>{{ item_data.quantity }}</td>
+                                <td>{% if item_data.latest_price %}{{ item_data.latest_price|floatformat:2 }}{% else %}<span
+                                        class="price-missing">غير متوفر</span>{% endif %}</td>
+                                <td>{% if item_data.total_value %}{{ item_data.total_value|floatformat:2 }}
+                                    ج.م{% else %}<span class="price-missing">-</span>{% endif %}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot>
+                            <tr class="total-row">
+                                <td><strong>المجموع</strong></td>
+                                <td><strong>{{ custody_data.warehouse.total_quantity }}</strong></td>
+                                <td class="price-col"><strong>-</strong></td>
+                                <td class="value-col"><strong>{{ custody_data.warehouse.total_value|floatformat:2 }}
+                                        ج.م</strong></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                    <div class="section-summary">
+                        <strong>ملاحظة:</strong> القيمة المحسوبة تعتمد على أحدث سعر مسجل لكل صنف في تاريخ التقرير.
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- PERSONAL CUSTODY -->
+            {% if custody_data.personal.items %}
+            <div class="custody-page">
+                <div class="header-group">
+                    <div class="page-header">
+                        <div class="report-info">
+                            <p class="report-title">إقرار بعهدة شخصية طبقا للمادة (411) من لآئحة المخازن</p>
+                        </div>
+                    </div>
+                    <div class="employee-info">
+                        <strong>الموظف:</strong> {{ employee.get_full_name|default:employee.username }}<br />
+                        <strong>القسم:</strong> {{ employee.profile.department.name|default:"غير محدد" }}<br />
+                        <strong>التاريخ:</strong> {{ current_date|date:"Y-m-d H:i" }}<br />
+                        <strong>إجمالي العهدة الشخصية:</strong>
+                        <span style="font-size: 18px; font-weight: bold; color: #d32f2f;">
+                            {{ custody_data.personal.total_value|floatformat:2 }} ج.م
+                        </span>
+                    </div>
+                </div>
+                <div class="table-wrapper">
+                    <div class="custody-header personal">
+                        <span>بعهدة شخصية طبقا للمادة (411) من لآئحة المخازن</span>
+                        <span style="font-size: 14px; font-weight: normal;">
+                            الإجمالي: {{ custody_data.personal.total_quantity }} وحدة |
+                            القيمة: {{ custody_data.personal.total_value|floatformat:2 }} ج.م
+                        </span>
+                    </div>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>اسم الصنف</th>
+                                <th>الكمية</th>
+                                <th>السعر (ج.م)</th>
+                                <th>القيمة (ج.م)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item_data in custody_data.personal.items %}
+                            <tr>
+                                <td>{{ item_data.item.name }}</td>
+                                <td>{{ item_data.quantity }}</td>
+                                <td>{% if item_data.latest_price %}{{ item_data.latest_price|floatformat:2 }}
+                                    ج.م{% else %}<span class="price-missing">غير متوفر</span>{% endif %}</td>
+                                <td>{% if item_data.total_value %}{{ item_data.total_value|floatformat:2 }}
+                                    ج.م{% else %}<span class="price-missing">-</span>{% endif %}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot>
+                            <tr class="total-row">
+                                <td><strong>المجموع</strong></td>
+                                <td><strong>{{ custody_data.personal.total_quantity }}</strong></td>
+                                <td><strong>-</strong></td>
+                                <td><strong>{{ custody_data.personal.total_value|floatformat:2 }} ج.م</strong></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                    <div class="section-summary">
+                        <strong>ملاحظة:</strong> القيمة المحسوبة تعتمد على أحدث سعر مسجل لكل صنف في تاريخ التقرير.
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- BRANCH CUSTODY -->
+            {% if custody_data.branch.items %}
+            <div class="custody-page">
+                <div class="header-group">
+                    <div class="page-header">
+                        <div class="report-info">
+                            <p class="report-title">إقرار بعهدة فرعية طبقا للمادة (411) من لآئحة المخازن</p>
+                        </div>
+                    </div>
+                    <div class="employee-info">
+                        <strong>الموظف:</strong> {{ employee.get_full_name|default:employee.username }}<br />
+                        <strong>القسم:</strong> {{ employee.profile.department.name|default:"غير محدد" }}<br />
+                        <strong>التاريخ:</strong> {{ current_date|date:"Y-m-d H:i" }}<br />
+                        <strong>إجمالي العهدة الفرعية:</strong>
+                        <span style="font-size: 18px; font-weight: bold; color: #d32f2f;">
+                            {{ custody_data.branch.total_value|floatformat:2 }} ج.م
+                        </span>
+                    </div>
+                </div>
+                <div class="table-wrapper">
+                    <div class="custody-header branch">
+                        <span>بعهدة فرعية طبقا للمادة (411) من لآئحة المخازن</span>
+                        <span style="font-size: 14px; font-weight: normal;">
+                            الإجمالي: {{ custody_data.branch.total_quantity }} وحدة |
+                            القيمة: {{ custody_data.branch.total_value|floatformat:2 }} ج.م
+                        </span>
+                    </div>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>اسم الصنف</th>
+                                <th>الكمية</th>
+                                <th>السعر (ج.م)</th>
+                                <th>القيمة (ج.م)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item_data in custody_data.branch.items %}
+                            <tr>
+                                <td>{{ item_data.item.name }}</td>
+                                <td>{{ item_data.quantity }}</td>
+                                <td>{% if item_data.latest_price %}{{ item_data.latest_price|floatformat:2 }}
+                                    ج.م{% else %}<span class="price-missing">غير متوفر</span>{% endif %}</td>
+                                <td>{% if item_data.total_value %}{{ item_data.total_value|floatformat:2 }}
+                                    ج.م{% else %}<span class="price-missing">-</span>{% endif %}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot>
+                            <tr class="total-row">
+                                <td><strong>المجموع</strong></td>
+                                <td><strong>{{ custody_data.branch.total_quantity }}</strong></td>
+                                <td><strong>-</strong></td>
+                                <td><strong>{{ custody_data.branch.total_value|floatformat:2 }} ج.م</strong></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                    <div class="section-summary">
+                        <strong>ملاحظة:</strong> القيمة المحسوبة تعتمد على أحدث سعر مسجل لكل صنف في تاريخ التقرير.
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            {% endif %}
+
+            <!-- NO CUSTODY FALLBACK -->
+            {% if not custody_data.warehouse.items and not custody_data.personal.items and not custody_data.branch.items %}
+            <div class="custody-page">
+                <div class="header-group">
+                    <div class="page-header">
+                        <div class="report-info">
+                            <p class="report-title">إقرار بعهدة طبقا للمادة (411) من لآئحة المخازن</p>
+                        </div>
+                    </div>
+                    <div class="employee-info">
+                        <strong>الموظف:</strong> {{ employee.get_full_name|default:employee.username }}<br />
+                        <strong>القسم:</strong> {{ employee.profile.department.name|default:"غير محدد" }}<br />
+                        <strong>التاريخ:</strong> {{ current_date|date:"Y-m-d H:i" }}<br />
+                        <strong>إجمالي العهدة الفرعية:</strong>
+                        <span style="font-size: 18px; font-weight: bold; color: #d32f2f;">
+                            {{ custody_data.branch.total_value|floatformat:2 }} ج.م
+                        </span>
+                    </div>
+                </div>
+                <div class="table-wrapper">
+                    <div class="custody-header branch">
+                        <span>إقرار بعهدة طبقا للمادة (411) من لآئحة المخازن</span>
+                        <span style="font-size: 14px; font-weight: normal;">
+                            الإجمالي: {{ custody_data.branch.total_quantity }} وحدة |
+                            القيمة: {{ custody_data.branch.total_value|floatformat:2 }} ج.م
+                        </span>
+                    </div>
+                    <div class="no-custody">
+                        <div style="font-size: 48px; margin-bottom: 15px;">📦</div>
+                        <strong>لا يوجد عهدة لهذا الموظف.</strong>
+                        <p style="margin-top: 10px; color: #6c757d;">
+                            لم يتم تسجيل أي عهدة لهذا الموظف في النظام حتى تاريخ {{ current_date|date:"Y-m-d" }}
+                        </p>
+                    </div>
+
+                </div>
+            </div>
+
+            {% endif %}
+        </div>
+    </body>
+
+</html>

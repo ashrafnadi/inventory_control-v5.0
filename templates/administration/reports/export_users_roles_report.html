@@ -1,0 +1,176 @@
+<!-- templates/inventory/reports/employee_custody_report.html -->
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="description" content="" />
+        <meta name="keywords" content="" />
+        <meta name="author" content="" />
+        <title>تقرير المستخدمين والصلاحيات</title>
+        <style>
+            @page {
+                margin: 2cm;
+
+                @bottom-center {
+                    content: "الصفحة " counter(page) " من " counter(pages);
+                    font-size: 10px;
+                    color: #6c757d;
+                }
+            }
+
+            body {
+                font-family: "Arial", sans-serif;
+                font-size: 12px;
+                line-height: 1.6;
+            }
+
+            .header {
+                text-align: center;
+                margin-bottom: 30px;
+                padding-bottom: 20px;
+                border-bottom: 3px double #343a40;
+            }
+
+            .employee-info {
+                background: #f8f9fa;
+                padding: 15px;
+                margin-bottom: 20px;
+                border-radius: 5px;
+            }
+
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-bottom: 20px;
+            }
+
+            th,
+            td {
+                border: 1px solid #dee2e6;
+                padding: 8px;
+                text-align: center;
+            }
+
+            th {
+                background-color: #343a40;
+                color: white;
+                font-weight: bold;
+            }
+
+            .custody-type {
+                margin-top: 30px;
+            }
+
+            .custody-header {
+                font-size: 18px;
+                font-weight: bold;
+                margin-bottom: 15px;
+                padding-bottom: 10px;
+                border-bottom: 2px solid;
+            }
+
+            .warehouse {
+                border-bottom-color: #007bff;
+                color: #007bff;
+            }
+
+            .personal {
+                border-bottom-color: #28a745;
+                color: #28a745;
+            }
+
+            .branch {
+                border-bottom-color: #ffc107;
+                color: #ffc107;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="header">
+            <h1>
+                تقرير المستخدمين والصلاحيات
+            </h1>
+        </div>
+        {% if users %}
+            <table class="table table-hover table-bordered table-sm table-responsive"
+                   id="users_list">
+                <thead>
+                    <tr>
+                        <th>
+                            الكود
+                        </th>
+                        <th>
+                            اسم المستخدم
+                        </th>
+                        <th>
+                            الاسم
+                        </th>
+                        <th>
+                            الموظفين
+                        </th>
+                        <th>
+                            الحالة
+                        </th>
+                        <th>
+                            الصلاحية
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                        <tr>
+                            <td>
+                                {{ user.id }}
+                            </td>
+                            <td>
+                                {{ user.username }}
+                            </td>
+                            <td>
+                                {{ user.first_name }} {{ user.last_name }}
+                            </td>
+                            <td>
+                                {% if user.is_staff %}
+                                    موظف
+                                {% else %}
+                                    مستخدم عادي
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if user.is_active %}
+                                    نشط
+                                {% else %}
+                                    غير نشط
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if user.profile.is_administration_manager %}
+                                    مدير الإدارة
+                                {% elif user.profile.is_faculty_manager %}
+                                    مدير الكلية
+                                {% elif user.profile.is_inventory_manager %}
+                                    مدير المخازن
+                                {% elif user.profile.is_inventory_employee %}
+                                    موظف المخازن
+                                {% elif user.profile.is_user %}
+                                    مستخدم عادي
+                                {% else %}
+                                    مدير النظام
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p>
+                لا يوجد مستخدمين
+            </p>
+        {% endif %}
+        <div class="footer">
+            <p>
+                {{ current_date }}
+            </p>
+        </div>
+    </body>
+</html>

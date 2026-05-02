@@ -1,0 +1,94 @@
+<!-- inventory/reports/warehouse_items_report.html -->
+{% load static %}
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+    <head>
+        <meta charset="UTF-8" />
+        <title>كشف المخزون</title>
+        <style>
+            body { font-family: "Arial", sans-serif; font-size: 11px; margin: 0; padding: 0; }
+            @page { size: landscape; margin: 1.5cm 1cm; }
+            table { width: 100%; border-collapse: collapse; font-size: 10px; }
+            th, td { border: 1px solid #dee2e6; padding: 4px 6px; text-align: center; }
+            th { background-color: #343a40; color: white; font-weight: bold; }
+            tr:nth-child(even) { background-color: #f8f9fa; }
+            /*Prevents WeasyPrint from dropping rows during page breaks */
+            tr { page-break-inside: avoid; }
+            
+            .status-out { color: #dc3545; font-weight: bold; }
+            .status-low { color: #e67e22; font-weight: bold; }
+            .status-ok { color: #27ae60; font-weight: bold; }
+            .no-stock { color: #95a5a6; font-style: italic; font-size: 9px; }
+            
+            .header-info { text-align: center; margin-bottom: 15px; border-bottom: 2px solid #343a40; padding-bottom: 10px; }
+            .report-title { font-size: 14px; font-weight: bold; color: #2c3e50; margin: 0 0 5px 0; }
+            .report-meta { font-size: 10px; color: #7f8c8d; margin: 0; }
+        </style>
+    </head>
+    <body>
+        <div class="header-info">
+            <p class="report-title">كشف المخزون - {{ faculty.name }}</p>
+            <p class="report-meta">
+                {% if sub_warehouse_name and sub_warehouse_name != "الكل" %}
+                    المخزن: {{ sub_warehouse_name }}
+                {% endif %}
+                {% if category_name and category_name != "الكل" %}
+                    | الفئة: {{ category_name }}
+                {% endif %}
+                | التاريخ: {{ current_date|date:"Y-m-d H:i" }}
+            </p>
+        </div>
+
+        {% if items %}
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 5%;">م</th>
+                        <th style="width: 35%;">اسم الصنف</th>
+                        <th style="width: 15%;">المخزن الفرعي</th>
+                        <th style="width: 15%;">الفئة</th>
+                        <th style="width: 8%;">الوحدة</th>
+                        <th style="width: 8%;">الكمية</th>
+                        <th style="width: 7%;">الحد الأدنى</th>
+                        <th style="width: 7%;">الحالة</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item_data in items %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td style="text-align: right; padding-right: 8px;">{{ item_data.item.name }}</td>
+                            <td>{{ item_data.sub_warehouse.name|default:"-" }}</td>
+                            <td>{{ item_data.item.category.name|default:"-" }}</td>
+                            <td>{{ item_data.item.get_unit_display }}</td>
+                            <td>
+                                <strong>{{ item_data.quantity }}</strong>
+                                {% if not item_data.has_stock_record %}
+                                    <br/><span class="no-stock">(لا يوجد سجل)</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ item_data.limit_quantity }}</td>
+                            <td>
+                                {% if item_data.quantity == 0 %}
+                                    {% if item_data.has_stock_record %}
+                                        <span class="status-out">نفذ</span>
+                                    {% else %}
+                                        <span class="no-stock">غير مسجل</span>
+                                    {% endif %}
+                                {% elif item_data.quantity <= item_data.limit_quantity %}
+                                    <span class="status-low">منخفض</span>
+                                {% else %}
+                                    <span class="status-ok">متوفر</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p style="text-align: center; color: #95a5a6; margin-top: 50px; font-size: 12px;">
+                لا توجد أصناف مسجلة لهذه الفئة أو المخزن المحدد.
+            </p>
+        {% endif %}
+    </body>
+</html>

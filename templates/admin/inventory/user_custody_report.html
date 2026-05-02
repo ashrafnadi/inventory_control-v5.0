@@ -1,0 +1,346 @@
+<!-- templates/admin/inventory/user_custody_report.html -->
+{% extends "admin/base_site.html" %}
+{% load i18n static %}
+{% block extrastyle %}
+    {{ block.super }}
+    <style>
+        .department-card {
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .department-header {
+            padding: 15px;
+            border-bottom: 1px solid #dee2e6;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .user-card {
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+            margin: 10px 15px;
+
+        }
+
+        .user-header {
+
+            padding: 10px 15px;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .user-body {
+            padding: 15px;
+        }
+
+        .stats-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .stats-row {
+            display: flex;
+            justify-content: space-around;
+            text-align: center;
+        }
+
+        .stat-item h3 {
+            font-size: 2em;
+            margin: 0;
+        }
+
+        .stat-item p {
+            margin: 5px 0 0 0;
+            opacity: 0.9;
+        }
+
+        .item-table {
+            width: 100%;
+            font-size: 13px;
+        }
+
+        .item-table th {
+            font-weight: 600;
+            padding: 8px;
+            text-align: right;
+        }
+
+        .item-table td {
+            padding: 8px;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .badge-count {
+            background-color: #28a745;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+        }
+
+        @media print {
+            .no-print {
+                display: none;
+            }
+
+            .department-card {
+                break-inside: avoid;
+            }
+
+            .user-card {
+                break-inside: avoid;
+            }
+        }
+    </style>
+{% endblock extrastyle %}
+{% block breadcrumbs %}
+    <div class="breadcrumbs">
+        <a href="{% url 'admin:index' %}">{% trans "Home" %}</a>
+        <a href="{% url 'admin:inventory_itemtransactions_changelist' %}">السندات</a>
+        <a href="{% url 'admin:inventory_itemtransactions_changelist' %}">تقرير عهدة الموظفين</a>
+    </div>
+{% endblock breadcrumbs %}
+{% block content %}
+    <div class="module">
+        <!-- Header with Actions -->
+        <div class="d-flex justify-content-between align-items-center mb-6 no-print">
+            <div>
+                <a href="{% url 'admin:inventory_itemtransactions_changelist' %}"
+                   class="button">
+                    <i class="bi bi-arrow-left me-1"></i>
+                    العودة للسندات
+                </a>
+            </div>
+        </div>
+        <!-- Statistics Cards -->
+        <div class="stats-card mt-6">
+            <div class="stats-row">
+                <div class="stat-item">
+                    <h3>
+                        {{ total_departments }}
+                    </h3>
+                    <p>
+                        إجمالي الأقسام
+                    </p>
+                </div>
+                <div class="stat-item">
+                    <h3>
+                        {{ total_users }}
+                    </h3>
+                    <p>
+                        إجمالي الموظفين
+                    </p>
+                </div>
+                <div class="stat-item">
+                    <h3>
+                        {{ grand_total_items }}
+                    </h3>
+                    <p>
+                        إجمالي الأصناف
+                    </p>
+                </div>
+                <div class="stat-item">
+                    <h3>
+                        {% if total_users > 0 %}
+                            {{ grand_total_items|floatformat:1 }}
+                        {% else %}
+                            0
+                        {% endif %}
+                    </h3>
+                    <p>
+                        متوسط الأصناف/موظف
+                    </p>
+                </div>
+            </div>
+        </div>
+        <!-- Filters -->
+        <div class="module no-print" style="margin-bottom: 20px;">
+            <form method="get" class="form-inline">
+                <div class="form-row"
+                     style="display: flex;
+                            gap: 10px;
+                            align-items: flex-end">
+                    <div style="flex: 1;">
+                        <label for="id_department"
+                               style="display: block;
+                                      margin-bottom: 5px;
+                                      font-weight: bold">
+                            القسم:
+                        </label>
+                        <select name="department"
+                                id="id_department"
+                                style="width: 100%;
+                                       padding: 8px;
+                                       border: 1px solid #ccc;
+                                       border-radius: 4px">
+                            <option value="">
+                                جميع الأقسام
+                            </option>
+                            {% for dept in all_departments %}
+                                <option value="{{ dept.id }}"
+                                        {% if selected_department == dept.id|stringformat:"s" %}
+                                            selected
+                                        {% endif %}>
+                                    {{ dept.name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div style="flex: 1;">
+                        <label for="id_search"
+                               style="display: block;
+                                      margin-bottom: 5px;
+                                      font-weight: bold">
+                            بحث عن موظف:
+                        </label>
+                        <input type="text"
+                               name="search"
+                               id="id_search"
+                               value="{{ search_query }}"
+                               placeholder="الاسم أو اسم المستخدم..."
+                               style="width: 100%;
+                                      padding: 8px;
+                                      border: 1px solid #ccc;
+                                      border-radius: 4px" />
+                    </div>
+                    <div>
+                        <button type="submit" class="button" style="padding: 8px 15px;">
+                            <i class="bi bi-funnel me-1"></i> تطبيق
+                        </button>
+                        <a href="?"
+                           class="button"
+                           style="padding: 8px 15px;
+                                  background-color: #6c757d">
+                            <i class="bi bi-x-circle me-1"></i> مسح
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <!-- Department Groups -->
+        {% if departments %}
+            {% for department in departments %}
+                <div class="department-card">
+                    <div class="department-header">
+                        <h2 style="margin: 0; font-size: 1.3em;">
+                            <i class="bi bi-building me-2"></i>
+                            {{ department.name }}
+                        </h2>
+                        <span class="badge-count">
+                            {{ department.users|length }} موظف - {{ department.total_items }} صنف
+                        </span>
+                    </div>
+                    {% for user_data in department.users %}
+                        <div class="user-card">
+                            <div class="user-header">
+                                <div style="display: flex;
+                                            justify-content: space-between;
+                                            align-items: center">
+                                    <div>
+                                        <strong style="font-size: 1.1em;">
+                                            <i class="bi bi-person-fill me-2"></i>
+                                            {{ user_data.user.get_full_name|default:user_data.user.username }}
+                                        </strong>
+                                        <span style="margin-left: 15px; color: #666;">
+                                            <i class="bi bi-envelope me-1"></i>
+                                            {{ user_data.user.email|default:"-" }}
+                                        </span>
+                                    </div>
+                                    <span class="badge-count">
+                                        {{ user_data.total_items }} صنف
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="user-body">
+                                {% if user_data.items %}
+                                    <table class="item-table">
+                                        <thead>
+                                            <tr>
+                                                <th width="5%">
+                                                    #
+                                                </th>
+                                                <th width="10%">
+                                                    كود الصنف
+                                                </th>
+                                                <th width="35%">
+                                                    اسم الصنف
+                                                </th>
+                                                <th width="10%">
+                                                    الكمية
+                                                </th>
+                                                <th width="10%">
+                                                    الوحدة
+                                                </th>
+                                                <th width="15%">
+                                                    المخزن
+                                                </th>
+                                                <th width="15%">
+                                                    آخر حركة
+                                                </th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for item in user_data.items %}
+                                                <tr>
+                                                    <td>
+                                                        {{ forloop.counter }}
+                                                    </td>
+                                                    <td>
+                                                        <span dir="ltr" style="display: inline-block;">
+                                                            {{ item.item__code|default:"-" }}
+                                                        </span>
+                                                    </td>
+                                                    <td>
+                                                        {{ item.item__name }}
+                                                    </td>
+                                                    <td>
+                                                        <strong style="color: #667eea;">
+                                                            {{ item.total_quantity }}
+                                                        </strong>
+                                                    </td>
+                                                    <td>
+                                                        {{ item.item__unit }}
+                                                    </td>
+                                                    <td>
+                                                        {{ item.item__sub_warehouse__name|default:"-" }}
+                                                    </td>
+                                                    <td>
+                                                        {% if item.last_transaction %}
+                                                            {{ item.last_transaction|date:"Y-m-d" }}
+                                                        {% else %}
+                                                            -
+                                                        {% endif %}
+                                                    </td>
+                                                </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                {% else %}
+                                    <p style="color: #666; padding: 10px;">
+                                        لا توجد أصناف مسجلة لهذا الموظف.
+                                    </p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="module" style="text-align: center; padding: 40px;">
+                <i class="bi bi-info-circle" style="font-size: 3em; color: #666;"></i>
+                <h3 style="color: #666; margin: 20px 0 10px 0;">
+                    لا توجد عهدة موظفين مسجلة للعرض
+                </h3>
+                <p style="color: #999;">
+                    لم يتم تسجيل أي حركات صرف أو نقل عهدة للموظفين حتى الآن.
+                </p>
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}

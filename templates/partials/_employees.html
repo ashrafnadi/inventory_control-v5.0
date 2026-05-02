@@ -1,0 +1,30 @@
+<!-- partials/_employees.html -->
+<li class="nav-item dropdown mx-1">
+    <a class="nav-link dropdown-toggle d-flex align-items-center"
+       href="#"
+       role="button"
+       data-bs-toggle="dropdown"
+       aria-expanded="false">
+        <i class="bi bi-person-badge me-1"></i>أصحاب العهد
+    </a>
+    <ul class="dropdown-menu">
+        <li>
+            <a class="dropdown-item" href="{% url 'department_list' %}">
+                <i class="bi bi-building me-1"></i> الإدارات
+            </a>
+        </li>
+        <li>
+            <a class="dropdown-item" href="{% url 'employee_list' %}">
+                <i class="bi bi-people me-1"></i> موظفي الجهة
+            </a>
+        </li>
+        <li>
+            <hr class="dropdown-divider" />
+        </li>
+        <li>
+            <a class="dropdown-item" href="{% url 'employee_custody' %}">
+                <i class="bi bi-person-lines-fill me-1"></i> أصحاب العهد
+            </a>
+        </li>
+    </ul>
+</li>

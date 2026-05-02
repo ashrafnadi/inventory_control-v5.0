@@ -1,0 +1,181 @@
+<!-- supplier_form.html -->
+{% extends "base.html" %}
+{% load static %}
+{% load widget_tweaks %}
+{% block content %}
+    <div class="container py-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3 mb-0">
+                {{ page_title }}
+            </h1>
+            <a href="{% url 'supplier_list' %}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left me-1"></i> رجوع
+            </a>
+        </div>
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    {{ page_title }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {% for error in form.non_field_errors %}
+                                <div>
+                                    {{ error }}
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    <!-- Company Information Section -->
+                    <div class="card mb-4">
+                        <div class="card-header bg-light">
+                            <h6 class="mb-0">
+                                <i class="bi bi-building me-2"></i>
+                                معلومات الشركة
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        {{ form.name.label_tag }}
+                                        {{ form.name|add_class:"form-control" }}
+                                        {% for error in form.name.errors %}
+                                            <div class="text-danger mt-1">
+                                                {{ error }}
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        {{ form.company_address.label_tag }}
+                                        {{ form.company_address|add_class:"form-control" }}
+                                        {% for error in form.company_address.errors %}
+                                            <div class="text-danger mt-1">
+                                                {{ error }}
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        {{ form.company_phone.label_tag }}
+                                        {{ form.company_phone|add_class:"form-control" }}
+                                        {% for error in form.company_phone.errors %}
+                                            <div class="text-danger mt-1">
+                                                {{ error }}
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        {{ form.company_email.label_tag }}
+                                        {{ form.company_email|add_class:"form-control" }}
+                                        {% for error in form.company_email.errors %}
+                                            <div class="text-danger mt-1">
+                                                {{ error }}
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                <div class="col-12">
+                                    <div class="mb-3">
+                                        {{ form.company_notes.label_tag }}
+                                        {{ form.company_notes|add_class:"form-control" }}
+                                        {% for error in form.company_notes.errors %}
+                                            <div class="text-danger mt-1">
+                                                {{ error }}
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Contact Person Section -->
+                    <div class="card mb-4">
+                        <div class="card-header bg-light">
+                            <h6 class="mb-0">
+                                <i class="bi bi-person me-2"></i>
+                                معلومات المندوب
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        {{ form.contact_name.label_tag }}
+                                        {{ form.contact_name|add_class:"form-control" }}
+                                        {% for error in form.contact_name.errors %}
+                                            <div class="text-danger mt-1">
+                                                {{ error }}
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        {{ form.contact_address.label_tag }}
+                                        {{ form.contact_address|add_class:"form-control" }}
+                                        {% for error in form.contact_address.errors %}
+                                            <div class="text-danger mt-1">
+                                                {{ error }}
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        {{ form.contact_phone.label_tag }}
+                                        {{ form.contact_phone|add_class:"form-control" }}
+                                        {% for error in form.contact_phone.errors %}
+                                            <div class="text-danger mt-1">
+                                                {{ error }}
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        {{ form.contact_email.label_tag }}
+                                        {{ form.contact_email|add_class:"form-control" }}
+                                        {% for error in form.contact_email.errors %}
+                                            <div class="text-danger mt-1">
+                                                {{ error }}
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                <div class="col-12">
+                                    <div class="mb-3">
+                                        {{ form.contact_notes.label_tag }}
+                                        {{ form.contact_notes|add_class:"form-control" }}
+                                        {% for error in form.contact_notes.errors %}
+                                            <div class="text-danger mt-1">
+                                                {{ error }}
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-between mt-4">
+                        <a href="{% url 'supplier_list' %}" class="btn btn-secondary">
+                            <i class="bi bi-x-circle me-1"></i> إلغاء
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-save me-1"></i> {{ submit_text }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock content %}

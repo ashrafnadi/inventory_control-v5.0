@@ -1,0 +1,620 @@
+<!-- /inventory_manager_home.html -->
+{% extends "base.html" %}
+{% load static %}
+{% block title %}
+    مدير مخزن
+{% endblock title %}
+{% block content %}
+    <style>
+        .dashboard-container {
+            padding: 1rem;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 400px;
+            width: 100%;
+        }
+
+        .stats-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        /*
+        .stats-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+        }
+        */
+
+        .subwarehouse-card {
+            border-left: 4px solid #4e73df;
+            transition: all 0.3s ease;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        /*
+        .subwarehouse-card:hover {
+            border-left: 4px solid #3a57e8;
+            transform: translateX(5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+        }
+        */
+
+        .subwarehouse-selector {
+            transition: all 0.3s ease;
+            border-radius: 12px;
+            padding: 1rem;
+            background: #f8f9fc;
+        }
+
+        /*
+        .subwarehouse-selector:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            background: #f1f3f9;
+        }
+        */
+
+        .chart-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            z-index: 10;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 2rem;
+            border-radius: 8px;
+            border: 1px solid #e3e6f0;
+        }
+
+        .chart-loading .spinner-border {
+            width: 3rem;
+            height: 3rem;
+        }
+
+        .chart-error {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            z-index: 10;
+            background: rgba(220, 53, 69, 0.1);
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #dc3545;
+        }
+
+        .unit-badge {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 8px;
+        }
+
+        .faculty-header {
+            background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
+            color: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 15px rgba(78, 115, 223, 0.3);
+        }
+
+        .category-tag {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            margin: 0.25rem;
+            transition: all 0.2s ease;
+        }
+
+        /*
+        .category-tag:hover {
+            transform: scale(1.05);
+        }
+        */
+
+        .stock-status {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .search-container {
+            background: white;
+            border-radius: 12px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .filter-badge {
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .filter-badge:hover {
+            /* transform: translateY(-1px); */
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .item-image {
+            width: 40px;
+            height: 40px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 2px solid #e3e6f0;
+        }
+
+        .quantity-badge {
+            min-width: 60px;
+            padding: 0.25rem 0.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .stats-summary {
+            background: linear-gradient(135deg, #6f42c1 0%, #4e36a1 100%);
+            color: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            box-shadow: 0 4px 15px rgba(111, 66, 193, 0.3);
+        }
+
+        .alert-custom {
+            border-radius: 12px;
+            padding: 1.25rem;
+            margin: 1rem 0;
+            border-left: 4px solid;
+        }
+
+        .chart-header {
+            background: linear-gradient(135deg, #1cc88a 0%, #13855c 100%);
+            color: white;
+            border-radius: 8px 8px 0 0;
+            padding: 0.75rem;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .btn-custom {
+            border-radius: 8px;
+            padding: 0.5rem 1rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .btn-custom:hover {
+            /* transform: translateY(-1px); */
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+    <div class="dashboard-container">
+        <!-- Faculty Summary Header -->
+        <div class="faculty-header">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h4 class="mb-0 opacity-85">
+                        <i class="bi bi-geo-alt me-1"></i>
+                        {{ user_faculty.name }}
+                    </h4>
+                </div>
+                <div class="text-end">
+                    <div class="badge bg-light text-dark fs-6 mb-1">
+                        <i class="bi bi-calendar-date me-1"></i>تاريخ الانضمام
+                        {{ request.user.date_joined|date:"Y-m-d" }}
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Sub-Warehouse Selector Section -->
+        <div class="subwarehouse-selector">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-8">
+                    <div class="mb-2">
+                        <label class="form-label fw-bold text-primary">
+                            <i class="bi bi-building me-2"></i>
+                            اختر المخزن الفرعي
+                        </label>
+                        <select class="form-select form-select" id="subwarehouse-select">
+                            <option value="">
+                                --------- اختر المخزن الفرعي من القائمة ---------
+                            </option>
+                            {% for sub_wh in sub_warehouses %}
+                                <option value="{{ sub_wh.id }}"
+                                        data-warehouse="{{ sub_wh.warehouse.name }}"
+                                        {% if selected_sub_warehouse_id == sub_wh.id %}
+                                            selected
+                                        {% endif %}>
+                                    <span class="text-muted"> ({{ sub_wh.warehouse.name }})</span>
+                                    {{ sub_wh.name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <button class="btn btn-primary btn-lg w-100 btn-custom d-flex align-items-center justify-content-center"
+                            id="show-charts-btn"
+                            {% if not selected_sub_warehouse %}
+                                disabled
+                            {% endif %}>
+                        <i class="bi bi-bar-chart me-2"></i>
+                        <span>عرض بيانات المخزن</span>
+                    </button>
+                </div>
+                <div class="col-12">
+                    <div class="alert alert-info mb-0 rounded-3">
+                        <i class="bi bi-info-circle me-1"></i>
+                        <strong>ملاحظة:</strong> بعد اختيار المخزن الفرعي، اضغط على زر "عرض بيانات المخزن" لعرض الإحصائيات والرسوم البيانية الخاصة بهذا المخزن.
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Statistics Summary -->
+        {% if selected_sub_warehouse %}
+            <div class="stats-summary">
+                <div class="row g-4">
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <i class="bi bi-house-door fs-1 mb-2 d-block"></i>
+                            <h5 class="mb-1">
+                                {{ selected_sub_warehouse.name }}
+                            </h5>
+                            <p class="mb-0 opacity-75">
+                                {{ selected_sub_warehouse.warehouse.name }}
+                            </p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <i class="bi bi-grid-3x3-gap fs-1 mb-2 d-block"></i>
+                            <h5 class="mb-1">
+                                {{ items_count }}
+                            </h5>
+                            <p class="mb-0 opacity-75">
+                                إجمالي الأصناف
+                            </p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <i class="bi bi-tag fs-1 mb-2 d-block"></i>
+                            <h5 class="mb-1">
+                                {{ categories_count }}
+                            </h5>
+                            <p class="mb-0 opacity-75">
+                                الفئات
+                            </p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <i class="bi bi-exclamation-triangle fs-1 mb-2 d-block"></i>
+                            <h5 class="mb-1">
+                                {{ low_stock_count }} / {{ out_of_stock_count }}
+                            </h5>
+                            <p class="mb-0 opacity-75">
+                                منخفض / نافد
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+        <!-- Charts Container - Will be populated dynamically -->
+        <div id="subwarehouse-charts-container" class="mb-5">
+            {% if selected_sub_warehouse %}
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">
+                            <i class="bi bi-house-door-fill me-2"></i>
+                            إحصائيات المخزن الفرعي: {{ selected_sub_warehouse.name }}
+                            <span class="badge bg-light text-dark ms-2">{{ items_count }} أصناف</span>
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-4">
+                            <div class="col-md-8">
+                                <div class="card shadow-sm h-100">
+                                    <div class="card-header bg-primary text-white text-center">
+                                        الأصناف حسب الفئة
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="chart-container position-relative">
+                                            <canvas id="chartCat_{{ selected_sub_warehouse.id }}"></canvas>
+                                            <div class="chart-loading d-none">
+                                                <div class="spinner-border text-primary" role="status">
+                                                    <span class="visually-hidden">جاري التحميل...</span>
+                                                </div>
+                                                <p class="mt-2 text-muted">
+                                                    جاري تحميل البيانات...
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card shadow-sm h-100">
+                                    <div class="card-header bg-warning text-dark text-center">
+                                        حالة المخزون
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="chart-container position-relative">
+                                            <canvas id="chartStock_{{ selected_sub_warehouse.id }}"></canvas>
+                                            <div class="chart-loading d-none">
+                                                <div class="spinner-border text-warning" role="status">
+                                                    <span class="visually-hidden">جاري التحميل...</span>
+                                                </div>
+                                                <p class="mt-2 text-muted">
+                                                    جاري تحميل البيانات...
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <div class="alert alert-info text-center py-5 rounded-4">
+                    <i class="bi bi-graph-up fs-1 mb-3 d-block text-primary"></i>
+                    <h4>
+                        <i class="bi bi-building me-2"></i>
+                        اختر مخزناً فرعياً لعرض البيانات
+                    </h4>
+                    <p class="mb-4 text-muted">
+                        من القائمة أعلاه لعرض الإحصائيات والرسوم البيانية الخاصة بهذا المخزن.
+                        يمكنك اختيار أي مخزن فرعي من كليتك لعرض تفاصيل المخزون.
+                    </p>
+                </div>
+            {% endif %}
+        </div>
+        <!-- Low Stock Items Section -->
+        <div class="mt-5">
+            {% include "administration/partials/low_stock_items.html" %}
+        </div>
+    </div>
+{% endblock content %}
+{% block scripts %}
+    <!-- DataTable initialization (must come FIRST) -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize DataTable ONLY if the table exists
+            const lowStockTable = document.getElementById('low_stock_items');
+            if (lowStockTable) {
+                new DataTable('#low_stock_items', {
+                    processing: true,
+                    deferRender: true,
+                    language: {
+                        url: "{% static 'ar.json' %}"
+                    },
+                    layout: {
+                        bottomEnd: {
+                            inputPaging: true
+                        }
+                    },
+                    lengthMenu: [10, 15, 30, 50, -1],
+                    responsive: true,
+                    columnDefs: [{
+                        className: 'text-right',
+                        targets: '_all'
+                    }, {
+                        width: 'auto',
+                        targets: 0
+                    }],
+                    autoWidth: true,
+                    order: [[0, 'asc']]
+                });
+            }
+        });
+    </script>
+    <!-- CORRECT Chart.js script tag (NO spaces, proper closing) -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
+    <!-- Main script with REORDERED initialization -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // STEP 1: Define chart options FIRST (no dependencies)
+            const barOptions = { /* ... your existing options ... */ };
+            const doughnutOptions = { /* ... your existing options ... */ };
+            
+            // Initialize SubWarehouseChartManager BEFORE charts
+            class SubWarehouseChartManager {
+                constructor() {
+                    this.subwarehouseSelect = document.getElementById('subwarehouse-select');
+                    this.showChartsBtn = document.getElementById('show-charts-btn');
+                    this.chartsContainer = document.getElementById('subwarehouse-charts-container');
+                    
+                    // Always initialize even if elements missing
+                    console.log('🔍 Initializing Chart Manager...');
+                    console.log('Select element:', this.subwarehouseSelect ? 'FOUND' : 'MISSING');
+                    console.log('Button element:', this.showChartsBtn ? 'FOUND' : 'MISSING');
+                    
+                    if (this.subwarehouseSelect && this.showChartsBtn) {
+                        this.initEventListeners();
+                        this.updateButtonState(); // Update state IMMEDIATELY on init
+                        console.log('Chart Manager initialized successfully');
+                    } else {
+                        console.error('CRITICAL: Sub-warehouse selector or button NOT found!');
+                        if (!this.subwarehouseSelect) console.error('Missing #subwarehouse-select element');
+                        if (!this.showChartsBtn) console.error('Missing #show-charts-btn element');
+                    }
+                }
+
+                initEventListeners() {
+                    // Add logging to verify event attachment
+                    this.subwarehouseSelect.addEventListener('change', () => {
+                        console.log('Sub-warehouse selection changed:', this.subwarehouseSelect.value);
+                        this.updateButtonState();
+                    });
+                    
+                    this.showChartsBtn.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        console.log('_CLICKED "عرض بيانات المخزن" button');
+                        this.handleShowCharts();
+                    });
+                }
+
+                updateButtonState() {
+                    const hasSelection = this.subwarehouseSelect.value;
+                    console.log('Button state update - Selection value:', hasSelection);
+                    
+                    // Force boolean evaluation
+                    const isEnabled = !!hasSelection && hasSelection.trim() !== '';
+                    this.showChartsBtn.disabled = !isEnabled;
+                    
+                    if (isEnabled) {
+                        this.showChartsBtn.classList.remove('btn-secondary', 'disabled');
+                        this.showChartsBtn.classList.add('btn-primary');
+                        console.log('Button ENABLED');
+                    } else {
+                        this.showChartsBtn.classList.remove('btn-primary');
+                        this.showChartsBtn.classList.add('btn-secondary');
+                        console.log('Button DISABLED (no selection)');
+                    }
+                }
+
+                // ... rest of your existing methods (handleShowCharts, etc.) ...
+                handleShowCharts() {
+                    const subwarehouseId = this.subwarehouseSelect.value;
+                    if (!subwarehouseId || subwarehouseId.trim() === '') {
+                        this.showError('يرجى اختيار مخزن فرعي أولاً');
+                        return;
+                    }
+                    
+                    const url = new URL('{% url "home" %}', window.location.origin);
+                    url.searchParams.set('sub_warehouse_id', subwarehouseId);
+                    this.showLoadingState();
+                    
+                    setTimeout(() => {
+                        window.location.href = url.toString();
+                    }, 300);
+                }
+
+                showLoadingState() {
+                    if (this.chartsContainer) {
+                        this.chartsContainer.innerHTML = `
+                            <div class="text-center py-5">
+                                <div class="spinner-border text-primary" role="status" style="width: 4rem; height: 4rem;">
+                                    <span class="visually-hidden">جاري التحميل...</span>
+                                </div>
+                                <h4 class="mt-3">جاري تحميل بيانات المخزن الفرعي...</h4>
+                                <p class="text-muted mt-2">يرجى الانتظار أثناء جلب البيانات</p>
+                            </div>
+                        `;
+                    }
+                }
+
+                showError(message) {
+                    if (!this.chartsContainer) return;
+                    
+                    this.chartsContainer.innerHTML = `
+                        <div class="alert alert-danger text-center py-5 rounded-4">
+                            <i class="bi bi-exclamation-triangle fs-1 mb-3 text-danger"></i>
+                            <h4 class="text-danger">خطأ</h4>
+                            <p class="mb-0">${message}</p>
+                            <button class="btn btn-danger mt-3" id="close-error">
+                                <i class="bi bi-x-circle me-1"></i> إغلاق
+                            </button>
+                        </div>
+                    `;
+                    
+                    document.getElementById('close-error')?.addEventListener('click', () => {
+                        this.chartsContainer.innerHTML = `
+                            <div class="alert alert-info text-center py-5 rounded-4">
+                                <i class="bi bi-graph-up fs-1 mb-3 d-block text-primary"></i>
+                                <h4><i class="bi bi-building me-2"></i> اختر مخزناً فرعياً لعرض البيانات</h4>
+                                <p class="mb-4 text-muted">من القائمة أعلاه لعرض الإحصائيات والرسوم البيانية الخاصة بهذا المخزن.</p>
+                            </div>
+                        `;
+                    });
+                }
+            }
+
+            // Initialize manager BEFORE chart initialization
+            const chartManager = new SubWarehouseChartManager();
+            window.chartManager = chartManager; // For debugging
+            
+            // Initialize charts WITH error isolation
+            {% if selected_sub_warehouse %}
+                {% for wh_data in per_warehouse_data %}
+                    try {
+                        const catCtx = document.getElementById('chartCat_{{ wh_data.warehouse.id }}');
+                        const stockCtx = document.getElementById('chartStock_{{ wh_data.warehouse.id }}');
+                        
+                        if (catCtx && stockCtx) {
+                            new Chart(catCtx.getContext('2d'), {
+                                type: 'bar',
+                                data: JSON.parse('{{ wh_data.chart_category_json|escapejs }}'),
+                                options: barOptions
+                            });
+                            
+                            new Chart(stockCtx.getContext('2d'), {
+                                type: 'doughnut',
+                                data: JSON.parse('{{ wh_data.chart_stock_json|escapejs }}'),
+                                options: doughnutOptions
+                            });
+                            console.log(`Charts initialized for warehouse {{ wh_data.warehouse.id }}`);
+                        } else {
+                            console.warn(`Chart canvases not found for warehouse {{ wh_data.warehouse.id }}`);
+                        }
+                    } catch (error) {
+                        console.error(`Error initializing charts for warehouse {{ wh_data.warehouse.id }}:`, error);
+                        // Fallback content already handled in template
+                    }
+                {% endfor %}
+            {% endif %}
+            
+            // Search/filter functionality (after manager init)
+            const itemSearch = document.getElementById('item-search');
+            const filterBadges = document.querySelectorAll('.filter-badge');
+            const tableRows = document.querySelectorAll('#low_stock_table tbody tr');
+            
+            if (itemSearch) {
+                itemSearch.addEventListener('input', function() {
+                    const searchTerm = this.value.toLowerCase().trim();
+                    tableRows.forEach(row => {
+                        const itemName = row.querySelector('td:nth-child(3)')?.textContent.toLowerCase() || '';
+                        const category = row.querySelector('td:nth-child(4)')?.textContent.toLowerCase() || '';
+                        row.style.display = (itemName.includes(searchTerm) || category.includes(searchTerm)) ? '' : 'none';
+                    });
+                });
+            }
+            
+            filterBadges.forEach(badge => {
+                badge.addEventListener('click', function() {
+                    const filterType = this.getAttribute('data-filter');
+                    tableRows.forEach(row => {
+                        row.style.display = (filterType === 'all' || row.getAttribute('data-status') === filterType) ? '' : 'none';
+                    });
+                    
+                    filterBadges.forEach(b => b !== this ? b.classList.remove('bg-primary', 'text-white') : null);
+                    this.classList.add('bg-primary', 'text-white');
+                });
+            });
+            
+            // Final verification
+            console.log('All initialization complete!');
+            console.log('Button initial state:', document.getElementById('show-charts-btn')?.disabled ? 'DISABLED' : 'ENABLED');
+        });
+        
+        // Global error handler
+        window.onerror = function(msg, url, lineNo, columnNo, error) {
+            console.error(`GLOBAL ERROR: ${msg} at ${lineNo}:${columnNo}`, error);
+            return false;
+        };
+    </script>
+{% endblock scripts %}

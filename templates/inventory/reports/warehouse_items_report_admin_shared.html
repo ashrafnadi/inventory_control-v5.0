@@ -1,0 +1,203 @@
+{% load static %}
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>كشف المخزون - جميع الكليات</title>
+        <style>
+            body {
+                font-family: "Arial", "Segoe UI", "Tahoma", "DejaVu Sans", sans-serif;
+                font-size: 12px;
+                margin: 0;
+                background: white;
+            }
+
+            @page {
+                size: landscape;
+                margin-top: 2cm;
+                margin-bottom: 1.5cm;
+                margin-left: 1cm;
+                margin-right: 1cm;
+
+                @top-right {
+                    content: element(page-logo);
+                    padding-left: 10px;
+                }
+
+                @top-center {
+                    content: element(page-header);
+                }
+
+                @bottom-center {
+                    content: element(page-footer);
+                }
+            }
+
+            .page-logo {
+                position: running(page-logo);
+                height: 30px;
+                margin-top: 5px;
+            }
+
+            .logo-img {
+                height: 40px;
+                width: auto;
+            }
+
+            .page-header {
+                position: running(page-header);
+                width: 100%;
+                height: 35px;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                background: white;
+            }
+
+            .report-info {
+                text-align: center;
+            }
+
+            .report-title {
+                font-size: 16px;
+                font-weight: bold;
+                color: #343a40;
+                margin: 0;
+            }
+
+            .report-meta {
+                font-size: 10px;
+                color: #6c757d;
+                margin-top: 2px;
+            }
+
+            .page-footer {
+                position: running(page-footer);
+                width: 100%;
+                height: 25px;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 0 10px;
+                background: white;
+                font-size: 9px;
+                color: #6c757d;
+            }
+
+            .content-container {
+                margin-top: 5px;
+            }
+
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                font-size: 11px;
+                table-layout: fixed;
+            }
+
+            th,
+            td {
+                border: 1px solid #dee2e6;
+                padding: 3px 5px;
+                text-align: center;
+                vertical-align: middle;
+                word-wrap: break-word;
+            }
+
+            th {
+                background-color: #343a40;
+                color: white;
+                font-weight: bold;
+            }
+
+            tr:nth-child(even) {
+                background-color: #f8f9fa;
+            }
+
+            .status-low {
+                color: #ffc107;
+                font-weight: bold;
+            }
+
+            .status-out {
+                color: #dc3545;
+                font-weight: bold;
+            }
+
+            .status-ok {
+                color: #28a745;
+                font-weight: bold;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="page-logo">
+            <img src="{% static 'img/bu_logo.png' %}" alt="شعار المؤسسة" class="logo-img" />
+        </div>
+        <div class="page-header">
+            <div class="report-info">
+                <p class="report-title">كشف المخزون - {{ faculty_label }}</p>
+                <div class="report-meta">
+                    {% if sub_warehouse_name != "الكل" %}
+                        المخزن: {{ warehouse_name }} / {{ sub_warehouse_name }}
+                    {% endif %}
+                    {% if sub_warehouse_name != "الكل" and category_name != "الكل" %}
+                        |
+                    {% endif %}
+                    {% if category_name != "الكل" %}
+                        الفئة: {{ category_name }}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="page-footer">
+            <div>تاريخ التقرير: {{ current_date|date:"Y-m-d" }}</div>
+            <div>{{ user.get_full_name|default:user.username }}</div>
+        </div>
+        <div class="content-container">
+            {% if rows %}
+                <table>
+                    <thead>
+                        <tr>
+                            <th>اسم الصنف</th>
+                            <th>الكلية</th>
+                            <th>المخزن الفرعي</th>
+                            <th>الفئة</th>
+                            <th>الوحدة</th>
+                            <th>الكمية المتوفرة</th>
+                            <th>الحد الأدنى</th>
+                            <th>الحالة</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in rows %}
+                            <tr>
+                                <td>{{ row.item.name }}</td>
+                                <td>{{ row.faculty.name }}</td>
+                                <td>{{ row.sub_warehouse.name|default:"-" }}</td>
+                                <td>{{ row.item.category.name|default:"-" }}</td>
+                                <td>{{ row.item.get_unit_display }}</td>
+                                <td>{{ row.cached_quantity }}</td>
+                                <td>{{ row.limit_quantity }}</td>
+                                <td>
+                                    {% if row.cached_quantity == 0 %}
+                                        <span class="status-out">نفذ</span>
+                                    {% elif row.cached_quantity <= row.limit_quantity %}
+                                        <span class="status-low">منخفض</span>
+                                    {% else %}
+                                        <span class="status-ok">متوفر</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <div style="text-align: center; padding: 40px; color: #6c757d;">
+                    لا توجد أصناف لإظهارها
+                </div>
+            {% endif %}
+        </div>
+    </body>
+</html>

@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}
+    تأكيد حذف الصنف
+{% endblock title %}
+{% block content %}
+    <div class="card">
+        <div class="card-header bg-danger text-white">
+            <h3>
+                تأكيد حذف الصنف
+            </h3>
+        </div>
+        <div class="card-body">
+            <p>
+                هل أنت متأكد من حذف الصنف "<strong>{{ item.name }}</strong>"؟
+            </p>
+            <p class="text-danger">
+                لا يمكن التراجع عن هذا الإجراء!
+            </p>
+            <form method="post">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger">
+                    نعم، احذف
+                </button>
+                <a href="{% url 'item_list' %}" class="btn btn-secondary">إلغاء</a>
+            </form>
+        </div>
+    </div>
+{% endblock content %}

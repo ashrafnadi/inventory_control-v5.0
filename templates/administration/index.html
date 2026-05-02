@@ -1,0 +1,55 @@
+<!-- administration/index.html -->
+{% extends "base.html" %}
+{% load static %}
+{% block title %}
+Administration
+{% endblock title %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>🛠️ لوحة تحكم المدير</h2>
+    <div>
+        {% if is_postgres %}
+        <form method="post" action="{% url 'admin_backup_db' %}" style="display: inline;">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-outline-success me-2"
+                onclick="return confirm('هل تريد إنشاء نسخة احتياطية الآن؟')">
+                <i class="bi bi-database-down"></i> نسخ احتياطي
+            </button>
+        </form>
+        {% else %}
+        <!-- Hidden button for SQLite development -->
+        <span class="small me-2">(SQLite Detected - Backup Disabled)</span>
+        {% endif %}
+    </div>
+</div>
+{% include "administration/partials/users_roles.html" %}
+{% endblock content %}
+{% block scripts %}
+<script type="text/javascript">
+    new DataTable('#users_list', {
+        processing: true,
+        deferRender: true,
+        language: {
+            url: "{% static 'ar.json' %}"
+        },
+        layout: {
+            bottomEnd: {
+                inputPaging: true
+            }
+        },
+        lengthMenu: [10, 15, 20, 30, 50, -1],
+        responsive: true,
+        columnDefs: [{
+            className: 'text-right',
+            targets: '_all'
+        }, {
+            width: 'auto',
+            targets: 0
+        }],
+        autoWidth: true,
+        order: [
+            [0, 'asc']
+        ] // sort by 2nd column (name)
+    })
+</script>
+{% endblock scripts %}

@@ -1,0 +1,31 @@
+<!-- templates/inventory/partials/category_select.html -->
+{% if categories %}
+    <label for="category_id" class="form-label">
+        <i class="bi bi-tags me-1"></i> الفئة
+    </label>
+    <select id="category_id"
+            name="category_id"
+            class="form-select"
+            hx-get="{% url 'items_by_warehouse_and_category' %}"
+            hx-target="#items-container"
+            hx-trigger="change"
+            hx-include="#warehouse_id">
+        <option value="">
+            اختر الفئة
+        </option>
+        {% for category in categories %}
+            <option value="{{ category.id }}">
+                {{ category.name }}
+            </option>
+        {% endfor %}
+    </select>
+{% else %}
+    <label class="form-label">
+        الفئة
+    </label>
+    <select class="form-select" disabled>
+        <option>
+            لا توجد فئات في هذا المخزن
+        </option>
+    </select>
+{% endif %}

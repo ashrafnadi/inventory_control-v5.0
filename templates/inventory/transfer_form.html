@@ -1,0 +1,984 @@
+<!-- templates/inventory/transfer_form.html -->
+{% extends "base.html" %}
+{% load static %}
+{% load widget_tweaks %}
+{% block content %}
+    <form method="post" data-editing="{{ editing|default:'false'|lower }}">
+        {% csrf_token %}
+        <div id="url-config"
+             data-item-search-url="{% url 'item_search_transfer' %}"
+             data-get-item-name-url="{% url 'get_item_name' %}"
+             class="hide">
+        </div>
+        <!-- Parent Form: ItemTransactions -->
+        <div class="card mb-4 overflow-visible">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    سند نقل عهدة
+                </h5>
+            </div>
+            <input type="hidden"
+                   name="approval_status"
+                   value="{{ form.approval_status.value|default:form.approval_status.initial }}" />
+            <input type="hidden" name="created_by" value="{{ request.user.id }}" />
+            <div class="card-body overflow-visible">
+                <div class="row">
+                    <!-- 1. document_number -->
+                    <div class="col-md-3 mb-3">
+                        <label>
+                            رقم المستند
+                        </label>
+                        <input type="text"
+                               class="form-control"
+                               value="{{ form.instance.document_number|default:'سيتم الإنشاء تلقائياً' }}"
+                               readonly />
+                    </div>
+                    <!-- 2. document_type -->
+                    <div class="col-md-3 mb-3">
+                        {{ form.document_type.label_tag }}
+                        {{ form.document_type|add_class:"form-select" }}
+                        {% if form.document_type.errors %}
+                            <div class="text-danger mt-1">
+                                {{ form.document_type.errors }}
+                            </div>
+                        {% endif %}
+                    </div>
+                    <!-- 3. castody_type -->
+                    <div class="col-md-3 mb-3">
+                        {{ form.castody_type.label_tag }}
+                        {{ form.castody_type|add_class:"form-select" }}
+                        {% if form.castody_type.errors %}
+                            <div class="text-danger mt-1">
+                                {{ form.castody_type.errors }}
+                            </div>
+                        {% endif %}
+                    </div>
+                    <!-- 4. WAREHOUSE CUSTODY FIELDS -->
+                    <!-- from_sub_warehouse -->
+                    <div class="col-md-3 mb-3" id="from-sub-warehouse-container">
+                        {{ form.from_sub_warehouse.label_tag }}
+                        <select name="from_sub_warehouse"
+                                id="id_from_sub_warehouse"
+                                class="form-select"
+                                hx-get="{% url 'from_sub_warehouse_users_select_transfer' %}"
+                                hx-trigger="change"
+                                hx-target="#from-user-container"
+                                hx-include="[name='from_sub_warehouse']"
+                                hx-vals='{"field_name": "from_user"}'>
+                            <option value="">
+                                ---------
+                            </option>
+                            {% for value, label in form.from_sub_warehouse.field.choices %}
+                                {% if value %}
+                                    <option value="{{ value }}"
+                                            {% if form.from_sub_warehouse.value|default:"" == value|default:"" %}
+                                                selected
+                                            {% endif %}>
+                                        {{ label }}
+                                    </option>
+                                {% endif %}
+                            {% endfor %}
+                        </select>
+                        {% if form.from_sub_warehouse.errors %}
+                            <div class="text-danger mt-1">
+                                {{ form.from_sub_warehouse.errors }}
+                            </div>
+                        {% endif %}
+                    </div>
+                    <!-- to_sub_warehouse -->
+                    <div class="col-md-3 mb-3" id="to-sub-warehouse-container">
+                        {{ form.to_sub_warehouse.label_tag }}
+                        <select name="to_sub_warehouse"
+                                id="id_to_sub_warehouse"
+                                class="form-select"
+                                hx-get="{% url 'to_sub_warehouse_users_select_transfer' %}"
+                                hx-trigger="change"
+                                hx-target="#to-user-container"
+                                hx-include="[name='to_sub_warehouse']"
+                                hx-vals='{"field_name": "to_user"}'>
+                            <option value="">
+                                ---------
+                            </option>
+                            {% for value, label in form.to_sub_warehouse.field.choices %}
+                                {% if value %}
+                                    <option value="{{ value }}"
+                                            {% if form.to_sub_warehouse.value|default:"" == value|default:"" %}
+                                                selected
+                                            {% endif %}>
+                                        {{ label }}
+                                    </option>
+                                {% endif %}
+                            {% endfor %}
+                        </select>
+                        {% if form.to_sub_warehouse.errors %}
+                            <div class="text-danger mt-1">
+                                {{ form.to_sub_warehouse.errors }}
+                            </div>
+                        {% endif %}
+                    </div>
+                    <!-- 5. DEPARTMENT CUSTODY FIELDS -->
+                    <!-- from_department -->
+                    <div class="col-md-3 mb-3" id="from-department-container">
+                        {{ form.from_department.label_tag }}
+                        <select name="from_department"
+                                id="id_from_department"
+                                class="form-select"
+                                hx-get="{% url 'from_department_users_select_transfer' %}"
+                                hx-trigger="change"
+                                hx-target="#from-user-container"
+                                hx-include="[name='from_department']"
+                                hx-vals='{"field_name": "from_user"}'>
+                            <option value="">
+                                ---------
+                            </option>
+                            {% for value, label in form.from_department.field.choices %}
+                                {% if value %}
+                                    <option value="{{ value }}"
+                                            {% if form.from_department.value|default:"" == value|default:"" %}
+                                                selected
+                                            {% endif %}>
+                                        {{ label }}
+                                    </option>
+                                {% endif %}
+                            {% endfor %}
+                        </select>
+                        {% if form.from_department.errors %}
+                            <div class="text-danger mt-1">
+                                {{ form.from_department.errors }}
+                            </div>
+                        {% endif %}
+                    </div>
+                    <!-- to_department -->
+                    <div class="col-md-3 mb-3" id="to-department-container">
+                        {{ form.to_department.label_tag }}
+                        <select name="to_department"
+                                id="id_to_department"
+                                class="form-select"
+                                hx-get="{% url 'to_department_users_select_transfer' %}"
+                                hx-trigger="change"
+                                hx-target="#to-user-container"
+                                hx-include="[name='to_department']"
+                                hx-vals='{"field_name": "to_user"}'>
+                            <option value="">
+                                ---------
+                            </option>
+                            {% for value, label in form.to_department.field.choices %}
+                                {% if value %}
+                                    <option value="{{ value }}"
+                                            {% if form.to_department.value|default:"" == value|default:"" %}
+                                                selected
+                                            {% endif %}>
+                                        {{ label }}
+                                    </option>
+                                {% endif %}
+                            {% endfor %}
+                        </select>
+                        {% if form.to_department.errors %}
+                            <div class="text-danger mt-1">
+                                {{ form.to_department.errors }}
+                            </div>
+                        {% endif %}
+                    </div>
+                    <!-- 6. USER FIELDS (dynamic) -->
+                    <!-- from_user -->
+                    <div class="col-md-3 mb-3">
+                        {{ form.from_user.label_tag }}
+                        <!-- from_user container -->
+                        <div id="from-user-container">
+                            {% if form.castody_type.value == 'W' %}
+                                {% if form.from_user.field.queryset.exists and form.from_sub_warehouse.value %}
+                                    {{ form.from_user|add_class:"form-select" }}
+                                {% else %}
+                                    <select class="form-select" disabled>
+                                        <option>
+                                            اختر المخزن الفرعي أولاً
+                                        </option>
+                                    </select>
+                                {% endif %}
+                            {% else %}
+                                {% if form.from_user.field.queryset.exists and form.from_department.value %}
+                                    {{ form.from_user|add_class:"form-select" }}
+                                {% else %}
+                                    <select class="form-select" disabled>
+                                        <option>
+                                            اختر القسم أولاً
+                                        </option>
+                                    </select>
+                                {% endif %}
+                            {% endif %}
+                        </div>
+                        {% if form.from_user.errors %}
+                            <div class="text-danger mt-1">
+                                {{ form.from_user.errors }}
+                            </div>
+                        {% endif %}
+                    </div>
+                    <!-- to_user -->
+                    <div class="col-md-3 mb-3">
+                        {{ form.to_user.label_tag }}
+                        <div id="to-user-container">
+                            {% if form.castody_type.value == 'W' %}
+                                {% if form.to_user.field.queryset.exists and form.to_sub_warehouse.value %}
+                                    {{ form.to_user|add_class:"form-select" }}
+                                {% else %}
+                                    <select class="form-select" disabled>
+                                        <option>
+                                            اختر المخزن الفرعي أولاً
+                                        </option>
+                                    </select>
+                                {% endif %}
+                            {% else %}
+                                {% if form.to_user.field.queryset.exists and form.to_department.value %}
+                                    {{ form.to_user|add_class:"form-select" }}
+                                {% else %}
+                                    <select class="form-select" disabled>
+                                        <option>
+                                            اختر القسم أولاً
+                                        </option>
+                                    </select>
+                                {% endif %}
+                            {% endif %}
+                        </div>
+                        {% if form.to_user.errors %}
+                            <div class="text-danger mt-1">
+                                {{ form.to_user.errors }}
+                            </div>
+                        {% endif %}
+                    </div>
+                    <!-- Other fields (approval_user, etc.) -->
+                    {% for field in form %}
+                        {% if field.name not in "document_number document_type castody_type from_sub_warehouse to_sub_warehouse from_department to_department from_user to_user inventory_user notes transaction_type approval_status created_by" %}
+                            <div class="col-md-3 mb-3">
+                                {{ field.label_tag }}
+                                {% if field.field.widget.input_type == 'select' %}
+                                    {{ field|add_class:"form-select" }}
+                                {% else %}
+                                    {{ field|add_class:"form-control" }}
+                                {% endif %}
+                                {% if field.errors %}
+                                    <div class="text-danger mt-1">
+                                        {{ field.errors }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+                <!-- Notes field on new line (full width) -->
+                <div class="row">
+                    <div class="col-12 mb-3">
+                        {{ form.notes.label_tag }}
+                        {{ form.notes|add_class:"form-control" }}
+                        {% if form.notes.errors %}
+                            <div class="text-danger mt-1">
+                                {{ form.notes.errors }}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Child Formset: ItemTransactionDetails -->
+        <div class="card mb-4 overflow-visible">
+            {{ details_formset.management_form }}
+            <div id="formset-config"
+                 data-prefix="{{ details_formset.prefix }}"
+                 class="hide">
+            </div>
+            <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    تفاصيل الأصناف
+                </h5>
+                <button type="button" id="add-row" class="btn btn-light btn-sm">
+                    إضافة صنف +
+                </button>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive overflow-visible">
+                    <table class="table table-bordered form-table" id="details-table">
+                        <thead class="table-light">
+                            <tr>
+                                <th width="600px">
+                                    الصنف
+                                </th>
+                                <th width="150px">
+                                    الكمية المنقولة
+                                </th>
+                                <th width="150px">
+                                    الحالة
+                                </th>
+                                <th>
+                                    ملاحظات
+                                </th>
+                                <th class="operations">
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for form in details_formset %}
+                                <tr class="form-row">
+                                    {{ form.id }}
+                                    <td>
+                                        {{ form.item }}
+                                        <input type="hidden"
+                                               name="{{ details_formset.prefix }}-{{ forloop.counter0 }}-stock"
+                                               class="item-stock" />
+                                        <input type="hidden"
+                                               name="{{ details_formset.prefix }}-{{ forloop.counter0 }}-order_quantity"
+                                               value="0" />
+                                        <!-- Hidden order_quantity with default 0 -->
+                                        <input type="text"
+                                               class="form-control form-control-sm item-search"
+                                               placeholder="ابحث عن الصنف..."
+                                               autocomplete="off" />
+                                    </td>
+                                    <td>
+                                        {{ form.approved_quantity|add_class:"form-control form-control-sm" }}
+                                        {% if form.approved_quantity.errors %}
+                                            <div class="text-danger small">
+                                                {{ form.approved_quantity.errors }}
+                                            </div>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {{ form.status|add_class:"form-select form-select-sm" }}
+                                    </td>
+                                    <td>
+                                        {{ form.notes|add_class:"form-control form-control-sm border-0 bg-transparent shadow-none" }}
+                                        {% if form.notes.errors %}
+                                            <div class="text-danger small">
+                                                {{ form.notes.errors }}
+                                            </div>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center align-middle">
+                                        <div class="hide-delete">
+                                            {{ form.DELETE }}
+                                        </div>
+                                        <button type="button"
+                                                class="btn btn-sm btn-link text-danger delete-row"
+                                                title="حذف الصنف">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="d-flex justify-content-between">
+            <a href="{% url 'transaction_list' %}" class="btn btn-secondary">إلغاء</a>
+            <button type="submit" class="btn btn-primary">
+                حفظ
+            </button>
+        </div>
+    </form>
+{% endblock content %}
+{% block scripts %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlConfig = document.getElementById('url-config');
+            const itemSearchUrl = urlConfig ? urlConfig.dataset.itemSearchUrl : '/inventory/api/item-search/transfer/';
+            const getItemNameUrl = urlConfig ? urlConfig.dataset.getItemNameUrl : '/inventory/api/item-name/';
+            const configDiv = document.getElementById('formset-config');
+            if (!configDiv) {
+                console.error("Missing #formset-config");
+                return;
+            }
+            const prefix = configDiv.dataset.prefix;
+            const totalFormsInput = document.getElementById('id_' + prefix + '-TOTAL_FORMS');
+            if (!totalFormsInput) {
+                console.error(`Management field id_${prefix}-TOTAL_FORMS not found`);
+                return;
+            }
+            const form = document.querySelector('form');
+            const isEditing = form ? form.dataset.editing === 'true' : false;
+            let suppressSourceChangeConfirmation = false;
+
+            // Add HTMX headers configuration
+            document.body.addEventListener('htmx:beforeRequest', function(event) {
+                event.detail.headers['X-CSRFToken'] = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            });
+
+            function hasSelectedItems() {
+                return Array.from(document.querySelectorAll('#details-table tbody .form-row')).some(row => {
+                    return row.querySelector('input[name$="-item"]')?.value.trim();
+                });
+            }
+
+            function clearSelectedItems() {
+                document.querySelectorAll('#details-table tbody .form-row').forEach(row => {
+                    const itemInput = row.querySelector('input[name$="-item"]');
+                    const searchInput = row.querySelector('.item-search');
+                    const stockInput = row.querySelector('.item-stock');
+                    const qtyInput = row.querySelector('input[name$="-approved_quantity"]');
+                    const orderQtyInput = row.querySelector('input[name$="-order_quantity"]');
+
+                    if (itemInput) itemInput.value = '';
+                    if (searchInput) searchInput.value = '';
+                    if (stockInput) stockInput.value = '';
+                    if (qtyInput) qtyInput.value = '';
+                    if (orderQtyInput) orderQtyInput.value = '0';
+                    row.classList.remove('table-danger', 'low-stock');
+                    row.querySelectorAll('.low-stock-warning').forEach(el => el.remove());
+                });
+            }
+
+            function confirmSourceChange(message) {
+                if (suppressSourceChangeConfirmation) return true;
+                if (!hasSelectedItems()) return true;
+                const confirmed = confirm(message);
+                if (confirmed) clearSelectedItems();
+                return confirmed;
+            }
+
+            function getCurrentTransferSource() {
+                const custodyType = document.getElementById('id_castody_type')?.value;
+                if (custodyType === 'W') {
+                    return {
+                        type: 'sub_warehouse',
+                        id: document.getElementById('id_from_sub_warehouse')?.value || '',
+                    };
+                }
+
+                return {
+                    type: 'user',
+                    id: document.getElementById('id_from_user')?.value || '',
+                };
+            }
+
+            function buildItemLookupUrl(itemId) {
+                const params = new URLSearchParams({ item_id: itemId });
+                const source = getCurrentTransferSource();
+                if (source.type === 'sub_warehouse' && source.id) {
+                    params.set('sub_warehouse_id', source.id);
+                } else if (source.type === 'user' && source.id) {
+                    params.set('from_user_id', source.id);
+                }
+                return `${getItemNameUrl}?${params.toString()}`;
+            }
+
+            function syncFromUserPreviousValue() {
+                const fromUserSelect = document.getElementById('id_from_user');
+                if (fromUserSelect) {
+                    fromUserSelect.dataset.previousValue = fromUserSelect.value || '';
+                }
+            }
+
+            // =============== CUSTODY TYPE FIELD TOGGLING ===============
+            function toggleCustodyFields() {
+                const custodySelect = document.getElementById('id_castody_type');
+                const fromSubWarehouseContainer = document.getElementById('from-sub-warehouse-container');
+                const toSubWarehouseContainer = document.getElementById('to-sub-warehouse-container');
+                const fromDepartmentContainer = document.getElementById('from-department-container');
+                const toDepartmentContainer = document.getElementById('to-department-container');
+                const fromUserContainer = document.getElementById('from-user-container');
+                const toUserContainer = document.getElementById('to-user-container');
+
+                if (!custodySelect || !fromSubWarehouseContainer || !toSubWarehouseContainer || 
+                    !fromDepartmentContainer || !toDepartmentContainer || !fromUserContainer || !toUserContainer) {
+                    return;
+                }
+
+                const custodyValue = custodySelect.value;
+
+                if (custodyValue === 'W') {
+                    // Show sub-warehouses, hide departments
+                    fromSubWarehouseContainer.style.display = '';
+                    toSubWarehouseContainer.style.display = '';
+                    fromDepartmentContainer.style.display = 'none';
+                    toDepartmentContainer.style.display = 'none';
+                    
+                    // Reset department fields
+                    const fromDept = document.getElementById('id_from_department');
+                    const toDept = document.getElementById('id_to_department');
+                    if (fromDept) fromDept.value = '';
+                    if (toDept) toDept.value = '';
+                    
+                    // Reset user containers to warehouse placeholder
+                    fromUserContainer.innerHTML = `<select class="form-select" disabled>
+                        <option>اختر المخزن الفرعي أولاً</option>
+                    </select>`;
+                    toUserContainer.innerHTML = `<select class="form-select" disabled>
+                        <option>اختر المخزن الفرعي أولاً</option>
+                    </select>`;
+                } else {
+                    // Show departments, hide sub-warehouses
+                    fromSubWarehouseContainer.style.display = 'none';
+                    toSubWarehouseContainer.style.display = 'none';
+                    fromDepartmentContainer.style.display = '';
+                    toDepartmentContainer.style.display = '';
+                    
+                    // Reset sub-warehouse fields
+                    const fromSW = document.getElementById('id_from_sub_warehouse');
+                    const toSW = document.getElementById('id_to_sub_warehouse');
+                    if (fromSW) fromSW.value = '';
+                    if (toSW) toSW.value = '';
+                    
+                    // Reset user containers to department placeholder
+                    fromUserContainer.innerHTML = `<select class="form-select" disabled>
+                        <option>اختر القسم أولاً</option>
+                    </select>`;
+                    toUserContainer.innerHTML = `<select class="form-select" disabled>
+                        <option>اختر القسم أولاً</option>
+                    </select>`;
+                }
+            }
+
+            // Initialize custody visibility
+            toggleCustodyFields();
+            const custodyField = document.getElementById('id_castody_type');
+            if (custodyField) {
+                custodyField.dataset.previousValue = custodyField.value;
+                custodyField.addEventListener('change', function() {
+                    if (!confirmSourceChange('تغيير نوع العهدة سيؤدي إلى مسح الأصناف المختارة لأن مصدر الصرف سيتغير.\nهل تريد المتابعة؟')) {
+                        this.value = this.dataset.previousValue || '';
+                        toggleCustodyFields();
+                        return;
+                    }
+                    this.dataset.previousValue = this.value;
+                    toggleCustodyFields();
+                });
+            }
+
+            const fromSubWarehouseSelect = document.getElementById('id_from_sub_warehouse');
+            if (fromSubWarehouseSelect) {
+                fromSubWarehouseSelect.dataset.previousValue = fromSubWarehouseSelect.value;
+                fromSubWarehouseSelect.addEventListener('change', function() {
+                    if (!confirmSourceChange('تغيير المخزن الفرعي المصدر سيؤدي إلى مسح الأصناف المختارة.\nهل تريد المتابعة؟')) {
+                        this.value = this.dataset.previousValue || '';
+                        return;
+                    }
+                    this.dataset.previousValue = this.value;
+                });
+            }
+
+            const fromDepartmentSelect = document.getElementById('id_from_department');
+            if (fromDepartmentSelect) {
+                fromDepartmentSelect.dataset.previousValue = fromDepartmentSelect.value;
+                fromDepartmentSelect.addEventListener('change', function() {
+                    if (!confirmSourceChange('تغيير القسم المصدر سيؤدي إلى مسح الأصناف المختارة.\nهل تريد المتابعة؟')) {
+                        this.value = this.dataset.previousValue || '';
+                        return;
+                    }
+                    this.dataset.previousValue = this.value;
+                });
+            }
+
+            document.body.addEventListener('change', function(event) {
+                if (event.target?.id !== 'id_from_user') return;
+                const fromUserSelect = event.target;
+                const previousValue = fromUserSelect.dataset.previousValue || '';
+                if (!confirmSourceChange('تغيير الموظف المصدر سيؤدي إلى مسح الأصناف المختارة.\nهل تريد المتابعة؟')) {
+                    fromUserSelect.value = previousValue;
+                    return;
+                }
+                fromUserSelect.dataset.previousValue = fromUserSelect.value;
+            });
+
+            // =============== FORMSET MANAGEMENT ===============
+            function updateDeleteButtons() {
+                const rows = document.querySelectorAll('#details-table tbody .form-row');
+                const deleteButtons = document.querySelectorAll('.delete-row');
+                if (rows.length <= 1) {
+                    deleteButtons.forEach(btn => {
+                        btn.disabled = true;
+                        btn.classList.add('disabled');
+                    });
+                } else {
+                    deleteButtons.forEach(btn => {
+                        btn.disabled = false;
+                        btn.classList.remove('disabled');
+                    });
+                }
+            }
+
+            function attachDeleteListener(button) {
+                button.addEventListener('click', function() {
+                    const confirmed = confirm("هل أنت متأكد من حذف هذا الصنف؟");
+                    if (!confirmed) return;
+                    const row = this.closest('tr');
+                    if (row) row.remove();
+                    let total = parseInt(totalFormsInput.value) || 0;
+                    totalFormsInput.value = Math.max(0, total - 1);
+                    updateDeleteButtons();
+                });
+            }
+
+            // =============== ITEM SEARCH ===============
+            function attachSearchToRow(row) {
+                const searchInput = row.querySelector('.item-search');
+                const hiddenInput = row.querySelector('input[name$="-item"]');
+                const stockInput = row.querySelector('.item-stock');
+                const orderQtyInput = row.querySelector('input[name$="-order_quantity"]'); //Get order_quantity input
+                let searchTimeout;
+
+                if (!searchInput || !hiddenInput) return;
+
+                const suggestionsContainer = document.createElement('div');
+                suggestionsContainer.className = 'search-dropdown';
+                searchInput.parentNode.style.position = 'relative';
+                searchInput.parentNode.appendChild(suggestionsContainer);
+
+                searchInput.addEventListener('input', function() {
+                    clearTimeout(searchTimeout);
+                    const query = this.value.trim();
+                    let parentId = null;
+                    let parentType = null;
+
+                    const castodyType = document.getElementById('id_castody_type')?.value;
+                    if (castodyType === 'W') {
+                        // Warehouse custody - use sub-warehouse
+                        parentId = document.getElementById('id_from_sub_warehouse')?.value;
+                        parentType = 'sub_warehouse';
+                    } else {
+                        // Personal/Branch custody - use from_user
+                        parentId = document.getElementById('id_from_user')?.value;
+                        parentType = 'user';
+                    }
+
+                    if (!parentId) {
+                        suggestionsContainer.innerHTML = `<div class="search-suggestion">
+                            <span class="theme-text-muted">
+                                ${parentType === 'sub_warehouse' ? 'اختر المخزن الفرعي أولاً' : 'اختر الموظف أولاً'}
+                            </span>
+                        </div>`;
+                        suggestionsContainer.style.display = 'block';
+                        return;
+                    }
+
+                    if (!query) {
+                        suggestionsContainer.style.display = 'none';
+                        return;
+                    }
+
+                    searchTimeout = setTimeout(() => {
+                        let url = '';
+                        if (parentType === 'sub_warehouse') {
+                            url = `${itemSearchUrl}?q=${encodeURIComponent(query)}&warehouse=${encodeURIComponent(parentId)}`;
+                        } else {
+                            url = `${itemSearchUrl}?q=${encodeURIComponent(query)}&from_user=${encodeURIComponent(parentId)}`;
+                        }
+                        
+                        fetch(url, {
+                            headers: {
+                                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                                'Accept': 'application/json'
+                            }
+                        })
+                        .then(response => {
+                            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                            return response.json();
+                        })
+                        .then(data => {
+                            suggestionsContainer.innerHTML = '';
+                            if (data.results?.length) {
+                                data.results.forEach(item => {
+                                    const div = document.createElement('div');
+                                    div.className = 'search-suggestion';
+                                    div.textContent = item.name;
+                                    div.dataset.itemId = item.id;
+                                    div.dataset.itemStock = item.quantity || 0;
+                                    div.addEventListener('click', () => {
+                                        hiddenInput.value = item.id;
+                                        searchInput.value = item.name;
+                                        if (item.quantity !== undefined) {
+                                            stockInput.value = item.quantity;
+                                        }
+                                        //Set order_quantity to 0 by default
+                                        if (orderQtyInput) {
+                                            orderQtyInput.value = '0';
+                                        }
+                                        suggestionsContainer.style.display = 'none';
+                                        validateStock();
+                                    });
+                                    div.addEventListener('mouseenter', () => div.style.backgroundColor = '#f8f9fa');
+                                    div.addEventListener('mouseleave', () => div.style.backgroundColor = '');
+                                    suggestionsContainer.appendChild(div);
+                                });
+                                suggestionsContainer.style.display = 'block';
+                            } else {
+                                suggestionsContainer.innerHTML = '<div class="search-suggestion"><span class="theme-text-muted">لا توجد أصناف</span></div>';
+                                suggestionsContainer.style.display = 'block';
+                            }
+                        })
+                        .catch(err => {
+                            console.error('Search error:', err);
+                            suggestionsContainer.innerHTML = `<div class="search-suggestion"><span class="theme-text-danger">خطأ في البحث: ${err.message}</span></div>`;
+                            suggestionsContainer.style.display = 'block';
+                        });
+                    }, 300);
+                });
+
+                document.addEventListener('click', (e) => {
+                    if (!row.contains(e.target)) {
+                        suggestionsContainer.style.display = 'none';
+                    }
+                });
+            }
+
+            function validateStock() {
+                document.querySelectorAll('.form-row').forEach(row => {
+                    const itemInput = row.querySelector('input[name$="-item"]');
+                    const stockInput = row.querySelector('.item-stock');
+                    const qtyInput = row.querySelector('input[name$="-approved_quantity"]');
+
+                    row.classList.remove('table-danger', 'low-stock');
+                    const warningEl = row.querySelector('.low-stock-warning');
+                    if (warningEl) warningEl.remove();
+
+                    if (!itemInput || !itemInput.value || !stockInput || !qtyInput) return;
+
+                    const stock = parseInt(stockInput.value) || 0;
+                    const approved = parseInt(qtyInput.value) || 0;
+
+                    if (approved > 0 && stock <= 0) {
+                        row.classList.add('table-danger');
+                    } else if (stock > 0 && stock <= 10) {
+                        row.classList.add('low-stock');
+                        const approvedCell = qtyInput.closest('td');
+                        if (approvedCell && !approvedCell.querySelector('.low-stock-warning')) {
+                            const warning = document.createElement('div');
+                            warning.className = 'low-stock-warning';
+                            warning.textContent = `تحذير: الكمية المتبقية ${stock}`;
+                            approvedCell.appendChild(warning);
+                        }
+                    }
+                });
+            }
+
+            function validateStockBeforeSubmit() {
+                validateStock();
+                const hasError = document.querySelector('.form-row.table-danger');
+                if (hasError) {
+                    alert("لا يمكن الحفظ: يوجد أصناف نافدة (الكمية = 0).");
+                    return false;
+                }
+                return true;
+            }
+
+            if (form) {
+                form.addEventListener('submit', function(e) {
+                    if (!validateStockBeforeSubmit()) {
+                        e.preventDefault();
+                    }
+                });
+            }
+
+            function restoreItemNames() {
+                document.querySelectorAll('.form-row').forEach(row => {
+                    const itemInput = row.querySelector('input[name$="-item"]');
+                    const searchInput = row.querySelector('.item-search');
+                    const stockInput = row.querySelector('.item-stock');
+
+                    if (itemInput && itemInput.value && searchInput) {
+                        const itemId = itemInput.value.trim();
+                        if (itemId !== '' && !isNaN(itemId)) {
+                            fetch(buildItemLookupUrl(itemId), {
+                                headers: {
+                                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                                    'Accept': 'application/json'
+                                }
+                            })
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.name) searchInput.value = data.name;
+                                if (stockInput && data.quantity !== undefined) {
+                                    stockInput.value = data.quantity;
+                                    validateStock();
+                                }
+                            })
+                            .catch(err => console.error('Failed to restore item name:', err));
+                        }
+                    }
+                });
+            }
+
+            // Initialize existing rows
+            document.querySelectorAll('#details-table .form-row').forEach(row => {
+                if (!row.querySelector('.item-stock')) {
+                    const stockInput = document.createElement('input');
+                    stockInput.type = 'hidden';
+                    stockInput.className = 'item-stock';
+                    const itemInput = row.querySelector('input[name$="-item"]');
+                    if (itemInput) {
+                        stockInput.name = itemInput.name.replace('-item', '-stock');
+                    }
+                    row.querySelector('td:first-child').appendChild(stockInput);
+                }
+                
+                //Add hidden order_quantity field if missing
+                if (!row.querySelector('input[name$="-order_quantity"]')) {
+                    const orderQtyInput = document.createElement('input');
+                    orderQtyInput.type = 'hidden';
+                    orderQtyInput.name = `${prefix}-${row.closest('tr').rowIndex - 1}-order_quantity`;
+                    orderQtyInput.value = '0';
+                    row.querySelector('td:first-child').appendChild(orderQtyInput);
+                }
+                
+                attachSearchToRow(row);
+            });
+
+            restoreItemNames();
+            syncFromUserPreviousValue();
+
+            document.body.addEventListener('htmx:afterSwap', function(event) {
+                if (event.detail.target.id === 'from-user-container') {
+                    syncFromUserPreviousValue();
+                    restoreItemNames();
+                }
+            });
+
+            // Handle initial state for editing
+            if (isEditing) {
+                suppressSourceChangeConfirmation = true;
+                const custodyType = document.getElementById('id_castody_type').value;
+                if (custodyType === 'W') {
+                    const fromSW = document.getElementById('id_from_sub_warehouse');
+                    const toSW = document.getElementById('id_to_sub_warehouse');
+                    if (fromSW?.value) fromSW.dispatchEvent(new Event('change'));
+                    if (toSW?.value) toSW.dispatchEvent(new Event('change'));
+                } else {
+                    const fromDept = document.getElementById('id_from_department');
+                    const toDept = document.getElementById('id_to_department');
+                    if (fromDept?.value) fromDept.dispatchEvent(new Event('change'));
+                    if (toDept?.value) toDept.dispatchEvent(new Event('change'));
+                }
+                suppressSourceChangeConfirmation = false;
+            }
+
+            // Add new row
+            document.getElementById('add-row')?.addEventListener('click', function() {
+                const tbody = document.querySelector('#details-table tbody');
+                const rows = tbody.querySelectorAll('.form-row');
+                if (rows.length === 0) return;
+
+                const newIndex = parseInt(totalFormsInput.value);
+                const lastRow = rows[rows.length - 1].cloneNode(true);
+
+                // Proper field name replacement with comprehensive regex
+                lastRow.querySelectorAll('input, select, textarea').forEach(el => {
+                    if (el.name) {
+                        // Use global regex to replace ALL index occurrences
+                        const originalName = el.name;
+                        const newName = originalName.replace(
+                            new RegExp(`-(\\d+)-`, 'g'),
+                            `-${newIndex}-`
+                        );
+                        el.name = newName;
+                        console.log(`🔧 Renamed field: ${originalName} → ${newName}`);
+                    }
+                    if (el.id) {
+                        el.id = el.id.replace(/-(\d+)-/g, `-${newIndex}-`);
+                    }
+                    
+                    //Handle different field types properly
+                    if (el.type === 'checkbox') {
+                        el.checked = false;
+                        console.log(`⬜ Reset checkbox: ${el.name}`);
+                    } else if (el.name && el.name.includes('price')) {
+                        // Only set default if no value exists
+                        el.value = el.value || '0.00';
+                        console.log(`💰 Price field value: ${el.value} for ${el.name}`);
+                    } else if (el.name && el.name.includes('item')) {
+                        // Item ID starts empty
+                        el.value = '';
+                        console.log(`📦 Reset item field: ${el.name}`);
+                    } else if (el.name && el.name.includes('stock')) {
+                        el.value = '';
+                        console.log(`📊 Reset stock field: ${el.name}`);
+                    } else if (!el.name.includes('DELETE')) {
+                        el.value = '';
+                        console.log(`🧹 Cleared field: ${el.name}`);
+                    }
+                });
+
+                //1: Reset search input
+                const searchInput = lastRow.querySelector('.item-search');
+                if (searchInput) {
+                    searchInput.value = '';
+                    searchInput.placeholder = "ابحث عن الصنف...";
+                    console.log('🔍 Reset search input');
+                }
+
+                //2: Ensure hidden item field is properly configured
+                const itemInput = lastRow.querySelector('input[name$="-item"]');
+                if (itemInput) {
+                    itemInput.value = '';
+                    itemInput.name = `${prefix}-${newIndex}-item`;
+                    console.log(`Configured item field: ${itemInput.name}`);
+                }
+
+                //3: Reset quantity and price fields
+                const qtyInput = lastRow.querySelector('input[name$="-approved_quantity"]');
+                if (qtyInput) {
+                    qtyInput.value = '';
+                    qtyInput.placeholder = "الكمية المنقولة";
+                    qtyInput.min = "1";
+                    console.log('🔢 Reset quantity field');
+                }
+
+                //4: Reset stock field
+                const stockInput = lastRow.querySelector('.item-stock');
+                if (stockInput) {
+                    stockInput.name = `${prefix}-${newIndex}-stock`;
+                    stockInput.value = '';
+                    console.log(`📊 Configured stock field: ${stockInput.name}`);
+                } else {
+                    const newStockInput = document.createElement('input');
+                    newStockInput.type = 'hidden';
+                    newStockInput.className = 'item-stock';
+                    newStockInput.name = `${prefix}-${newIndex}-stock`;
+                    newStockInput.value = '';
+                    lastRow.querySelector('td:first-child').appendChild(newStockInput);
+                    console.log('➕ Added missing stock field');
+                }
+
+                //5: Reset delete functionality
+                const deleteCell = lastRow.querySelector('td:last-child');
+                if (deleteCell) {
+                    deleteCell.innerHTML = '';
+                    const hiddenDiv = document.createElement('div');
+                    hiddenDiv.className = 'hide-delete';
+                    
+                    const chk = document.createElement('input');
+                    chk.type = 'checkbox';
+                    chk.name = `${prefix}-${newIndex}-DELETE`;
+                    chk.id = `id_${prefix}-${newIndex}-DELETE`;
+                    chk.className = 'form-check-input';
+                    hiddenDiv.appendChild(chk);
+                    
+                    deleteCell.appendChild(hiddenDiv);
+
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.className = 'btn btn-sm btn-link text-danger delete-row';
+                    btn.title = 'حذف الصنف';
+                    btn.innerHTML = '<i class="bi bi-trash"></i>';
+                    deleteCell.appendChild(btn);
+                    attachDeleteListener(btn);
+                    console.log('🗑️ Configured delete button');
+                }
+
+                tbody.appendChild(lastRow);
+                console.log('New row appended to table');
+
+                //6: Reattach search functionality to new row
+                attachSearchToRow(lastRow);
+                console.log('Attached search functionality to new row');
+
+                totalFormsInput.value = newIndex + 1;
+                console.log(`Updated TOTAL_FORMS to: ${totalFormsInput.value}`);
+
+                updateDeleteButtons();
+                console.log('Updated delete buttons state');
+                console.log('Row addition complete!');
+            });
+
+            document.querySelectorAll('.delete-row').forEach(attachDeleteListener);
+            updateDeleteButtons();
+        });
+    </script>
+{% endblock scripts %}

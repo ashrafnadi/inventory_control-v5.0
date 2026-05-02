@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}تأكيد الحذف{% endblock %}
+
+{% block content %}
+<div class="card col-lg-6 mx-auto border-danger">
+    <div class="card-header bg-danger text-white">
+        <h4 class="mb-0">⚠️ تأكيد الحذف</h4>
+    </div>
+    <div class="card-body text-center">
+        <p class="lead">هل أنت متأكد من حذف <strong>{{ obj_name }}</strong>؟</p>
+
+        {% if entity == "faculty" %}
+        <div class="alert alert-warning text-start">
+            <strong>تنبيه:</strong> حذف الكلية سيحذف جميع الأقسام والمستخدمين المرتبطين بها!<br>
+            تأكد من نقل أو أرشفة البيانات المهمة أولاً.
+        </div>
+        {% endif %}
+
+        <form method="post">
+            {% csrf_token %}
+            <div class="d-flex justify-content-center gap-2 mt-4">
+                <a href="javascript:history.back()" class="btn btn-secondary">إلغاء</a>
+                <button type="submit" class="btn btn-danger">نعم، احذف</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,18 @@
+1- Make backup of old database.
+2- Make restore to new clean database.
+3- Do't migrate.
+4- Comment created_at,created_by,updated_at,updated_by in Item model in models.py.
+5- Run "uv run python manage.py fix_duplicate_item_names"
+6- Run "uv run python manage.py generate_item_codes"
+7- Uncomment created_at,created_by,updated_at,updated_by in Item model in models.py.
+8- Run "uv run python manage.py makemigrations"
+9- Run "uv run python manage.py migrate"
+10- Add new faculties.
+11- Run query "create_index_before_populate.sql"
+12- Run query "change_item_category_subwarehouse.sql"
+13- Run query "check_item_category_subwarehouse.sql"
+14- Update "itemcategory" table with the values from "inventory_itemcategory_sub_warehouse.csv".
+15- Run "uv run python manage.py populate_faculty_item_stock".
+16- Run "uv run python manage.py recalculate_faculty_item_stock".
+17- Update user department from admin panel.
+18- Check the system.

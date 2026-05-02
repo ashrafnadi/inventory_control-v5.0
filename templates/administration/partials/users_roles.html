@@ -1,0 +1,84 @@
+<div class="card shadow-sm h-100 mt-4">
+    <div class="card-header text-dark text-center d-flex justify-content-between align-items-center mb-3">
+        <h5>
+            تقرير المستخدمين والصلاحيات
+        </h5>
+    </div>
+    <div class="card-body">
+        {% if users %}
+            <table class="table table-hover table-bordered table-sm table-responsive"
+                   id="users_list">
+                <thead>
+                    <tr>
+                        <th>
+                            الكود
+                        </th>
+                        <th>
+                            اسم المستخدم
+                        </th>
+                        <th>
+                            الاسم
+                        </th>
+                        <th>
+                            الموظفين
+                        </th>
+                        <th>
+                            الحالة
+                        </th>
+                        <th>
+                            الصلاحية
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                        <tr>
+                            <td>
+                                {{ user.id }}
+                            </td>
+                            <td>
+                                {{ user.username }}
+                            </td>
+                            <td>
+                                {{ user.first_name }} {{ user.last_name }}
+                            </td>
+                            <td>
+                                {% if user.is_staff %}
+                                    موظف
+                                {% else %}
+                                    مستخدم عادي
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if user.is_active %}
+                                    نشط
+                                {% else %}
+                                    غير نشط
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if user.profile.is_administration_manager %}
+                                    مدير الإدارة
+                                {% elif user.profile.is_faculty_manager %}
+                                    مدير الكلية
+                                {% elif user.profile.is_inventory_manager %}
+                                    مدير المخازن
+                                {% elif user.profile.is_inventory_employee %}
+                                    موظف المخازن
+                                {% elif user.profile.is_user %}
+                                    مستخدم عادي
+                                {% else %}
+                                    مدير النظام
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p>
+                لا يوجد مستخدمين
+            </p>
+        {% endif %}
+    </div>
+</div>

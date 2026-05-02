@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+<div class="card col-lg-8 mx-auto">
+    <div class="card-header">
+        <h4 class="mb-0">{{ title }}</h4>
+    </div>
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            {% for field in form %}
+            <div class="mb-3">
+                {{ field.label_tag }}
+                {{ field }}
+                {% if field.errors %}<div class="text-danger small mt-1">{{ field.errors.0 }}</div>{% endif %}
+            </div>
+            {% endfor %}
+            <div class="d-flex justify-content-between mt-4">
+                <a href="javascript:history.back()" class="btn btn-secondary">إلغاء</a>
+                <button type="submit" class="btn btn-primary">حفظ</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ block.super }}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const facultySelect = document.querySelector('select[name="faculty"]');
+    const deptSelect = document.querySelector('select[name="department"]');
+    
+    // Get the API URL from Django (avoids path mismatches)
+    const deptApiUrl = "{% url 'api_departments_by_faculty' %}";
+
+    if (facultySelect && deptSelect) {
+        // Capture the currently selected department ID BEFORE any AJAX changes
+        const savedDeptId = deptSelect.value;
+
+        facultySelect.addEventListener('change', function () {
+            const facultyId = this.value;
+            const emptyOption = deptSelect.querySelector('option[value=""]') || new Option("", "");
+            
+            if (!facultyId) {
+                // Reset: show all original options
+                deptSelect.innerHTML = '';
+                deptSelect.appendChild(emptyOption.cloneNode(true));
+                // Note: originalDeptOptions logic removed for simplicity; 
+                // the form already renders all options on initial load
+                return;
+            }
+
+            // Show loading state
+            deptSelect.innerHTML = '<option value="">جاري التحميل...</option>';
+            deptSelect.disabled = true;
+
+            // credentials: 'same-origin' sends Django session cookies
+            fetch(`${deptApiUrl}?faculty_id=${facultyId}`, {
+                method: 'GET',
+                credentials: 'same-origin',
+                headers: { 'Accept': 'application/json' }
+            })
+            .then(response => {
+                // Verify response is JSON before parsing
+                const contentType = response.headers.get('content-type');
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                if (!contentType || !contentType.includes('application/json')) {
+                    throw new Error('Server returned HTML instead of JSON');
+                }
+                return response.json();
+            })
+            .then(data => {
+                deptSelect.innerHTML = '';
+                deptSelect.appendChild(emptyOption.cloneNode(true));
+                
+                let restored = false;
+                
+                if (data.departments && data.departments.length > 0) {
+                    data.departments.forEach(dept => {
+                        const option = document.createElement('option');
+                        option.value = dept.id;
+                        option.textContent = dept.name;
+                        
+                        // Restore the saved department if it exists in the new list
+                        if (savedDeptId && String(dept.id) === String(savedDeptId)) {
+                            option.selected = true;
+                            restored = true;
+                        }
+                        deptSelect.appendChild(option);
+                    });
+                }
+                
+                // Fallback: If saved dept not in new list (e.g., faculty changed)
+                if (!restored && savedDeptId) {
+                    const option = document.createElement('option');
+                    option.value = savedDeptId;
+                    option.textContent = "القسم السابق (غير متوفر في هذه الكلية)";
+                    option.selected = true;
+                    option.disabled = true;
+                    deptSelect.appendChild(option);
+                }
+            })
+            .catch(err => {
+                console.error('🔴 Department fetch failed:', err);
+                deptSelect.innerHTML = `<option value="">خطأ: ${err.message}</option>`;
+            })
+            .finally(() => {
+                deptSelect.disabled = false;
+            });
+        });
+
+        // Trigger change on page load if faculty is pre-selected (Edit mode)
+        if (facultySelect.value) {
+            facultySelect.dispatchEvent(new Event('change'));
+        }
+    }
+});
+</script>
+{% endblock %}

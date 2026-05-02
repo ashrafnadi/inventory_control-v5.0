@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}
+    404 - سجل غير موجود
+{% endblock title %}
+{% block contents %}
+    <div class="fw-bold fs-1 text-center text-danger">
+        <div class="mb-4 fs-1">
+            404
+        </div>
+        هذا السجل غير موجود بالنظام
+        {{ message }}
+    </div>
+{% endblock contents %}

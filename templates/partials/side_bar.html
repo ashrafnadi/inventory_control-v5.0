@@ -1,0 +1,88 @@
+<aside class="sidebar" id="sidebar">
+    <section class="sidebar-user">
+        <div class="avatar">{{ user_display_name|first|default:"م" }}</div>
+        <div>
+            <div class="sidebar-greeting">مرحباً،</div>
+            <div class="sidebar-name">{{ user_display_name }}</div>
+            <div class="sidebar-dept">{{ department|default:"نظام المخازن" }}</div>
+        </div>
+    </section>
+
+    <section class="sidebar-section">
+        <div class="sidebar-section-title">التشغيل</div>
+        <a class="sidebar-item" href="{% url 'home' %}">
+            <i class="bi bi-speedometer2"></i>
+            <span>الرئيسية</span>
+        </a>
+        <a class="sidebar-item" href="{% url 'transaction_list' %}">
+            <i class="bi bi-file-earmark-text-fill"></i>
+            <span>السندات</span>
+        </a>
+        <a class="sidebar-item" href="{% url 'pending_transactions' %}">
+            <i class="bi bi-hourglass-split"></i>
+            <span>سندات قيد الانتظار</span>
+        </a>
+    </section>
+
+    <section class="sidebar-section">
+        <div class="sidebar-section-title">مستند جديد</div>
+        <a class="sidebar-item" href="{% url 'transaction_create_addition' %}">
+            <i class="bi bi-plus-circle-fill"></i>
+            <span>إذن إضافة</span>
+        </a>
+        <a class="sidebar-item" href="{% url 'transaction_create' %}">
+            <i class="bi bi-box-arrow-up"></i>
+            <span>إذن صرف</span>
+        </a>
+        <a class="sidebar-item" href="{% url 'transaction_create_return' %}">
+            <i class="bi bi-arrow-return-left"></i>
+            <span>طلب ارتجاع</span>
+        </a>
+        <a class="sidebar-item" href="{% url 'transaction_create_transfer' %}">
+            <i class="bi bi-arrow-left-right"></i>
+            <span>نقل عهدة</span>
+        </a>
+    </section>
+
+    <section class="sidebar-section">
+        <div class="sidebar-section-title">التعريفات</div>
+        <a class="sidebar-item" href="{% url 'item_list' %}">
+            <i class="bi bi-tags-fill"></i>
+            <span>الأصناف</span>
+        </a>
+        <a class="sidebar-item" href="{% url 'warehouse_list' %}">
+            <i class="bi bi-building-fill"></i>
+            <span>المخازن الرئيسية</span>
+        </a>
+        <a class="sidebar-item" href="{% url 'subwarehouse_list' %}">
+            <i class="bi bi-box-fill"></i>
+            <span>المخازن الفرعية</span>
+        </a>
+        <a class="sidebar-item" href="{% url 'supplier_list' %}">
+            <i class="bi bi-truck"></i>
+            <span>الموردون</span>
+        </a>
+    </section>
+
+    {% if request.user.is_superuser %}
+        <section class="sidebar-section">
+            <div class="sidebar-section-title">إدارة النظام</div>
+            <a class="sidebar-item" href="{% url 'system_settings' %}">
+                <i class="bi bi-gear-fill"></i>
+                <span>إعدادات النظام</span>
+            </a>
+            <a class="sidebar-item" href="{% url 'admin_user_list' %}">
+                <i class="bi bi-people-fill"></i>
+                <span>المستخدمون</span>
+            </a>
+            <a class="sidebar-item" href="{% url 'admin_faculty_list' %}">
+                <i class="bi bi-bank"></i>
+                <span>الكليات</span>
+            </a>
+            <a class="sidebar-item" href="{% url 'view_logs' %}">
+                <i class="bi bi-clipboard-data"></i>
+                <span>سجلات النظام</span>
+            </a>
+        </section>
+    {% endif %}
+</aside>

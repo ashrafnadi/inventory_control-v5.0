@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block title %}إعدادات النظام{% endblock title %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1>إعدادات النظام</h1>
+        <p>إعدادات الجلسة وسنوات تشغيل المخزون.</p>
+    </div>
+</div>
+
+<div class="settings-grid">
+    <section class="panel session-panel">
+        <h2 class="section-title">
+            <i class="bi bi-clock-fill"></i>
+            إعدادات الجلسة
+        </h2>
+        <form method="post" class="settings-form">
+            {% csrf_token %}
+            <label>
+                مدة الخمول بالدقائق
+                {{ form.idle_timeout_minutes }}
+            </label>
+            <label>
+                التحذير قبل الانتهاء بالدقائق
+                {{ form.session_warning_minutes }}
+            </label>
+            <button class="btn btn-primary" type="submit">
+                <i class="bi bi-save-fill me-1"></i>
+                حفظ إعدادات الجلسة
+            </button>
+        </form>
+    </section>
+
+    <section class="panel">
+        <h2 class="section-title">
+            <i class="bi bi-calendar2-check-fill"></i>
+            سنوات المخزون
+        </h2>
+        {% if open_year %}
+            <div class="open-year-card">
+                <span>السنة المفتوحة الحالية</span>
+                <strong>{{ open_year.year }}</strong>
+                <form method="post" action="{% url 'close_inventory_year' open_year.id %}">
+                    {% csrf_token %}
+                    <button class="btn btn-warning" type="submit">
+                        <i class="bi bi-lock-fill me-1"></i>
+                        إغلاق السنة وفتح السنة التالية
+                    </button>
+                </form>
+            </div>
+        {% endif %}
+        <div class="table-responsive mt-3">
+            <table class="table table-striped align-middle">
+                <thead>
+                    <tr>
+                        <th>السنة</th>
+                        <th>الحالة</th>
+                        <th>تاريخ الفتح</th>
+                        <th>تاريخ الإغلاق</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for year in years %}
+                        <tr>
+                            <td>{{ year.year }}</td>
+                            <td>
+                                {% if year.is_open %}
+                                    <span class="badge bg-success">مفتوحة</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">مغلقة</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ year.opened_at|date:"Y-m-d H:i" }}</td>
+                            <td>{{ year.closed_at|date:"Y-m-d H:i"|default:"-" }}</td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="4" class="text-center text-muted">لا توجد سنوات مسجلة.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>
+{% endblock content %}

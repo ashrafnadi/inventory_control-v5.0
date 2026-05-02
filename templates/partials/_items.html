@@ -1,0 +1,22 @@
+<!-- partials/_items.html -->
+<li class="nav-item dropdown mx-1">
+    <a class="nav-link dropdown-toggle d-flex align-items-center"
+       href="#"
+       role="button"
+       data-bs-toggle="dropdown"
+       aria-expanded="false">
+        <i class="bi bi-box me-1"></i>المخزون
+    </a>
+    <ul class="dropdown-menu">
+        <li>
+            <a class="dropdown-item" href="{% url 'warehouse_inventory' %}">
+                <i class="bi bi-box-seam me-1"></i> المخزون
+            </a>
+        </li>
+        <li>
+            <a class="dropdown-item" href="{% url 'item_list' %}">
+                <i class="bi bi-list-ul me-1"></i> قائمة الأصناف
+            </a>
+        </li>
+    </ul>
+</li>

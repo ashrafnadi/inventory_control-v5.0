@@ -1,0 +1,54 @@
+sudo apt update && sudo apt install graphviz graphviz-dev pkg-config
+
+pip install django-extensions graphviz
+
+python manage.py graph_models administration inventory --group-models --dot -o erd.dot --exclude-models auth.User
+
+
+================ ADD to .dot file in the first line ================
+
+  // >>> BOLD, LARGE TITLE <<<
+  label=<
+    <TABLE BORDER="0" CELLBORDER="0" CELLPADDING="0" CELLSPACING="0">
+      <TR>
+        <TD>
+          <FONT FACE="Roboto" POINT-SIZE="20"><B>Benha University Inventory Control System</B></FONT>
+        </TD>
+      </TR>
+    </TABLE>
+  >;
+  labelloc=t;
+
+  fontname = "Roboto"
+  fontsize = 8
+  splines  = true
+  rankdir = "TB"
+================
+
+# SVG (scalable, better for zooming)
+  dot -Tsvg erd.dot -o erd.svg
+
+# PDF (for printing)
+  dot -Tpdf erd.dot -o erd.pdf
+
+# For PDF reports
+  sudo apt-get install build-essential libcairo2 libpango-1.0-0 libpangocairo-1.0-0 libgdk-pixbuf2.0-0 libffi-dev libxml2-dev libxslt1-dev libjpeg8-dev zlib1g-dev
+  sudo apt-get install fonts-liberation fonts-dejavu-core fonts-freefont-ttf
+
+# Run Create Fake Data 
+# Create fake data:
+    python manage.py create_fake_data
+
+# Create specific amounts:
+    python manage.py create_fake_data --users 15 --items 100 --transactions 50
+
+# Clear existing data and create fresh fake data:
+    python manage.py create_fake_data --clear
+
+# Default Login Credentials
+# After running the command, you can log in with:
+    Admin: admin / admin123
+    Inventory Managers: inventory_manager_1 / password123
+    Inventory Employees: inventory_employee_1 / password123
+    Department Users: department_user_1 / password123
+

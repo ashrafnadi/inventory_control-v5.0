@@ -1,0 +1,174 @@
+<svg width="350pt" height="473pt" viewBox="0.00 0.00 350.00 473.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 468.8)">
+<title>model_graph</title>
+<polygon fill="white" stroke="none" points="-4,4 -4,-468.8 346.33,-468.8 346.33,4 -4,4"/>
+<g id="clust1" class="cluster">
+<title>cluster_administration</title>
+<path fill="none" stroke="#698b22" d="M20,-8C20,-8 266,-8 266,-8 272,-8 278,-14 278,-20 278,-20 278,-444.8 278,-444.8 278,-450.8 272,-456.8 266,-456.8 266,-456.8 20,-456.8 20,-456.8 14,-456.8 8,-450.8 8,-444.8 8,-444.8 8,-20 8,-20 8,-14 14,-8 20,-8"/>
+<text xml:space="preserve" text-anchor="start" x="66.33" y="-440.8" font-family="Roboto" font-size="8.00">          </text>
+<text xml:space="preserve" text-anchor="start" x="86.33" y="-440.8" font-family="Roboto" font-size="10.00">          </text>
+<text xml:space="preserve" text-anchor="start" x="111.33" y="-440.8" font-family="Roboto" font-weight="bold" font-size="10.00">administration</text>
+<text xml:space="preserve" text-anchor="start" x="174.67" y="-440.8" font-family="Roboto" font-size="10.00">          </text>
+<text xml:space="preserve" text-anchor="start" x="199.67" y="-440.8" font-family="Roboto" font-size="8.00">          </text>
+</g>
+<!-- administration_models_Faculty -->
+<g id="node1" class="node">
+<title>administration_models_Faculty</title>
+<polygon fill="white" stroke="none" points="78.45,-20 78.45,-71.2 199.55,-71.2 199.55,-20 78.45,-20"/>
+<polygon fill="#1b563f" stroke="none" points="79.45,-48.2 79.45,-70.2 198.55,-70.2 198.55,-48.2 79.45,-48.2"/>
+<text xml:space="preserve" text-anchor="start" x="101.89" y="-57.2" font-family="Roboto" font-size="8.00">      </text>
+<text xml:space="preserve" text-anchor="start" x="113.89" y="-57.2" font-family="Roboto" font-weight="bold" font-size="10.00" fill="white">      Faculty      </text>
+<text xml:space="preserve" text-anchor="start" x="81.45" y="-40" font-family="Roboto" font-size="8.00">      </text>
+<text xml:space="preserve" text-anchor="start" x="93.45" y="-40" font-family="Roboto" font-weight="bold" font-size="8.00">id</text>
+<text xml:space="preserve" text-anchor="start" x="100.12" y="-40" font-family="Roboto" font-size="8.00">      </text>
+<text xml:space="preserve" text-anchor="start" x="126.77" y="-40" font-family="Roboto" font-size="8.00">      </text>
+<text xml:space="preserve" text-anchor="start" x="138.77" y="-40" font-family="Roboto" font-weight="bold" font-size="8.00">BigAutoField</text>
+<text xml:space="preserve" text-anchor="start" x="184.55" y="-40" font-family="Roboto" font-size="8.00">      </text>
+<text xml:space="preserve" text-anchor="start" x="81.45" y="-26.4" font-family="Roboto" font-size="8.00">      </text>
+<text xml:space="preserve" text-anchor="start" x="93.45" y="-26.4" font-family="Roboto" font-size="8.00">name</text>
+<text xml:space="preserve" text-anchor="start" x="110.77" y="-26.4" font-family="Roboto" font-size="8.00">      </text>
+<text xml:space="preserve" text-anchor="start" x="126.77" y="-26.4" font-family="Roboto" font-size="8.00">      </text>
+<text xml:space="preserve" text-anchor="start" x="138.77" y="-26.4" font-family="Roboto" font-size="8.00">CharField</text>
+<text xml:space="preserve" text-anchor="start" x="170.77" y="-26.4" font-family="Roboto" font-size="8.00">      </text>
+<polygon fill="none" stroke="black" points="78.45,-20 78.45,-71.2 199.55,-71.2 199.55,-20 78.45,-20"/>
+</g>
+<!-- administration_models_Department -->
+<g id="node2" class="node">
+<title>administration_models_Department</title>
+<polygon fill="white" stroke="none" points="126.01,-124.8 126.01,-189.6 261.99,-189.6 261.99,-124.8 126.01,-124.8"/>
+<polygon fill="#1b563f" stroke="none" points="127.01,-166.6 127.01,-188.6 260.99,-188.6 260.99,-166.6 127.01,-166.6"/>
+<text xml:space="preserve" text-anchor="start" x="147.17" y="-175.6" font-family="Roboto" font-size="8.00">      </text>
+<text xml:space="preserve" text-anchor="start" x="159.17" y="-175.6" font-family="Roboto" font-weight="bold" font-size="10.00" fill="white">      Department      </text>
+<text xml:space="preserve" text-anchor="start" x="129.01" y="-158.4" font-family="Roboto" font-size="8.00">      </text>
+<text xml:space="preserve" text-anchor="start" x="141.01" y="-158.4" font-family="Roboto" font-weight="bold" font-size="8.00">id</text>
+<text xml:space="preserve" text-anchor="start" x="147.68" y="-158.4" font-family="Roboto" font-size="8.00">      </text>
+<text xml:space="preserve" text-anchor="start" x="180.56" y="-158.4" font-family="Roboto" font-size="8.00">      </text>
+<text xml:space="preserve" text-anchor="start" x="192.56" y="-158.4" font-family="Roboto" font-weight="bold" font-size="8.00">BigAutoField</text>
+<text xml:space="preserve" text-anchor="start" x="238.34" y="-158.4" font-family="Roboto" font-size="8.00">      </text>
+<text xml:space="preserve" text-anchor="start" x="129.01" y="-144.8" font-family="Roboto" font-size="8.00">      </text>
+<text xml:space="preserve" text-anchor="start" x="141.01" y="-144.8" font-family="Roboto" font-weight="bold" font-size="8.00">faculty</text>
+<text xml:space="preserve" text-anchor="start" x="164.56" y="-144.8" font-family="Roboto" font-size="8.00">      </text>
+<text xml:space="preserve" text-anchor="start" x="180.56" y="-144.8" font-family="Roboto" font-size="8.00">      </text>
+<text xml:space="preserve" text-anchor="start" x="192.56" y="-144.8" font-family="Roboto" font-weight="bold" font-size="8.00">ForeignKey (id)</text>
+<text xml:space="preserve" text-anchor="start" x="246.99" y="-144.8" font-family="Roboto" font-size="8.00">      </text>
+<text xml:space="preserve" text-anchor="start" x="129.01" y="-131.2" font-family="Roboto" font-size="8.00">      </text>
+<text xml:space="preserve" text-anchor="start" x="141.01" y="-131.2" font-family="Roboto" font-size="8.00">name</text>
+<text xml:space="preserve" text-anchor="start" x="158.33" y="-131.2" font-family="Roboto" font-size="8.00">      </text>
+<text xml:space="preserve" text-anchor="start" x="180.56" y="-131.2" font-family="Roboto" font-size="8.00">      </text>
+<text xml:space="preserve" text-anchor="start" x="192.56" y="-131.2" font-family="Roboto" font-size="8.00">CharField</text>
+<text xml:space="preserve" text-anchor="start" x="224.55" y="-131.2" font-family="Roboto" font-size="8.00">      </text>
+<polygon fill="none" stroke="black" points="126.01,-124.8 126.01,-189.6 261.99,-189.6 261.99,-124.8 126.01,-124.8"/>
+</g>
+<!-- administration_models_Department&#45;&gt;administration_models_Faculty -->
+<g id="edge1" class="edge">
+<title>administration_models_Department-&gt;administration_models_Faculty</title>
+<path fill="none" stroke="black" d="M172.36,-113.07C165.92,-100.24 159.03,-86.51 153.19,-74.88"/>
+<ellipse fill="black" stroke="black" cx="174.28" cy="-116.9" rx="4" ry="4"/>
+<text xml:space="preserve" text-anchor="middle" x="200.26" y="-95.6" font-family="Roboto" font-size="8.00"> faculty (department)</text>
+</g>
+<!-- administration_models_UserProfile -->
+<g id="node3" class="node">
+<title>administration_models_UserProfile</title>
+<polygon fill="white" stroke="none" points="47.9,-243.2 47.9,-416.8 262.1,-416.8 262.1,-243.2 47.9,-243.2"/>
+<polygon fill="#1b563f" stroke="none" points="48.9,-393.8 48.9,-415.8 261.1,-415.8 261.1,-393.8 48.9,-393.8"/>
+<text xml:space="preserve" text-anchor="start" x="109.57" y="-402.8" font-family="Roboto" font-size="8.00">      </text>
+<text xml:space="preserve" text-anchor="start" x="121.57" y="-402.8" font-family="Roboto" font-weight="bold" font-size="10.00" fill="white">      UserProfile      </text>
+<text xml:space="preserve" text-anchor="start" x="50.9" y="-385.6" font-family="Roboto" font-size="8.00">      </text>
+<text xml:space="preserve" text-anchor="start" x="62.9" y="-385.6" font-family="Roboto" font-weight="bold" font-size="8.00">id</text>
+<text xml:space="preserve" text-anchor="start" x="69.57" y="-385.6" font-family="Roboto" font-size="8.00">      </text>
+<text xml:space="preserve" text-anchor="start" x="165.99" y="-385.6" font-family="Roboto" font-size="8.00">      </text>
+<text xml:space="preserve" text-anchor="start" x="177.99" y="-385.6" font-family="Roboto" font-weight="bold" font-size="8.00">BigAutoField</text>
+<text xml:space="preserve" text-anchor="start" x="223.77" y="-385.6" font-family="Roboto" font-size="8.00">      </text>
+<text xml:space="preserve" text-anchor="start" x="50.9" y="-372" font-family="Roboto" font-size="8.00">      </text>
+<text xml:space="preserve" text-anchor="start" x="62.9" y="-372" font-family="Roboto" font-weight="bold" font-size="8.00" fill="#7b7b7b">department</text>
+<text xml:space="preserve" text-anchor="start" x="102.89" y="-372" font-family="Roboto" font-size="8.00">      </text>
+<text xml:space="preserve" text-anchor="start" x="165.99" y="-372" font-family="Roboto" font-size="8.00">      </text>
+<text xml:space="preserve" text-anchor="start" x="177.99" y="-372" font-family="Roboto" font-weight="bold" font-size="8.00" fill="#7b7b7b">ForeignKey (id)</text>
+<text xml:space="preserve" text-anchor="start" x="232.42" y="-372" font-family="Roboto" font-size="8.00">      </text>
+<text xml:space="preserve" text-anchor="start" x="50.9" y="-358.4" font-family="Roboto" font-size="8.00">      </text>
+<text xml:space="preserve" text-anchor="start" x="62.9" y="-358.4" font-family="Roboto" font-weight="bold" font-size="8.00" fill="#7b7b7b">faculty</text>
+<text xml:space="preserve" text-anchor="start" x="86.45" y="-358.4" font-family="Roboto" font-size="8.00">      </text>
+<text xml:space="preserve" text-anchor="start" x="165.99" y="-358.4" font-family="Roboto" font-size="8.00">      </text>
+<text xml:space="preserve" text-anchor="start" x="177.99" y="-358.4" font-family="Roboto" font-weight="bold" font-size="8.00" fill="#7b7b7b">ForeignKey (id)</text>
+<text xml:space="preserve" text-anchor="start" x="232.42" y="-358.4" font-family="Roboto" font-size="8.00">      </text>
+<text xml:space="preserve" text-anchor="start" x="50.9" y="-344.8" font-family="Roboto" font-size="8.00">      </text>
+<text xml:space="preserve" text-anchor="start" x="62.9" y="-344.8" font-family="Roboto" font-weight="bold" font-size="8.00">user</text>
+<text xml:space="preserve" text-anchor="start" x="77.56" y="-344.8" font-family="Roboto" font-size="8.00">      </text>
+<text xml:space="preserve" text-anchor="start" x="165.99" y="-344.8" font-family="Roboto" font-size="8.00">      </text>
+<text xml:space="preserve" text-anchor="start" x="177.99" y="-344.8" font-family="Roboto" font-weight="bold" font-size="8.00">OneToOneField (id)</text>
+<text xml:space="preserve" text-anchor="start" x="247.1" y="-344.8" font-family="Roboto" font-size="8.00">      </text>
+<text xml:space="preserve" text-anchor="start" x="50.9" y="-331.2" font-family="Roboto" font-size="8.00">      </text>
+<text xml:space="preserve" text-anchor="start" x="62.9" y="-331.2" font-family="Roboto" font-size="8.00">is_administration_manager</text>
+<text xml:space="preserve" text-anchor="start" x="149.99" y="-331.2" font-family="Roboto" font-size="8.00">      </text>
+<text xml:space="preserve" text-anchor="start" x="165.99" y="-331.2" font-family="Roboto" font-size="8.00">      </text>
+<text xml:space="preserve" text-anchor="start" x="177.99" y="-331.2" font-family="Roboto" font-size="8.00">BooleanField</text>
+<text xml:space="preserve" text-anchor="start" x="221.09" y="-331.2" font-family="Roboto" font-size="8.00">      </text>
+<text xml:space="preserve" text-anchor="start" x="50.9" y="-317.6" font-family="Roboto" font-size="8.00">      </text>
+<text xml:space="preserve" text-anchor="start" x="62.9" y="-317.6" font-family="Roboto" font-size="8.00">is_faculty_manager</text>
+<text xml:space="preserve" text-anchor="start" x="125.98" y="-317.6" font-family="Roboto" font-size="8.00">      </text>
+<text xml:space="preserve" text-anchor="start" x="165.99" y="-317.6" font-family="Roboto" font-size="8.00">      </text>
+<text xml:space="preserve" text-anchor="start" x="177.99" y="-317.6" font-family="Roboto" font-size="8.00">BooleanField</text>
+<text xml:space="preserve" text-anchor="start" x="221.09" y="-317.6" font-family="Roboto" font-size="8.00">      </text>
+<text xml:space="preserve" text-anchor="start" x="50.9" y="-304" font-family="Roboto" font-size="8.00">      </text>
+<text xml:space="preserve" text-anchor="start" x="62.9" y="-304" font-family="Roboto" font-size="8.00">is_inventory_employee</text>
+<text xml:space="preserve" text-anchor="start" x="137.99" y="-304" font-family="Roboto" font-size="8.00">      </text>
+<text xml:space="preserve" text-anchor="start" x="165.99" y="-304" font-family="Roboto" font-size="8.00">      </text>
+<text xml:space="preserve" text-anchor="start" x="177.99" y="-304" font-family="Roboto" font-size="8.00">BooleanField</text>
+<text xml:space="preserve" text-anchor="start" x="221.09" y="-304" font-family="Roboto" font-size="8.00">      </text>
+<text xml:space="preserve" text-anchor="start" x="50.9" y="-290.4" font-family="Roboto" font-size="8.00">      </text>
+<text xml:space="preserve" text-anchor="start" x="62.9" y="-290.4" font-family="Roboto" font-size="8.00">is_inventory_manager</text>
+<text xml:space="preserve" text-anchor="start" x="134.43" y="-290.4" font-family="Roboto" font-size="8.00">      </text>
+<text xml:space="preserve" text-anchor="start" x="165.99" y="-290.4" font-family="Roboto" font-size="8.00">      </text>
+<text xml:space="preserve" text-anchor="start" x="177.99" y="-290.4" font-family="Roboto" font-size="8.00">BooleanField</text>
+<text xml:space="preserve" text-anchor="start" x="221.09" y="-290.4" font-family="Roboto" font-size="8.00">      </text>
+<text xml:space="preserve" text-anchor="start" x="50.9" y="-276.8" font-family="Roboto" font-size="8.00">      </text>
+<text xml:space="preserve" text-anchor="start" x="62.9" y="-276.8" font-family="Roboto" font-size="8.00">is_user</text>
+<text xml:space="preserve" text-anchor="start" x="85.56" y="-276.8" font-family="Roboto" font-size="8.00">      </text>
+<text xml:space="preserve" text-anchor="start" x="165.99" y="-276.8" font-family="Roboto" font-size="8.00">      </text>
+<text xml:space="preserve" text-anchor="start" x="177.99" y="-276.8" font-family="Roboto" font-size="8.00">BooleanField</text>
+<text xml:space="preserve" text-anchor="start" x="221.09" y="-276.8" font-family="Roboto" font-size="8.00">      </text>
+<text xml:space="preserve" text-anchor="start" x="50.9" y="-263.2" font-family="Roboto" font-size="8.00">      </text>
+<text xml:space="preserve" text-anchor="start" x="62.9" y="-263.2" font-family="Roboto" font-size="8.00" fill="#7b7b7b">national_id</text>
+<text xml:space="preserve" text-anchor="start" x="98.89" y="-263.2" font-family="Roboto" font-size="8.00">      </text>
+<text xml:space="preserve" text-anchor="start" x="165.99" y="-263.2" font-family="Roboto" font-size="8.00">      </text>
+<text xml:space="preserve" text-anchor="start" x="177.99" y="-263.2" font-family="Roboto" font-size="8.00" fill="#7b7b7b">CharField</text>
+<text xml:space="preserve" text-anchor="start" x="209.98" y="-263.2" font-family="Roboto" font-size="8.00">      </text>
+<text xml:space="preserve" text-anchor="start" x="50.9" y="-249.6" font-family="Roboto" font-size="8.00">      </text>
+<text xml:space="preserve" text-anchor="start" x="62.9" y="-249.6" font-family="Roboto" font-size="8.00" fill="#7b7b7b">phone</text>
+<text xml:space="preserve" text-anchor="start" x="82.45" y="-249.6" font-family="Roboto" font-size="8.00">      </text>
+<text xml:space="preserve" text-anchor="start" x="165.99" y="-249.6" font-family="Roboto" font-size="8.00">      </text>
+<text xml:space="preserve" text-anchor="start" x="177.99" y="-249.6" font-family="Roboto" font-size="8.00" fill="#7b7b7b">CharField</text>
+<text xml:space="preserve" text-anchor="start" x="209.98" y="-249.6" font-family="Roboto" font-size="8.00">      </text>
+<polygon fill="none" stroke="black" points="47.9,-243.2 47.9,-416.8 262.1,-416.8 262.1,-243.2 47.9,-243.2"/>
+</g>
+<!-- administration_models_UserProfile&#45;&gt;administration_models_Faculty -->
+<g id="edge3" class="edge">
+<title>administration_models_UserProfile-&gt;administration_models_Faculty</title>
+<path fill="none" stroke="black" d="M61.97,-231.78C54.23,-219.62 47.57,-206.8 42.81,-193.6 31.84,-163.16 28.54,-149.84 42.81,-120.8 51.97,-102.16 68.33,-86.87 84.98,-75.13"/>
+<ellipse fill="black" stroke="black" cx="64.43" cy="-235.51" rx="4" ry="4"/>
+<text xml:space="preserve" text-anchor="middle" x="75.9" y="-154.8" font-family="Roboto" font-size="8.00"> faculty (userprofile)</text>
+</g>
+<!-- administration_models_UserProfile&#45;&gt;administration_models_Department -->
+<g id="edge4" class="edge">
+<title>administration_models_UserProfile-&gt;administration_models_Department</title>
+<path fill="none" stroke="black" d="M177.35,-231.14C180.43,-217.62 183.42,-204.53 186,-193.25"/>
+<ellipse fill="black" stroke="black" cx="176.42" cy="-235.21" rx="4" ry="4"/>
+<text xml:space="preserve" text-anchor="middle" x="221.37" y="-214" font-family="Roboto" font-size="8.00"> department (userprofile)</text>
+</g>
+<!-- django_contrib_auth_models_User -->
+<g id="node4" class="node">
+<title>django_contrib_auth_models_User</title>
+<polygon fill="white" stroke="none" points="295.67,-146 295.67,-168.4 334.33,-168.4 334.33,-146 295.67,-146"/>
+<polygon fill="#1b563f" stroke="none" points="295.67,-146 295.67,-168.4 334.33,-168.4 334.33,-146 295.67,-146"/>
+<text xml:space="preserve" text-anchor="start" x="299.67" y="-154.6" font-family="Roboto" font-size="8.00">  </text>
+<text xml:space="preserve" text-anchor="start" x="303.67" y="-154.6" font-family="Roboto" font-size="12.00" fill="white">User</text>
+<text xml:space="preserve" text-anchor="start" x="326.33" y="-154.6" font-family="Roboto" font-size="8.00">  </text>
+</g>
+<!-- administration_models_UserProfile&#45;&gt;django_contrib_auth_models_User -->
+<g id="edge2" class="edge">
+<title>administration_models_UserProfile-&gt;django_contrib_auth_models_User</title>
+<path fill="none" stroke="black" d="M248.27,-239.23C254.01,-233.2 259.63,-227.16 265,-221.2 278.55,-206.16 292.79,-187.94 302.59,-174.98"/>
+<text xml:space="preserve" text-anchor="middle" x="294.2" y="-214" font-family="Roboto" font-size="8.00"> user (profile)</text>
+</g>
+</g>
+</svg>

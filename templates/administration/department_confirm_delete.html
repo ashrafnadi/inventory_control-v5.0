@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}
+    تأكيد حذف القسم
+{% endblock title %}
+{% block content %}
+    <div class="card">
+        <div class="card-header bg-danger text-white">
+            <h3>
+                تأكيد حذف القسم
+            </h3>
+        </div>
+        <div class="card-body">
+            <p>
+                هل أنت متأكد من حذف القسم "<strong>{{ object.name }}</strong>" من كلية "{{ object.faculty.name }}"؟
+            </p>
+            <p class="text-danger">
+                لا يمكن التراجع عن هذا الإجراء!
+            </p>
+            <form method="post">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger">
+                    <i class="bi bi-trash"></i> نعم، احذف
+                </button>
+                <a href="{% url 'department_list' %}" class="btn btn-secondary">
+                    <i class="bi bi-x-circle"></i> إلغاء
+                </a>
+            </form>
+        </div>
+    </div>
+{% endblock content %}

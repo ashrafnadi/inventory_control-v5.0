@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="description" content="" />
+        <meta name="keywords" content="" />
+        <meta name="author" content="" />
+        <title>سند {{ transaction.get_transaction_type_display }}</title>
+        <style>
+            @page {
+                size: landscape;
+                margin: 0.5cm;
+
+                @bottom-center {
+                    content: "الصفحة " counter(page) " من " counter(pages);
+                    font-size: 10px;
+                    color: #6c757d;
+                }
+            }
+
+            body {
+                font-family: "Arial", "Segoe UI", "Tahoma", sans-serif;
+                font-size: 10px;
+                line-height: 1.6;
+                margin: 0;
+                padding: 0;
+            }
+
+
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                table-layout: fixed;
+                /* This helps with column sizing */
+            }
+
+            /* Allow page breaks within table */
+            tr {
+                break-inside: avoid;
+            }
+
+            .header {
+                text-align: center;
+                margin-bottom: 30px;
+                padding-bottom: 20px;
+                border-bottom: 3px double #343a40;
+            }
+
+            .header h1 {
+                font-size: 24px;
+                color: #343a40;
+                margin: 0;
+                font-weight: bold;
+            }
+
+            .transaction-info {
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 15px;
+                margin-bottom: 20px;
+                background: #f8f9fa;
+                padding: 15px;
+                border-radius: 5px;
+            }
+
+            /*.info-item {
+                display: flex;
+                flex-direction: column;
+            }*/
+
+            .info-label {
+                font-weight: bold;
+                color: #495057;
+                font-size: 11px;
+                margin-bottom: 3px;
+            }
+
+            .info-value {
+                font-size: 12px;
+                color: #212529;
+            }
+
+            .items-table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-top: 20px;
+                margin-bottom: 30px;
+            }
+
+            .items-table th,
+            .items-table td {
+                border: 1px solid #dee2e6;
+                padding: 10px;
+                text-align: center;
+                vertical-align: top;
+            }
+
+            .items-table th {
+                background-color: #343a40;
+                color: white;
+                font-weight: bold;
+                font-size: 12px;
+            }
+
+            .items-table tr:nth-child(even) {
+                background-color: #f8f9fa;
+            }
+
+            .status-badge {
+                display: inline-block;
+                padding: 2px 8px;
+                border-radius: 12px;
+                font-size: 10px;
+                font-weight: bold;
+            }
+
+            .status-new {
+                background-color: #28a745;
+                color: white;
+            }
+
+            .status-used {
+                background-color: #ffc107;
+                color: #212529;
+            }
+
+            .status-repairable {
+                background-color: #17a2b8;
+                color: white;
+            }
+
+            .status-damaged {
+                background-color: #dc3545;
+                color: white;
+            }
+
+            .signature-section {
+                margin-top: 40px;
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 20px;
+            }
+
+            .signature-box {
+                text-align: center;
+                border-top: 1px solid #6c757d;
+                padding-top: 40px;
+            }
+
+            .signature-label {
+                font-weight: bold;
+                margin-bottom: 5px;
+            }
+
+            .audit-info {
+                margin-top: 30px;
+                padding: 10px;
+                background: #e9ecef;
+                border-radius: 5px;
+                font-size: 10px;
+                color: #6c757d;
+            }
+
+            .watermark {
+                position: fixed;
+                opacity: 0.1;
+                font-size: 80px;
+                transform: rotate(-45deg);
+                top: 40%;
+                left: 20%;
+                color: #343a40;
+                pointer-events: none;
+            }
+        </style>
+    </head>
+    <body>
+        {% if transaction.deleted %}
+            <div class="watermark">
+                محذوف
+            </div>
+        {% endif %}
+        <div class="header">
+            <h1>
+                {{ transaction.get_transaction_type_display }}
+            </h1>
+            <div>
+                رقم المستند: {{ transaction.document_number }}
+            </div>
+        </div>
+        <div class="transaction-info">
+            <div class="info-item">
+                <span class="info-label">نوع المستند:</span>
+                <span class="info-value">{{ transaction.get_document_type_display }}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">تاريخ المعاملة:</span>
+                <span class="info-value">{{ transaction.created_at|date:"Y-m-d H:i" }}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">نوع العهدة:</span>
+                <span class="info-value">{{ transaction.get_castody_type_display }}</span>
+            </div>
+            {% if transaction.from_warehouse %}
+                <div class="info-item">
+                    <span class="info-label">من المخزن:</span>
+                    <span class="info-value">{{ transaction.from_warehouse.name }}</span>
+                </div>
+            {% endif %}
+            {% if transaction.to_warehouse %}
+                <div class="info-item">
+                    <span class="info-label">إلى المخزن:</span>
+                    <span class="info-value">{{ transaction.to_warehouse.name }}</span>
+                </div>
+            {% endif %}
+            {% if transaction.from_department %}
+                <div class="info-item">
+                    <span class="info-label">من القسم:</span>
+                    <span class="info-value">{{ transaction.from_department.name }}</span>
+                </div>
+            {% endif %}
+            {% if transaction.to_department %}
+                <div class="info-item">
+                    <span class="info-label">إلى القسم:</span>
+                    <span class="info-value">{{ transaction.to_department.name }}</span>
+                </div>
+            {% endif %}
+            {% if transaction.from_user %}
+                <div class="info-item">
+                    <span class="info-label">من المستخدم:</span>
+                    <span class="info-value">{{ transaction.from_user.get_full_name|default:transaction.from_user.username }}</span>
+                </div>
+            {% endif %}
+            {% if transaction.to_user %}
+                <div class="info-item">
+                    <span class="info-label">إلى المستخدم:</span>
+                    <span class="info-value">{{ transaction.to_user.get_full_name|default:transaction.to_user.username }}</span>
+                </div>
+            {% endif %}
+            {% if transaction.supplier %}
+                <div class="info-item">
+                    <span class="info-label">المورد:</span>
+                    <span class="info-value">{{ transaction.supplier.name }}</span>
+                </div>
+            {% endif %}
+            <div class="info-item">
+                <span class="info-label">موظف المخزن:</span>
+                <span class="info-value">
+                    {{ transaction.inventory_user.get_full_name|default:transaction.inventory_user.username }}
+                </span>
+            </div>
+            {% if transaction.approval_user %}
+                <div class="info-item">
+                    <span class="info-label">مدير المخزن:</span>
+                    <span class="info-value">{{ transaction.approval_user.get_full_name|default:transaction.approval_user.username }}</span>
+                </div>
+            {% endif %}
+        </div>
+        {% if transaction.notes %}
+            <div style="margin-bottom: 20px;
+                        padding: 10px;
+                        background: #f8f9fa;
+                        border-radius: 5px">
+                <strong>ملاحظات:</strong> {{ transaction.notes }}
+            </div>
+        {% endif %}
+        <table class="items-table">
+            <thead>
+                <tr>
+                    <th>
+                        اسم الصنف
+                    </th>
+                    <th>
+                        الكمية المطلوبة
+                    </th>
+                    <th>
+                        الكمية المنصرفة
+                    </th>
+                    <th>
+                        السعر
+                    </th>
+                    <th>
+                        الحالة
+                    </th>
+                    <th>
+                        ملاحظات
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for detail in transaction.itemtransactiondetails_set.all %}
+                    <tr>
+                        <td>
+                            {{ detail.item.name }}
+                        </td>
+                        <td>
+                            {{ detail.order_quantity|default:"-" }}
+                        </td>
+                        <td>
+                            {{ detail.approved_quantity }}
+                        </td>
+                        <td>
+                            {% if detail.item.itempricehistory_set.exists %}
+                                {{ detail.item.itempricehistory_set.last.price }} ج.م
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="status-badge status-{{ detail.get_status_display|lower }}">
+                                {{ detail.get_status_display }}
+                            </span>
+                        </td>
+                        <td>
+                            {{ detail.notes|default:"-" }}
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="6" style="text-align: center; color: #6c757d;">
+                            لا توجد أصناف
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <div class="signature-section">
+            <div class="signature-box">
+                <div class="signature-label">
+                    موظف المخزن
+                </div>
+                <div style="font-size: 10px; color: #6c757d;">
+                    الاسم والتوقيع
+                </div>
+            </div>
+            <div class="signature-box">
+                <div class="signature-label">
+                    المستلم
+                </div>
+                <div style="font-size: 10px; color: #6c757d;">
+                    الاسم والتوقيع
+                </div>
+            </div>
+            <div class="signature-box">
+                <div class="signature-label">
+                    المشرف
+                </div>
+                <div style="font-size: 10px; color: #6c757d;">
+                    الاسم والتوقيع
+                </div>
+            </div>
+        </div>
+        {% if transaction.created_by or transaction.modified_by %}
+            <div class="audit-info">
+                {% if transaction.created_by %}
+                    أنشئ بواسطة: {{ transaction.created_by.get_full_name|default:transaction.created_by.username }}
+                    في {{ transaction.created_at|date:"Y-m-d H:i" }}
+                {% endif %}
+                {% if transaction.modified_by and transaction.modified_by != transaction.created_by %}
+                    | عُدل بواسطة: {{ transaction.modified_by.get_full_name|default:transaction.modified_by.username }}
+                    في {{ transaction.modified_at|date:"Y-m-d H:i" }}
+                {% endif %}
+                {% if transaction.deleted %}
+                    | <strong>محذوف</strong> بواسطة: {{ transaction.deleted_by.get_full_name|default:transaction.deleted_by.username }}
+                    في {{ transaction.deleted_at|date:"Y-m-d H:i" }}
+                {% endif %}
+            </div>
+        {% endif %}
+    </body>
+</html>

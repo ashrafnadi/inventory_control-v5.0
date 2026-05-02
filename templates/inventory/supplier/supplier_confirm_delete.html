@@ -1,0 +1,55 @@
+<!-- supplier_confirm_delete.html -->
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+    <div class="container py-4">
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="card border-danger">
+                    <div class="card-header bg-danger text-white">
+                        <h5 class="mb-0">
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            تأكيد حذف المورد
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-warning">
+                            <i class="bi bi-info-circle me-1"></i>
+                            <strong>تحذير:</strong> عملية الحذف لا يمكن التراجع عنها!
+                        </div>
+                        <div class="text-center mb-4">
+                            <div class="bg-danger bg-opacity-10 p-4 rounded-circle d-inline-block mb-3">
+                                <i class="bi bi-person-x fs-1 text-danger"></i>
+                            </div>
+                            <h4 class="mb-3">
+                                هل أنت متأكد من حذف المورد؟
+                            </h4>
+                            <p class="fw-bold fs-5 text-danger">
+                                "{{ supplier.name }}"
+                            </p>
+                        </div>
+                        {% if item_count > 0 %}
+                            <div class="alert alert-danger">
+                                <i class="bi bi-exclamation-circle me-1"></i>
+                                <strong>تحذير:</strong> هذا المورد مرتبط بـ <strong>{{ item_count }} عناصر</strong>.
+                                <br />
+                                سيتم حذف جميع العلاقات المرتبطة بهذا المورد.
+                            </div>
+                        {% endif %}
+                        <form method="post">
+                            {% csrf_token %}
+                            <div class="d-flex justify-content-between mt-4">
+                                <a href="{% url 'supplier_list' %}" class="btn btn-secondary">
+                                    <i class="bi bi-arrow-left me-1"></i> إلغاء
+                                </a>
+                                <button type="submit" class="btn btn-danger">
+                                    <i class="bi bi-trash me-1"></i> حذف المورد نهائياً
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock content %}

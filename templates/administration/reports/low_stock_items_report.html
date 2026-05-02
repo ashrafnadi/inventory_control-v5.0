@@ -1,0 +1,96 @@
+<!-- administration/reports/low_stock_items_report.html -->
+{% load static %}
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+    <meta charset="UTF-8" />
+    <title>كشف الأصناف منخفضة المخزون - {{ faculty.name }}</title>
+    <style>
+        body { font-family: "Arial", sans-serif; font-size: 11px; margin: 0; padding: 0; }
+        @page { size: A4 landscape; margin: 1.5cm; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border: 1px solid #dee2e6; padding: 4px 6px; text-align: center; }
+        th { background-color: #343a40; color: white; font-weight: bold; }
+        tr:nth-child(even) { background-color: #f8f9fa; }
+        .header-info { text-align: center; margin-bottom: 15px; border-bottom: 2px solid #343a40; padding-bottom: 10px; }
+        .report-title { font-size: 14px; font-weight: bold; color: #2c3e50; margin: 0 0 5px 0; }
+        .report-meta { font-size: 10px; color: #7f8c8d; margin: 0; }
+        .filter-info { background-color: #e7f3ff; border: 1px solid #2196f3; padding: 5px; margin-bottom: 10px; font-size: 10px; }
+        .qty-low { color: #e67e22; font-weight: bold; }
+        .qty-out { color: #dc3545; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="header-info">
+        <p class="report-title">كشف الأصناف منخفضة المخزون - {{ faculty.name }}</p>
+        <p class="report-meta">
+            التاريخ: {{ current_date|date:"Y-m-d H:i" }} | 
+            المستخدم: {{ user.get_full_name|default:user.username }}
+        </p>
+        
+        {% if selected_sub_warehouse %}
+        <div class="filter-info">
+            📍 المخزن الفرعي: <strong>{{ selected_sub_warehouse.name }}</strong> | 
+            المخزن الرئيسي: <strong>{{ selected_sub_warehouse.warehouse.name|default:"-" }}</strong>
+        </div>
+        {% else %}
+        <div class="filter-info">
+            📍 جميع المخازن الفرعية في {{ faculty.name }}
+        </div>
+        {% endif %}
+    </div>
+
+    {% if low_stock_items %}
+        <table>
+            <thead>
+                <tr>
+                    <th>م</th>
+                    <th>اسم الصنف</th>
+                    <th>الكود</th>
+                    <th>الفئة</th>
+                    <th>المخزن الفرعي</th>
+                    <th>الكمية</th>
+                    <th>الحد الأدنى</th>
+                    <th>الحالة</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for stock in low_stock_items %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td style="text-align: right;">{{ stock.item.name }}</td>
+                    <td>{{ stock.item.code|default:"-" }}</td>
+                    <td>{{ stock.item.category.name|default:"بدون فئة" }}</td>
+                    <td>{{ stock.sub_warehouse.name }}</td>
+                    <td>
+                        <span class="{% if stock.cached_quantity == 0 %}qty-out{% else %}qty-low{% endif %}">
+                            {{ stock.cached_quantity }}
+                        </span>
+                    </td>
+                    <td>{{ stock.limit_quantity }}</td>
+                    <td>
+                        {% if stock.cached_quantity == 0 %}
+                            <strong style="color: #dc3545;">نافد</strong>
+                        {% else %}
+                            <strong style="color: #e67e22;">منخفض</strong>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        
+        <div style="margin-top: 15px; font-size: 10px; color: #7f8c8d;">
+            إجمالي الأصناف: {{ total_count }}
+        </div>
+    {% else %}
+        <p style="text-align: center; color: #7f8c8d; margin-top: 50px; font-size: 12px;">
+            {% if selected_sub_warehouse %}
+                لا توجد أصناف منخفضة المخزون في المخزن الفرعي "<strong>{{ selected_sub_warehouse.name }}</strong>".
+            {% else %}
+                لا توجد أصناف منخفضة المخزون في كلية "<strong>{{ faculty.name }}</strong>".
+            {% endif %}
+        </p>
+    {% endif %}
+</body>
+</html>

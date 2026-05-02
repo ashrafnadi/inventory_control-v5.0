@@ -1,0 +1,228 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="description" content="" />
+        <meta name="keywords" content="" />
+        <meta name="author" content="" />
+        <link rel="icon" href="{% static 'img/bu_logo.png' %}" />
+        <!--  CRITICAL FIX: Single HTMX config meta tag -->
+        <meta name="htmx-config"
+            content='{"headers": {"X-CSRFToken": "{{ csrf_token }}"}, "cache": "false", "defaultSwapStyle": "innerHTML"}' />
+        <title>
+            {% block title %}
+            {% endblock title %}
+        </title>
+        {% include "partials/_styles.html" %}
+        {% block styles %}
+        {% endblock styles %}
+    </head>
+
+    <body>
+        {% include "partials/top_bar.html" %}
+        {% include "partials/side_bar.html" %}
+        <div class="sidebar-overlay" id="sidebar-overlay"></div>
+        <!-- Main Content -->
+        <div class="main-container">
+            <!-- Display Django messages as Bootstrap alerts -->
+            {% if messages %}
+            {% for message in messages %}
+            <div class="alert {{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
+                </button>
+                </div>
+                {% endfor %}
+            {% endif %}
+            {% block content %}
+            {% endblock content %}
+        </div>
+        {% if user.is_authenticated %}
+        <div class="idle-modal" id="idle-modal" aria-hidden="true">
+            <div class="idle-modal-content">
+                <i class="bi bi-clock-fill idle-modal-icon"></i>
+                <h2>تنبيه انتهاء الجلسة</h2>
+                <p>
+                    ستنتهي جلستك خلال
+                    <strong id="idle-countdown"></strong>
+                    ثانية بسبب عدم النشاط.
+                </p>
+                <button class="btn btn-primary" id="idle-continue" type="button">
+                    <i class="bi bi-arrow-repeat me-1"></i>
+                    متابعة الجلسة
+                </button>
+            </div>
+        </div>
+        {% endif %}
+        <!-- Footer -->
+        {% include "partials/_footer.html" %}
+        <!-- Modal -->
+        {% include "partials/_modal.html" %}
+        <!-- Scripts - Load libraries FIRST -->
+        {% include "partials/_scripts.html" %}
+        {% if user.is_authenticated %}
+            <script id="app-session-init"
+                    data-idle-timeout-ms="{{ idle_timeout_ms }}"
+                    data-warning-ms="{{ session_warning_ms }}"
+                    data-logout-url="{% url 'logout' %}">
+                window.APP_SESSION = {
+                    idleTimeoutMs: parseInt(document.currentScript.dataset.idleTimeoutMs, 10) || 0,
+                    warningMs: parseInt(document.currentScript.dataset.warningMs, 10) || 0,
+                    logoutUrl: document.currentScript.dataset.logoutUrl
+                };
+            </script>
+        {% endif %}
+        <!--  CRITICAL FIX: SINGLE HTMX CONFIGURATION SCRIPT -->
+        <script>
+                document.addEventListener('DOMContentLoaded', function () {
+                //  SINGLE CSRF TOKEN CONFIGURATION
+                const csrfToken = '{{ csrf_token }}';
+
+                // Add CSRF token to all HTMX requests
+                document.body.addEventListener('htmx:configRequest', function (event) {
+                    if (!event.detail.headers) {
+                        event.detail.headers = {};
+                    }
+                    event.detail.headers['X-CSRFToken'] = csrfToken;
+                });
+
+                // Add CSRF token to all fetch requests
+                const originalFetch = window.fetch;
+                window.fetch = function (url, options = {}) {
+                    if (!options.headers) {
+                        options.headers = {};
+                    }
+                    if (!options.headers['X-CSRFToken']) {
+                        options.headers['X-CSRFToken'] = csrfToken;
+                    }
+                    return originalFetch(url, options);
+                };
+
+                //  PROPER SCRIPT REMOVAL (fixed regex)
+                document.body.addEventListener('htmx:beforeSwap', function (event) {
+                    if (event.detail.xhr && event.detail.xhr.response) {
+                        // Remove ALL script tags from response
+                        event.detail.xhr.response = event.detail.xhr.response.replace(/<script\b [^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
+                    }
+                });
+
+                //  PROPER ERROR HANDLING
+                document.body.addEventListener('htmx:responseError', function (event) {
+                    console.error('HTMX response error:', event.detail.error);
+                    const errorMessage = event.detail.error.message || 'حدث خطأ في الخادم';
+
+                    // Show user-friendly error
+                    const container = event.detail.target || document.body;
+                    container.innerHTML = `
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <strong>خطأ في التحميل:</strong> ${errorMessage}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    `;
+                });
+
+                document.body.addEventListener('htmx:sendError', function (event) {
+                    console.error('HTMX send error:', event.detail.error);
+                    alert('فشل إرسال الطلب. يرجى التحقق من اتصال الإنترنت.');
+                });
+
+                //  DEBUGGING (optional, can be removed in production)
+                document.body.addEventListener('htmx:afterRequest', function (event) {
+                    console.log('HTMX request completed:', {
+                        url: event.detail.requestConfig.path,
+                        status: event.detail.xhr.status,
+                        target: event.detail.target.id || event.detail.target.tagName
+                    });
+                });
+
+                console.log(' HTMX and CSRF configuration initialized');
+            });
+
+            //  GLOBAL HTMX CONFIGURATION (outside DOMContentLoaded for early initialization)
+            if (typeof htmx !== 'undefined') {
+                htmx.config.globalViewTransitions = true;
+                htmx.config.defaultSwapDelay = 0;
+                htmx.config.refreshOnHistoryMiss = true;
+            }
+</script>
+        <script>
+            (function () {
+                const toggle = document.getElementById('sidebar-toggle');
+                const sidebar = document.getElementById('sidebar');
+                const overlay = document.getElementById('sidebar-overlay');
+
+                if (toggle && sidebar && overlay) {
+                    const closeSidebar = function () {
+                        sidebar.classList.remove('open');
+                        overlay.classList.remove('active');
+                        document.body.classList.remove('no-scroll');
+                    };
+
+                    toggle.addEventListener('click', function () {
+                        sidebar.classList.toggle('open');
+                        overlay.classList.toggle('active');
+                        document.body.classList.toggle('no-scroll');
+                    });
+                    overlay.addEventListener('click', closeSidebar);
+                    sidebar.querySelectorAll('a').forEach(function (link) {
+                        link.addEventListener('click', closeSidebar);
+                    });
+                }
+
+                const sessionConfig = window.APP_SESSION;
+                const idleModal = document.getElementById('idle-modal');
+                const countdown = document.getElementById('idle-countdown');
+                const continueButton = document.getElementById('idle-continue');
+
+                if (sessionConfig && idleModal && countdown && continueButton) {
+                    let warningTimer;
+                    let countdownTimer;
+
+                    const hideIdleWarning = function () {
+                        idleModal.classList.remove('active');
+                        idleModal.setAttribute('aria-hidden', 'true');
+                        clearInterval(countdownTimer);
+                    };
+
+                    const startIdleWarning = function () {
+                        let remaining = Math.max(1, Math.round(sessionConfig.warningMs / 1000));
+                        countdown.textContent = String(remaining);
+                        idleModal.classList.add('active');
+                        idleModal.setAttribute('aria-hidden', 'false');
+
+                        countdownTimer = setInterval(function () {
+                            remaining -= 1;
+                            countdown.textContent = String(Math.max(remaining, 0));
+                            if (remaining <= 0) {
+                                clearInterval(countdownTimer);
+                                window.location.href = sessionConfig.logoutUrl + '?timeout=1';
+                            }
+                        }, 1000);
+                    };
+
+                    const resetIdleTimer = function () {
+                        clearTimeout(warningTimer);
+                        hideIdleWarning();
+                        warningTimer = setTimeout(
+                            startIdleWarning,
+                            Math.max(1000, sessionConfig.idleTimeoutMs - sessionConfig.warningMs)
+                        );
+                    };
+
+                    ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll', 'click'].forEach(function (eventName) {
+                        document.addEventListener(eventName, resetIdleTimer, { passive: true });
+                    });
+                    continueButton.addEventListener('click', resetIdleTimer);
+                    resetIdleTimer();
+                }
+            })();
+        </script>
+        <!--  CRITICAL FIX: Remove all other script blocks - this is the ONLY one needed -->
+        {% block scripts %}
+        {% endblock scripts %}
+        </body>
+
+</html>

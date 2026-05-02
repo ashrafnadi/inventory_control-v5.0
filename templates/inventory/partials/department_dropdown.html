@@ -1,0 +1,12 @@
+<!-- inventory/partials/department_dropdown.html -->
+{% if departments %}
+<label class="form-label fw-bold">اختر القسم</label>
+<select name="department_id" class="form-select" hx-get="{% url 'htmx_load_employees' %}" hx-target="#emp-container"
+    hx-swap="innerHTML" hx-include="[name='department_id']" hx-indicator="#emp-spinner">
+    <option value="">-- اختر القسم --</option>
+    {% for d in departments %}
+    <option value="{{ d.id }}">{{ d.name }}</option>
+    {% endfor %}
+</select>
+{% endif %}
+<div id="emp-spinner" class="htmx-indicator hide"><small class="text-primary">جاري تحميل الموظفين...</small></div>

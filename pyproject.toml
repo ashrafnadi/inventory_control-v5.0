@@ -1,0 +1,34 @@
+[project]
+name = "inventory-control"
+version = "0.1.0"
+description = "Django-based web application designed to manage inventory and warehouse operations efficiently. Built for Benha University (GSCC)"
+readme = "README.md"
+requires-python = ">=3.13.7"
+dependencies = [
+    "crispy-bootstrap5>=2025.6",
+    "django>=6.0",
+    "django-crispy-forms>=2.5",
+    "django-extensions>=4.1",
+    "django-htmx>=1.27.0",
+    "django-widget-tweaks>=1.5.0",
+    "openpyxl>=3.1.5",
+    "pillow>=12.0.0",
+    "psycopg2-binary>=2.9.11",
+    "python-dateutil>=2.9.0.post0",
+    "python-decouple>=3.8",
+    # for linux
+    "python-magic>=0.4.27",
+    # for windows
+    #"python-magic-bin>=0.4.14",
+    "reportlab>=4.4.5",
+    "ruff>=0.14.8",
+    # for windows
+    "waitress>=3.0.2",
+    # for linux
+    #gunicorn>=23.0.0,
+    "weasyprint>=67.0",
+    "whitenoise>=6.11.0",
+    "ipykernel>=7.1.0",
+    "django-debug-toolbar>=6.1.0",
+    "faker>=38.2.0",
+]

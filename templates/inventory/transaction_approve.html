@@ -1,0 +1,90 @@
+<!-- templates/inventory/transaction_approve.html -->
+{% extends "base.html" %}
+{% load static %}
+{% block title %}
+    اعتماد السند
+{% endblock title %}
+{% block content %}
+    <div class="card">
+        <div class="card-header bg-info text-white">
+            <h3 class="mb-0">
+                اعتماد سند الإضافة
+            </h3>
+        </div>
+        <div class="card-body">
+            <div class="alert alert-info">
+                <strong>رقم السند:</strong> {{ transaction.document_number }}
+                <br />
+                <strong>النوع:</strong> {{ transaction.get_transaction_type_display }}
+                <br />
+                <strong>أنشئ بواسطة:</strong> {{ transaction.created_by.get_full_name }}
+                <br />
+                <strong>التاريخ:</strong> {{ transaction.created_at|date:"Y-m-d H:i" }}
+            </div>
+            <h4 class="mb-3 mt-4">
+                تفاصيل الأصناف
+            </h4>
+            <div class="table-responsive">
+                <table class="table table-bordered">
+                    <thead class="table-light">
+                        <tr>
+                            <th>
+                                اسم الصنف
+                            </th>
+                            <th>
+                                الكمية المطلوبة
+                            </th>
+                            <th>
+                                الكمية المعتمدة
+                            </th>
+                            <th>
+                                السعر
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for detail in items %}
+                            <tr>
+                                <td>
+                                    {{ detail.item.name }}
+                                </td>
+                                <td>
+                                    {{ detail.order_quantity }}
+                                </td>
+                                <td>
+                                    {{ detail.approved_quantity }}
+                                </td>
+                                <td>
+                                    {{ detail.price|default:"-" }}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <form method="post" class="mt-4">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label class="form-label">
+                        ملاحظات الاعتماد/الرفض
+                    </label>
+                    <textarea name="approval_notes"
+                              class="form-control"
+                              placeholder="اكتب ملاحظاتك هنا..."
+                              rows="3">{{ transaction.approval_notes }}</textarea>
+                </div>
+                <div class="d-flex gap-3">
+                    <button type="submit" name="reject" class="btn btn-danger">
+                        <i class="bi bi-x-circle"></i> رفض السند
+                    </button>
+                    <button type="submit" name="approve" class="btn btn-success">
+                        <i class="bi bi-check-circle"></i> اعتماد السند
+                    </button>
+                    <a href="{% url 'transaction_list' %}" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left"></i> إلغاء
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock content %}

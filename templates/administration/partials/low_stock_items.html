@@ -1,0 +1,67 @@
+<!-- administration/partials/low_stock_items.html -->
+{% if low_stock_items %}
+<div class="card shadow-sm h-100 mt-4">
+    <div class="card-header text-dark text-center d-flex justify-content-between align-items-center mb-3 bg-warning">
+        <h5>
+            <i class="bi bi-exclamation-triangle me-2"></i>الأصناف منخفضة المخزون
+        </h5>
+        <div>
+            {% if selected_sub_warehouse %}
+                <a href="{% url 'export_low_stock_items_pdf' %}?sub_warehouse_id={{ selected_sub_warehouse.id }}" class="btn btn-sm btn-danger" target="_blank">
+                    <i class="bi bi-file-earmark-pdf me-1"></i>
+                    تصدير PDF (هذا المخزن)
+                </a>
+            {% else %}
+                <a href="{% url 'export_low_stock_items_pdf' %}" class="btn btn-sm btn-danger" target="_blank">
+                    <i class="bi bi-file-earmark-pdf me-1"></i>
+                    تصدير PDF (جميع المخازن)
+                </a>
+            {% endif %}
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover" id="low_stock_items">
+                <thead class="table-dark">
+                    <tr>
+                        <th>#</th>
+                        <th>اسم الصنف</th>
+                        <th>الكود</th>
+                        <th>الفئة</th>
+                        <th>الكمية</th>
+                        <th>الحد الأدنى</th>
+                        <th>الحالة</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item_data in low_stock_items %}
+                    <tr class="{% if item_data.quantity == 0 %}table-danger{% else %}table-warning{% endif %}">
+                        <td>{{ forloop.counter }}</td>
+                        <td><strong>{{ item_data.item_name }}</strong></td>
+                        <td><small class="text-muted">{{ item_data.item_code|default:"-" }}</small></td>
+                        <td>{{ item_data.category_name }}</td>
+                        <td>
+                            <strong class="{% if item_data.quantity == 0 %}text-danger{% else %}text-warning{% endif %}">
+                                {{ item_data.quantity }}
+                            </strong>
+                        </td>
+                        <td>{{ item_data.limit_quantity }}</td>
+                        <td>
+                            {% if item_data.quantity == 0 %}
+                            <span class="badge bg-danger">نافد</span>
+                            {% else %}
+                            <span class="badge bg-warning text-dark">منخفض</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="alert alert-info">
+    <i class="bi bi-info-circle me-2"></i>لا توجد أصناف منخفضة المخزون.
+</div>
+{% endif %}

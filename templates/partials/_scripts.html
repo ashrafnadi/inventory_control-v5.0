@@ -1,0 +1,29 @@
+{% load static %}
+<!--  PROPER LIBRARY LOADING ORDER -->
+<!-- Bootstrap Bundle with Popper -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<!-- HTMX -->
+<script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.8/dist/htmx.min.js"
+        integrity="sha384-/TgkGk7p307TH7EXJDuUlgG3Ce1UVolAOFopFekQkkXihi5u/6OCvVKyz1W+idaz"
+        crossorigin="anonymous"></script>
+<!-- jQuery and DataTables -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<script src="https://cdn.datatables.net/2.3.5/js/dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/2.3.5/js/dataTables.bootstrap5.min.js"></script>
+<script src="https://cdn.datatables.net/plug-ins/2.3.7/features/inputPaging/dist/dataTables.inputPaging.min.js"></script>
+<!-- Select2 JS -->
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<!-- Theme Mode Script -->
+<script src="{% static 'js/theme_mode.js' %}"></script>
+<!-- Custom HTMX Initialization -->
+<script>
+    //  EARLY HTMX CONFIGURATION (before DOMContentLoaded)
+    if (typeof htmx !== 'undefined') {
+        // Set default swap style globally
+        htmx.config.defaultSwapStyle = 'innerHTML';
+        // Enable view transitions for better UX
+        htmx.config.globalViewTransitions = true;
+        // Set reasonable timeout
+        htmx.config.timeout = 10000; // 10 seconds
+    }
+</script>

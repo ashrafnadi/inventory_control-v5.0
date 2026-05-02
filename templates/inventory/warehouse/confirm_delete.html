@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block content %}
+    <div class="container mt-5">
+        <div class="card p-4 text-center" style="max-width: 500px; margin: 0 auto">
+            <h5>
+                هل أنت متأكد من حذف "{{ object }}"؟
+            </h5>
+            <p class="text-danger">
+                سيتم حذف هذا العنصر نهائيًا.
+            </p>
+            <form method="post">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger me-2">
+                    <i class="bi bi-trash"></i> نعم، احذف
+                </button>
+                <a href="{% if 'warehouse' in request.path %}{% url 'warehouse_list' %}{% else %}{% url 'itemcategory_list' %}{% endif %}"
+                   class="btn btn-secondary">
+                    إلغاء
+                </a>
+            </form>
+        </div>
+    </div>
+{% endblock content %}

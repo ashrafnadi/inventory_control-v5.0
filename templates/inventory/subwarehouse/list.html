@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>
+            المخازن الفرعية
+        </h1>
+        {% if request.session.user_type == "inventory_admin" %}
+            <a href="{% url 'subwarehouse_create' %}" class="btn btn-primary">إضافة مخزن فرعي</a>
+        {% endif %}
+    </div>
+    {% if sub_warehouses %}
+        <table class="table table-striped" id="subwarehouse_list">
+            <thead>
+                <tr>
+                    <th>
+                        اسم المخزن الفرعي
+                    </th>
+                    <th>
+                        المخزن الرئيسي
+                    </th>
+                    <th>
+                        النطاق
+                    </th>
+                    {% if request.session.user_type == "inventory_admin" %}
+                        <th>
+                            الإجراءات
+                        </th>
+                    {% endif %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for sw in sub_warehouses %}
+                    <tr>
+                        <td>
+                            {{ sw.name }}
+                        </td>
+                        <td>
+                            {{ sw.warehouse.name }}
+                        </td>
+                        <td>
+                            مشترك بين الكليات
+                        </td>
+                        {% if request.session.user_type == "inventory_admin" %}
+                            <td>
+                                <a href="{% url 'subwarehouse_update' sw.pk %}"
+                                   class="btn btn-sm btn-warning">تعديل</a>
+                                <a href="{% url 'subwarehouse_delete' sw.pk %}"
+                                   class="btn btn-sm btn-danger">حذف</a>
+                            </td>
+                        {% endif %}
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <div class="alert alert-info">
+            لا توجد مخازن فرعية.
+        </div>
+    {% endif %}
+{% endblock content %}
+{% block scripts %}
+    <script type="text/javascript">
+        new DataTable('#subwarehouse_list', {
+            processing: true,
+            deferRender: true,
+            language: {
+                url: "{% static 'ar.json' %}"
+            },
+            layout: {
+                bottomEnd: {
+                    inputPaging: true
+                }
+            },
+            lengthMenu: [10, 15, 30, 50, -1],
+            responsive: true,
+            columnDefs: [{
+                className: 'text-right',
+                targets: '_all'
+            }, {
+                width: 'auto',
+                targets: 0
+            }],
+            autoWidth: true,
+            order: [
+                [0, 'asc']
+            ] // sort by 2nd column (name)
+        })
+    </script>
+{% endblock scripts %}

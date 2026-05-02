@@ -1,0 +1,58 @@
+<!-- templates/inventory/transaction_audit_log.html -->
+{% extends "base.html" %}
+{% block content %}
+    <div class="container py-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>
+                سجل التدقيق: سند {{ transaction.document_number }}
+            </h2>
+            <a href="{% url 'transaction_list' %}" class="btn btn-secondary">رجوع</a>
+        </div>
+        <div class="timeline">
+            {% for log in audit_logs %}
+                <div class="card mb-3">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <div>
+                            <span class="badge bg-{{ log.get_action_display|yesno:'success,warning,danger,info' }}">
+                                {{ log.get_action_display }}
+                            </span>
+                            {% if log.performed_by %}
+                                بواسطة: {{ log.performed_by.get_full_name|default:log.performed_by.username }}
+                            {% endif %}
+                        </div>
+                        <small class="text-muted">{{ log.timestamp|date:"Y-m-d H:i" }}</small>
+                    </div>
+                    <div class="card-body">
+                        {% if log.changed_fields %}
+                            <h6>
+                                الحقول المعدلة:
+                            </h6>
+                            <ul class="list-unstyled">
+                                {% for field_name, changes in log.changed_fields.items %}
+                                    <li>
+                                        <strong>{{ field_name }}:</strong>
+                                        <span class="text-muted">{{ changes.old }}</span> →
+                                        <span class="text-primary">{{ changes.new }}</span>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                        {% if log.ip_address %}
+                            <small class="text-muted">
+                                IP: {{ log.ip_address }}
+                                <br />
+                                {% if log.user_agent %}
+                                    User Agent: {{ log.user_agent|truncatechars:50 }}
+                                {% endif %}
+                            </small>
+                        {% endif %}
+                    </div>
+                </div>
+            {% empty %}
+                <div class="alert alert-info">
+                    لا يوجد سجل تدقيق لهذا السند.
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+{% endblock content %}
