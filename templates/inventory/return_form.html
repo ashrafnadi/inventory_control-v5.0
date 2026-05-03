@@ -2,549 +2,673 @@
 {% extends "base.html" %}
 {% load static %}
 {% load widget_tweaks %}
+
+{% block title %}نموذج 8: طلب ارتجاع أصناف{% endblock title %}
+
 {% block content %}
-    <form method="post">
-        {% csrf_token %}
-        <!-- Parent Form: ItemTransactions -->
-        <div class="card mb-4 overflow-visible">
-            <div class="card-header bg-primary text-white">
-                <h5 class="mb-0">نموذج 8: طلب ارتجاع أصناف</h5>
-            </div>
-            <input type="hidden"
-                   name="approval_status"
-                   value="{{ form.approval_status.value|default:form.approval_status.initial }}" />
-            <div class="card-body overflow-visible">
-                <div class="row">
-                    <!-- 1. document_number -->
-                    <div class="col-md-3 mb-3">
-                        <label>رقم المستند</label>
-                        <input type="text"
-                               class="form-control"
-                               value="{{ form.instance.document_number|default:'سيتم الإنشاء تلقائياً' }}"
-                               readonly />
-                    </div>
-                    <!-- 2. document_type -->
-                    <div class="col-md-3 mb-3">
-                        {{ form.document_type.label_tag }}
-                        {{ form.document_type|add_class:"form-select" }}
-                        {% if form.document_type.errors %}<div class="text-danger mt-1">{{ form.document_type.errors }}</div>{% endif %}
-                    </div>
-                    <!-- 3. from_department -->
-                    <div class="col-md-3 mb-3">
-                        {{ form.from_department.label_tag }}
-                        <select name="from_department"
-                                id="id_from_department"
-                                class="form-select"
-                                hx-get="{% url 'from_department_users_select_return' %}"
-                                hx-trigger="change"
-                                hx-target="#from-user-container"
-                                hx-include="[name='from_department']">
-                            <option value="">---------</option>
-                            {% for value, label in form.from_department.field.choices %}
-                                {% if value %}
-                                    <option value="{{ value }}"
-                                            {% if form.from_department.value == value|default_if_none:"" %}selected{% endif %}>
-                                        {{ label }}
-                                    </option>
-                                {% endif %}
-                            {% endfor %}
-                        </select>
-                        {% if form.from_department.errors %}<div class="text-danger mt-1">{{ form.from_department.errors }}</div>{% endif %}
-                    </div>
-                    <!-- 4. from_user -->
-                    <div class="col-md-3 mb-3">
-                        {{ form.from_user.label_tag }}
-                        <div id="from-user-container">
-                            {% if form.from_user.field.queryset.exists and form.from_department.value %}
-                                {{ form.from_user|add_class:"form-select" }}
-                            {% else %}
-                                <select class="form-select" disabled>
-                                    <option>اختر القسم أولاً</option>
-                                </select>
+<form method="post" id="return-form">
+    {% csrf_token %}
+    
+    <!-- Parent Form: ItemTransactions -->
+    <div class="card mb-4 overflow-visible">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">نموذج 8: طلب ارتجاع أصناف</h5>
+        </div>
+        
+        <input type="hidden" name="approval_status" value="{{ form.approval_status.value|default:form.approval_status.initial }}" />
+        <input type="hidden" name="transaction_type" value="{{ form.transaction_type.value|default:form.transaction_type.initial }}" />
+        <input type="hidden" name="castody_type" value="{{ form.castody_type.value|default:form.castody_type.initial }}" />
+        
+        <div class="card-body overflow-visible">
+            <div class="row">
+                <!-- 1. document_number (Read-only) -->
+                <div class="col-md-3 mb-3">
+                    <label>رقم المستند</label>
+                    <input type="text" class="form-control" value="{{ form.instance.document_number|default:'سيتم الإنشاء تلقائياً' }}" readonly />
+                </div>
+                
+                <!-- 2. document_type -->
+                <div class="col-md-3 mb-3">
+                    {{ form.document_type.label_tag }}
+                    {{ form.document_type|add_class:"form-select" }}
+                    {% if form.document_type.errors %}
+                        <div class="text-danger mt-1">{{ form.document_type.errors }}</div>
+                    {% endif %}
+                </div>
+                
+                <!-- 3. from_department (HTMX) -->
+                <div class="col-md-3 mb-3">
+                    {{ form.from_department.label_tag }}
+                    <select name="from_department" id="id_from_department" class="form-select"
+                            hx-get="{% url 'from_department_users_select_return' %}"
+                            hx-trigger="change"
+                            hx-target="#from-user-container"
+                            hx-include="[name='from_department']"
+                            hx-indicator="#from-dept-spinner">
+                        <option value="">---------</option>
+                        {% for value, label in form.from_department.field.choices %}
+                            {% if value %}
+                                <option value="{{ value }}" {% if form.from_department.value == value|default_if_none:"" %}selected{% endif %}>
+                                    {{ label }}
+                                </option>
                             {% endif %}
-                        </div>
-                        {% if form.from_user.errors %}<div class="text-danger mt-1">{{ form.from_user.errors }}</div>{% endif %}
+                        {% endfor %}
+                    </select>
+                    <div id="from-dept-spinner" class="htmx-indicator hide">
+                        <small class="text-primary">جاري التحميل...</small>
                     </div>
-                    <!-- 5. to_sub_warehouse (FIXED FIELD) -->
-                    <div class="col-md-3 mb-3">
-                        {{ form.to_sub_warehouse.label_tag }}
-                        <select name="to_sub_warehouse"
-                                id="id_to_sub_warehouse"
-                                class="form-select"
-                                hx-get="{% url 'inventory_user_select_return' %}"
-                                hx-trigger="change"
-                                hx-target="#inventory-user-container"
-                                hx-include="[name='to_sub_warehouse']">
-                            <option value="">---------</option>
-                            {% for value, label in form.to_sub_warehouse.field.choices %}
-                                {% if value %}
-                                    <option value="{{ value }}"
-                                            {% if form.to_sub_warehouse.value == value|default_if_none:"" %}selected{% endif %}>
-                                        {{ label }}
-                                    </option>
-                                {% endif %}
-                            {% endfor %}
-                        </select>
-                        {% if form.to_sub_warehouse.errors %}<div class="text-danger mt-1">{{ form.to_sub_warehouse.errors }}</div>{% endif %}
-                    </div>
-                    <!-- 6. inventory_user -->
-                    <div class="col-md-3 mb-3">
-                        {{ form.inventory_user.label_tag }}
-                        <div id="inventory-user-container">
-                            {% if form.inventory_user.field.queryset.exists %}
-                                {{ form.inventory_user|add_class:"form-select" }}
-                            {% else %}
-                                <div class="form-control text-muted" disabled>اختر المخزن الفرعي أولاً</div>
-                            {% endif %}
-                        </div>
-                        {% if form.inventory_user.errors %}<div class="text-danger mt-1">{{ form.inventory_user.errors }}</div>{% endif %}
-                    </div>
-                    <!-- Other fields -->
-                    {% for field in form %}
-                        {% if field.name not in "document_number document_type to_sub_warehouse from_department from_user inventory_user notes transaction_type castody_type to_warehouse created_by approval_status" %}
-                            <div class="col-md-3 mb-3">
-                                {{ field.label_tag }}
-                                {% if field.field.widget.input_type == 'select' %}
-                                    {{ field|add_class:"form-select" }}
-                                {% else %}
-                                    {{ field|add_class:"form-control" }}
-                                {% endif %}
-                                {% if field.errors %}<div class="text-danger mt-1">{{ field.errors }}</div>{% endif %}
-                            </div>
+                    {% if form.from_department.errors %}
+                        <div class="text-danger mt-1">{{ form.from_department.errors }}</div>
+                    {% endif %}
+                </div>
+                
+                <!-- 4. from_user (HTMX target) -->
+                <div class="col-md-3 mb-3">
+                    {{ form.from_user.label_tag }}
+                    <div id="from-user-container">
+                        {% if form.from_user.field.queryset.exists and form.from_department.value %}
+                            {{ form.from_user|add_class:"form-select" }}
+                        {% else %}
+                            <select class="form-select" disabled>
+                                <option>اختر القسم أولاً</option>
+                            </select>
                         {% endif %}
-                    {% endfor %}
-                </div>
-                <!-- Notes field on new line (full width) -->
-                <div class="row">
-                    <div class="col-12 mb-3">
-                        {{ form.notes.label_tag }}
-                        {{ form.notes|add_class:"form-control" }}
-                        {% if form.notes.errors %}<div class="text-danger mt-1">{{ form.notes.errors }}</div>{% endif %}
                     </div>
+                    {% if form.from_user.errors %}
+                        <div class="text-danger mt-1">{{ form.from_user.errors }}</div>
+                    {% endif %}
+                </div>
+                
+                <!-- 5. to_sub_warehouse (FIXED: HTMX for inventory_user) -->
+                <div class="col-md-3 mb-3">
+                    {{ form.to_sub_warehouse.label_tag }}
+                    <select name="to_sub_warehouse" id="id_to_sub_warehouse" class="form-select"
+                            hx-get="{% url 'inventory_user_select_return' %}"
+                            hx-trigger="change"
+                            hx-target="#inventory-user-container"
+                            hx-include="[name='to_sub_warehouse']"
+                            hx-indicator="#to-wh-spinner">
+                        <option value="">---------</option>
+                        {% for value, label in form.to_sub_warehouse.field.choices %}
+                            {% if value %}
+                                <option value="{{ value }}" {% if form.to_sub_warehouse.value == value|default_if_none:"" %}selected{% endif %}>
+                                    {{ label }}
+                                </option>
+                            {% endif %}
+                        {% endfor %}
+                    </select>
+                    <div id="to-wh-spinner" class="htmx-indicator hide">
+                        <small class="text-primary">جاري التحميل...</small>
+                    </div>
+                    {% if form.to_sub_warehouse.errors %}
+                        <div class="text-danger mt-1">{{ form.to_sub_warehouse.errors }}</div>
+                    {% endif %}
+                </div>
+                
+                <!-- 6. inventory_user (HTMX target) -->
+                <div class="col-md-3 mb-3">
+                    {{ form.inventory_user.label_tag }}
+                    <div id="inventory-user-container">
+                        {% if form.inventory_user.field.queryset.exists %}
+                            {{ form.inventory_user|add_class:"form-select" }}
+                        {% else %}
+                            <div class="form-control text-muted" disabled>اختر المخزن الفرعي أولاً</div>
+                        {% endif %}
+                    </div>
+                    {% if form.inventory_user.errors %}
+                        <div class="text-danger mt-1">{{ form.inventory_user.errors }}</div>
+                    {% endif %}
+                </div>
+                
+                <!-- Other fields (loop, excluding handled ones) -->
+                {% for field in form %}
+                    {% if field.name not in "document_number document_type to_sub_warehouse from_department from_user inventory_user notes transaction_type castody_type to_warehouse created_by approval_status" %}
+                        <div class="col-md-3 mb-3">
+                            {{ field.label_tag }}
+                            {% if field.field.widget.input_type == 'select' %}
+                                {{ field|add_class:"form-select" }}
+                            {% else %}
+                                {{ field|add_class:"form-control" }}
+                            {% endif %}
+                            {% if field.errors %}
+                                <div class="text-danger mt-1">{{ field.errors }}</div>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+            
+            <!-- Notes field (full width) -->
+            <div class="row">
+                <div class="col-12 mb-3">
+                    {{ form.notes.label_tag }}
+                    {{ form.notes|add_class:"form-control" }}
+                    {% if form.notes.errors %}
+                        <div class="text-danger mt-1">{{ form.notes.errors }}</div>
+                    {% endif %}
                 </div>
             </div>
         </div>
-        <!-- Child Formset: ItemTransactionDetails -->
-        <div class="card mb-4 overflow-visible">
-            {{ details_formset.management_form }}
-            <div id="formset-config"
-                 data-prefix="{{ details_formset.prefix }}"
-                 class="hide"></div>
-            <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">تفاصيل الأصناف</h5>
-                <button type="button" id="add-row" class="btn btn-light btn-sm">إضافة صنف +</button>
-            </div>
-            <div class="card-body">
-                <div class="table-responsive overflow-visible">
-                    <table class="table table-bordered form-table" id="details-table">
-                        <thead class="table-light">
-                            <tr>
-                                <th width="600px">الصنف</th>
-                                <th width="150px">الكمية المسترجعة</th>
-                                <th width="150px">الحالة</th>
-                                <th>ملاحظات</th>
-                                <th class="operations"></th>
+    </div>
+    
+    <!-- Child Formset: ItemTransactionDetails -->
+    <div class="card mb-4 overflow-visible">
+        {{ details_formset.management_form }}
+        <div id="formset-config" data-prefix="{{ details_formset.prefix }}" class="hide"></div>
+        
+        <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">تفاصيل الأصناف</h5>
+            <button type="button" id="add-row" class="btn btn-light btn-sm">إضافة صنف +</button>
+        </div>
+        
+        <div class="card-body">
+            <div class="table-responsive overflow-visible">
+                <table class="table table-bordered form-table" id="details-table">
+                    <thead class="table-light">
+                        <tr>
+                            <th width="600px">الصنف</th>
+                            <th width="150px">الكمية المسترجعة</th>
+                            <th width="150px">الحالة</th>
+                            <th>ملاحظات</th>
+                            <th class="operations"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for form in details_formset %}
+                            <tr class="form-row">
+                                {{ form.id }}
+                                <td>
+                                    {{ form.item }}
+                                    <input type="hidden" name="{{ details_formset.prefix }}-{{ forloop.counter0 }}-stock" class="item-stock" />
+                                    <input type="text" class="form-control form-control-sm item-search" placeholder="ابحث عن الصنف..." autocomplete="off" />
+                                </td>
+                                <td>
+                                    {{ form.approved_quantity|add_class:"form-control form-control-sm" }}
+                                    {% if form.approved_quantity.errors %}
+                                        <div class="text-danger small">{{ form.approved_quantity.errors }}</div>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {{ form.status|add_class:"form-select form-select-sm" }}
+                                </td>
+                                <td>
+                                    {{ form.notes|add_class:"form-control form-control-sm border-0 bg-transparent shadow-none" }}
+                                    {% if form.notes.errors %}
+                                        <div class="text-danger small">{{ form.notes.errors }}</div>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center align-middle">
+                                    <div class="hide-delete">{{ form.DELETE }}</div>
+                                    <button type="button" class="btn btn-sm btn-link text-danger delete-row" title="حذف الصنف">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </td>
                             </tr>
-                        </thead>
-                        <tbody>
-                            {% for form in details_formset %}
-                                <tr class="form-row">
-                                    {{ form.id }}
-                                    <td>
-                                        {{ form.item }}
-                                        <input type="hidden"
-                                               name="{{ details_formset.prefix }}-{{ forloop.counter0 }}-stock"
-                                               class="item-stock" />
-                                        <input type="text"
-                                               class="form-control form-control-sm item-search"
-                                               placeholder="ابحث عن الصنف..."
-                                               autocomplete="off" />
-                                    </td>
-                                    <td>
-                                        {{ form.approved_quantity|add_class:"form-control form-control-sm" }}
-                                        {% if form.approved_quantity.errors %}
-                                            <div class="text-danger small">{{ form.approved_quantity.errors }}</div>
-                                        {% endif %}
-                                    </td>
-                                    <td>{{ form.status|add_class:"form-select form-select-sm" }}</td>
-                                    <td>
-                                        {{ form.notes|add_class:"form-control form-control-sm border-0 bg-transparent shadow-none" }}
-                                        {% if form.notes.errors %}<div class="text-danger small">{{ form.notes.errors }}</div>{% endif %}
-                                    </td>
-                                    <td class="text-center align-middle">
-                                        <div class="hide-delete">{{ form.DELETE }}</div>
-                                        <button type="button"
-                                                class="btn btn-sm btn-link text-danger delete-row"
-                                                title="حذف الصنف">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
-                                    </td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
         </div>
-        <input type="hidden" name="created_by" value="{{ request.user.id }}" />
-        <div class="d-flex justify-content-between">
-            <a href="{{ return_url|default:'/inventory/items/' }}"
-               class="btn btn-secondary">إلغاء</a>
-            <button type="submit" class="btn btn-primary">حفظ</button>
-        </div>
-    </form>
+    </div>
+    
+    <!-- Hidden created_by -->
+    <input type="hidden" name="created_by" value="{{ request.user.id }}" />
+    
+    <!-- Submit buttons -->
+    <div class="d-flex justify-content-between">
+        <a href="{{ return_url|default:'/inventory/items/' }}" class="btn btn-secondary">إلغاء</a>
+        <button type="submit" class="btn btn-primary">حفظ</button>
+    </div>
+</form>
 {% endblock content %}
+
 {% block scripts %}
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const getItemNameUrl = "{% url 'get_item_name' %}";
-            const configDiv = document.getElementById('formset-config');
-            if (!configDiv) {
-                console.error("Missing #formset-config");
-                return;
-            }
-            const prefix = configDiv.dataset.prefix;
-            const totalFormsInput = document.getElementById('id_' + prefix + '-TOTAL_FORMS');
-            if (!totalFormsInput) {
-                console.error(`Management field id_${prefix}-TOTAL_FORMS not found`);
-                return;
-            }
-            let suppressSourceChangeConfirmation = false;
-
-            function hasSelectedItems() {
-                return Array.from(document.querySelectorAll('#details-table tbody .form-row')).some(row => {
-                    return row.querySelector('input[name$="-item"]')?.value.trim();
-                });
-            }
-
-            function clearSelectedItems() {
-                document.querySelectorAll('#details-table tbody .form-row').forEach(row => {
-                    const itemInput = row.querySelector('input[name$="-item"]');
-                    const searchInput = row.querySelector('.item-search');
-                    const stockInput = row.querySelector('.item-stock');
-                    const qtyInput = row.querySelector('input[name$="-approved_quantity"]');
-
-                    if (itemInput) itemInput.value = '';
-                    if (searchInput) searchInput.value = '';
-                    if (stockInput) stockInput.value = '';
-                    if (qtyInput) {
-                        qtyInput.removeAttribute('max');
-                        qtyInput.removeAttribute('data-max');
-                        qtyInput.value = '';
-                    }
-                });
-            }
-
-            function confirmSourceChange(message) {
-                if (suppressSourceChangeConfirmation) return true;
-                if (!hasSelectedItems()) return true;
-                const confirmed = confirm(message);
-                if (confirmed) clearSelectedItems();
-                return confirmed;
-            }
-
-            function getCurrentFromUserId() {
-                return document.getElementById('id_from_user')?.value || '';
-            }
-
-            function buildItemLookupUrl(itemId) {
-                const params = new URLSearchParams({ item_id: itemId });
-                const fromUserId = getCurrentFromUserId();
-                if (fromUserId) params.set('from_user_id', fromUserId);
-                return `${getItemNameUrl}?${params.toString()}`;
-            }
-
-            function syncFromUserPreviousValue() {
-                const fromUserSelect = document.getElementById('id_from_user');
-                if (fromUserSelect) {
-                    fromUserSelect.dataset.previousValue = fromUserSelect.value || '';
-                }
-            }
-
-            // =============== FORMSET MANAGEMENT ===============
-            function updateDeleteButtons() {
-                const rows = document.querySelectorAll('#details-table tbody .form-row');
-                const deleteButtons = document.querySelectorAll('.delete-row');
-                if (rows.length <= 1) {
-                    deleteButtons.forEach(btn => {
-                        btn.disabled = true;
-                        btn.classList.add('disabled');
-                    });
-                } else {
-                    deleteButtons.forEach(btn => {
-                        btn.disabled = false;
-                        btn.classList.remove('disabled');
-                    });
-                }
-            }
-
-            function attachDeleteListener(button) {
-                button.addEventListener('click', function() {
-                    const confirmed = confirm("هل أنت متأكد من حذف هذا الصنف؟");
-                    if (!confirmed) return;
-                    const row = this.closest('tr');
-                    if (row) row.remove();
-                    let total = parseInt(totalFormsInput.value) || 0;
-                    totalFormsInput.value = Math.max(0, total - 1);
-                    updateDeleteButtons();
-                });
-            }
-
-            // =============== ITEM SEARCH ===============
-            function attachSearchToRow(row) {
-                const searchInput = row.querySelector('.item-search');
-                const hiddenInput = row.querySelector('input[name$="-item"]');
-                const stockInput = row.querySelector('.item-stock');
-                let searchTimeout;
-
-                if (!searchInput || !hiddenInput) return;
-
-                const suggestionsContainer = document.createElement('div');
-                suggestionsContainer.className = 'search-dropdown';
-                searchInput.parentNode.style.position = 'relative';
-                searchInput.parentNode.appendChild(suggestionsContainer);
-
-                searchInput.addEventListener('input', function() {
-                    clearTimeout(searchTimeout);
-                    const query = this.value.trim();
-                    const fromUserSelect = document.getElementById('id_from_user');
-                    const fromUserId = fromUserSelect ? fromUserSelect.value : null;
-
-                    if (!fromUserId) {
-                        suggestionsContainer.innerHTML = '<div class="search-suggestion"><span class="theme-text-muted">يرجى اختيار الموظف المرسل أولاً</span></div>';
-                        suggestionsContainer.style.display = 'block';
-                        return;
-                    }
-
-                    if (!query) {
-                        suggestionsContainer.style.display = 'none';
-                        return;
-                    }
-
-                    searchTimeout = setTimeout(() => {
-                        const url = `{% url 'item_search_return' %}?q=${encodeURIComponent(query)}&from_user=${encodeURIComponent(fromUserId)}`;
-                        fetch(url)
-                            .then(response => response.json())
-                            .then(data => {
-                                suggestionsContainer.innerHTML = '';
-                                if (data.results?.length) {
-                                    data.results.forEach(item => {
-                                        const div = document.createElement('div');
-                                        div.className = 'search-suggestion';
-                                        div.textContent = item.name;
-                                        div.addEventListener('click', () => {
-                                            hiddenInput.value = item.id;
-                                            searchInput.value = item.name;
-                                            if (stockInput) {
-                                                stockInput.value = item.quantity || 0;
-                                            }
-                                            // Store max quantity for validation
-                                            const qtyInput = row.querySelector('input[name$="-approved_quantity"]');
-                                            if (qtyInput) {
-                                                qtyInput.setAttribute('max', item.quantity);
-                                                qtyInput.setAttribute('data-max', item.quantity);
-                                            }
-                                            suggestionsContainer.style.display = 'none';
-                                        });
-                                        div.addEventListener('mouseenter', () => {
-                                            div.style.backgroundColor = '#f8f9fa';
-                                        });
-                                        div.addEventListener('mouseleave', () => {
-                                            div.style.backgroundColor = '';
-                                        });
-                                        suggestionsContainer.appendChild(div);
-                                    });
-                                    suggestionsContainer.style.display = 'block';
-                                } else {
-                                    suggestionsContainer.innerHTML = '<div class="search-suggestion"><span class="theme-text-muted">لا توجد أصناف</span></div>';
-                                    suggestionsContainer.style.display = 'block';
-                                }
-                            })
-                            .catch(err => {
-                                console.error('Search error:', err);
-                                suggestionsContainer.innerHTML = '<div class="search-suggestion"><span class="theme-text-danger">خطأ في البحث</span></div>';
-                                suggestionsContainer.style.display = 'block';
-                            });
-                    }, 300);
-                });
-
-                document.addEventListener('click', (e) => {
-                    if (!row.contains(e.target)) {
-                        suggestionsContainer.style.display = 'none';
-                    }
-                });
-
-                // Add quantity validation
-                const qtyInput = row.querySelector('input[name$="-approved_quantity"]');
-                if (qtyInput) {
-                    qtyInput.addEventListener('input', function() {
-                        const maxQty = parseInt(this.getAttribute('data-max')) || Infinity;
-                        const currentQty = parseInt(this.value) || 0;
-                        if (currentQty > maxQty) {
-                            alert(`الكمية لا يمكن أن تتجاوز ${maxQty}`);
-                            this.value = maxQty;
-                        }
-                    });
-                }
-            }
-
-            // =============== RESTORE ITEM NAMES ===============
-            function restoreItemNames() {
-                document.querySelectorAll('.form-row').forEach(row => {
-                    const itemInput = row.querySelector('input[name$="-item"]');
-                    const searchInput = row.querySelector('.item-search');
-                    const stockInput = row.querySelector('.item-stock');
-                    const qtyInput = row.querySelector('input[name$="-approved_quantity"]');
-
-                    if (itemInput && itemInput.value && searchInput) {
-                        fetch(buildItemLookupUrl(itemInput.value))
-                            .then(response => response.json())
-                            .then(data => {
-                                if (data.name) {
-                                    searchInput.value = data.name;
-                                }
-                                if (stockInput && data.quantity !== undefined) {
-                                    stockInput.value = data.quantity;
-                                }
-                                if (qtyInput && data.quantity !== undefined) {
-                                    qtyInput.setAttribute('max', data.quantity);
-                                    qtyInput.setAttribute('data-max', data.quantity);
-                                }
-                            })
-                            .catch(err => console.error('Failed to restore item name:', err));
-                    }
-                });
-            }
-
-            // Initialize existing rows
-            document.querySelectorAll('#details-table .form-row').forEach(row => {
-                if (!row.querySelector('.item-stock')) {
-                    const stockInput = document.createElement('input');
-                    stockInput.type = 'hidden';
-                    stockInput.className = 'item-stock';
-                    const itemInput = row.querySelector('input[name$="-item"]');
-                    if (itemInput) {
-                        stockInput.name = itemInput.name.replace('-item', '-stock');
-                    }
-                    row.querySelector('td:first-child').appendChild(stockInput);
-                }
-                attachSearchToRow(row);
-            });
-
-            restoreItemNames();
-            syncFromUserPreviousValue();
-
-            document.body.addEventListener('htmx:afterSwap', function(event) {
-                if (event.detail.target.id === 'from-user-container') {
-                    syncFromUserPreviousValue();
-                    restoreItemNames();
-                }
-            });
-
-            const fromDepartmentSelect = document.getElementById('id_from_department');
-            if (fromDepartmentSelect) {
-                fromDepartmentSelect.dataset.previousValue = fromDepartmentSelect.value;
-                fromDepartmentSelect.addEventListener('change', function() {
-                    if (!confirmSourceChange('تغيير القسم سيؤدي إلى مسح الأصناف المختارة لأن عهدة المصدر ستتغير.\nهل تريد المتابعة؟')) {
-                        this.value = this.dataset.previousValue || '';
-                        return;
-                    }
-                    this.dataset.previousValue = this.value;
-                });
-            }
-
-            document.body.addEventListener('change', function(event) {
-                if (event.target?.id !== 'id_from_user') return;
-                const fromUserSelect = event.target;
-                const previousValue = fromUserSelect.dataset.previousValue || '';
-                if (!confirmSourceChange('تغيير الموظف المرسل سيؤدي إلى مسح الأصناف المختارة.\nهل تريد المتابعة؟')) {
-                    fromUserSelect.value = previousValue;
-                    return;
-                }
-                fromUserSelect.dataset.previousValue = fromUserSelect.value;
-            });
-
-            // =============== ADD NEW ROW ===============
-            document.getElementById('add-row')?.addEventListener('click', function() {
-                const tbody = document.querySelector('#details-table tbody');
-                const rows = tbody.querySelectorAll('.form-row');
-                if (rows.length === 0) return;
-
-                const newIndex = parseInt(totalFormsInput.value);
-                const lastRow = rows[rows.length - 1].cloneNode(true);
-
-                lastRow.querySelectorAll('input, select, textarea').forEach(el => {
-                    if (el.name) el.name = el.name.replace(/-\d+-(.+)/, `-${newIndex}-$1`);
-                    if (el.id) el.id = el.id.replace(/-\d+-(.+)/, `-${newIndex}-$1`);
-                    if (el.type === 'checkbox') el.checked = false;
-                    else el.value = '';
-                });
-
-                const stockInput = lastRow.querySelector('.item-stock');
-                if (stockInput) {
-                    stockInput.name = `${prefix}-${newIndex}-stock`;
-                    stockInput.value = '';
-                } else {
-                    const newStockInput = document.createElement('input');
-                    newStockInput.type = 'hidden';
-                    newStockInput.className = 'item-stock';
-                    newStockInput.name = `${prefix}-${newIndex}-stock`;
-                    lastRow.querySelector('td:first-child').appendChild(newStockInput);
-                }
-
-                const deleteCell = lastRow.querySelector('td:last-child');
-                if (deleteCell) {
-                    deleteCell.innerHTML = '';
-                    const hiddenDiv = document.createElement('div');
-                    hiddenDiv.className = 'hide-delete';
-                    const chk = document.createElement('input');
-                    chk.type = 'checkbox';
-                    chk.name = `${prefix}-${newIndex}-DELETE`;
-                    chk.id = `id_${prefix}-${newIndex}-DELETE`;
-                    hiddenDiv.appendChild(chk);
-                    deleteCell.appendChild(hiddenDiv);
-
-                    const btn = document.createElement('button');
-                    btn.type = 'button';
-                    btn.className = 'btn btn-sm btn-link text-danger delete-row';
-                    btn.title = 'حذف الصنف';
-                    btn.innerHTML = '<i class="bi bi-trash"></i>';
-                    deleteCell.appendChild(btn);
-                    attachDeleteListener(btn);
-                }
-
-                tbody.appendChild(lastRow);
-                attachSearchToRow(lastRow);
-                totalFormsInput.value = newIndex + 1;
-                updateDeleteButtons();
-            });
-
-            document.querySelectorAll('.delete-row').forEach(attachDeleteListener);
-            updateDeleteButtons();
-
-            // =============== INITIAL STATE HANDLING ===============
-            // Set initial state for inventory user container
-            const subWarehouseSelect = document.getElementById('id_to_sub_warehouse');
-            if (subWarehouseSelect && !subWarehouseSelect.value) {
-                document.getElementById('inventory-user-container').innerHTML = `
-                    <div class="form-control text-muted" disabled>
-                        اختر المخزن الفرعي أولاً
-                    </div>
-                `;
-            }
-
-            // Trigger HTMX load for inventory user when editing
-            const isEditing = "{{ editing|yesno:'true,false' }}" === "true";
-            if (isEditing && fromDepartmentSelect && fromDepartmentSelect.value) {
-                suppressSourceChangeConfirmation = true;
-                fromDepartmentSelect.dispatchEvent(new Event('change'));
-                suppressSourceChangeConfirmation = false;
-            }
-            if (isEditing && subWarehouseSelect && subWarehouseSelect.value) {
-                // Simulate change event to load inventory users
-                const event = new Event('change');
-                subWarehouseSelect.dispatchEvent(event);
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Configuration
+    const configDiv = document.getElementById('formset-config');
+    if (!configDiv) { console.error("Missing #formset-config"); return; }
+    const prefix = configDiv.dataset.prefix;
+    const totalFormsInput = document.getElementById('id_' + prefix + '-TOTAL_FORMS');
+    if (!totalFormsInput) { console.error(`Management field id_${prefix}-TOTAL_FORMS not found`); return; }
+    
+    let suppressSourceChangeConfirmation = false;
+    
+    // Utility: Check if any items are selected
+    function hasSelectedItems() {
+        return Array.from(document.querySelectorAll('#details-table tbody .form-row')).some(row => {
+            return row.querySelector('input[name$="-item"]')?.value.trim();
+        });
+    }
+    
+    // Utility: Clear all selected items
+    function clearSelectedItems() {
+        document.querySelectorAll('#details-table tbody .form-row').forEach(row => {
+            const itemInput = row.querySelector('input[name$="-item"]');
+            const searchInput = row.querySelector('.item-search');
+            const stockInput = row.querySelector('.item-stock');
+            const qtyInput = row.querySelector('input[name$="-approved_quantity"]');
+            
+            if (itemInput) itemInput.value = '';
+            if (searchInput) searchInput.value = '';
+            if (stockInput) stockInput.value = '';
+            if (qtyInput) {
+                qtyInput.removeAttribute('max');
+                qtyInput.removeAttribute('data-max');
+                qtyInput.value = '';
             }
         });
-    </script>
+    }
+    
+    // Utility: Confirm source change (with suppression flag)
+    function confirmSourceChange(message) {
+        if (suppressSourceChangeConfirmation) return true;
+        if (!hasSelectedItems()) return true;
+        const confirmed = confirm(message);
+        if (confirmed) clearSelectedItems();
+        return confirmed;
+    }
+    
+    // Utility: Get current from_user ID
+    function getCurrentFromUserId() {
+        return document.getElementById('id_from_user')?.value || '';
+    }
+    
+    // Utility: Get current to_sub_warehouse ID
+    function getCurrentToSubWarehouseId() {
+        return document.getElementById('id_to_sub_warehouse')?.value || '';
+    }
+    
+    // Utility: Build item lookup URL for restoring names
+    function buildItemLookupUrl(itemId) {
+        const params = new URLSearchParams({ item_id: itemId });
+        const fromUserId = getCurrentFromUserId();
+        const toSubWarehouseId = getCurrentToSubWarehouseId();
+        if (fromUserId) params.set('from_user', fromUserId);
+        if (toSubWarehouseId) params.set('to_sub_warehouse', toSubWarehouseId);
+        return `{% url 'get_item_name' %}?${params.toString()}`;
+    }
+    
+    // Sync from_user previous value for change detection
+    function syncFromUserPreviousValue() {
+        const fromUserSelect = document.getElementById('id_from_user');
+        if (fromUserSelect) {
+            fromUserSelect.dataset.previousValue = fromUserSelect.value || '';
+        }
+    }
+    
+    // ================== FORMSET MANAGEMENT ==================
+    function updateDeleteButtons() {
+        const rows = document.querySelectorAll('#details-table tbody .form-row');
+        const deleteButtons = document.querySelectorAll('.delete-row');
+        if (rows.length <= 1) {
+            deleteButtons.forEach(btn => {
+                btn.disabled = true;
+                btn.classList.add('disabled');
+            });
+        } else {
+            deleteButtons.forEach(btn => {
+                btn.disabled = false;
+                btn.classList.remove('disabled');
+            });
+        }
+    }
+    
+    function attachDeleteListener(button) {
+        button.addEventListener('click', function() {
+            const confirmed = confirm("هل أنت متأكد من حذف هذا الصنف؟");
+            if (!confirmed) return;
+            const row = this.closest('tr');
+            if (row) row.remove();
+            let total = parseInt(totalFormsInput.value) || 0;
+            totalFormsInput.value = Math.max(0, total - 1);
+            updateDeleteButtons();
+        });
+    }
+    
+    // ================== ITEM SEARCH (DUAL PARAMETER) ==================
+    function attachSearchToRow(row) {
+        const searchInput = row.querySelector('.item-search');
+        const hiddenInput = row.querySelector('input[name$="-item"]');
+        const stockInput = row.querySelector('.item-stock');
+        let searchTimeout;
+        
+        if (!searchInput || !hiddenInput) return;
+        
+        // Create suggestions dropdown
+        const suggestionsContainer = document.createElement('div');
+        suggestionsContainer.className = 'search-dropdown';
+        searchInput.parentNode.style.position = 'relative';
+        searchInput.parentNode.appendChild(suggestionsContainer);
+        
+        searchInput.addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            const query = this.value.trim();
+            const fromUserSelect = document.getElementById('id_from_user');
+            const toSubWarehouseSelect = document.getElementById('id_to_sub_warehouse');
+            
+            const fromUserId = fromUserSelect ? fromUserSelect.value : null;
+            const toSubWarehouseId = toSubWarehouseSelect ? toSubWarehouseSelect.value : null;
+            
+            // Validate required params
+            if (!fromUserId || !toSubWarehouseId) {
+                suggestionsContainer.innerHTML = '<div class="search-suggestion"><span class="theme-text-muted">يرجى اختيار الموظف المرسل والمخزن المستقبل أولاً</span></div>';
+                suggestionsContainer.style.display = 'block';
+                return;
+            }
+            
+            if (!query) {
+                suggestionsContainer.style.display = 'none';
+                return;
+            }
+            
+            searchTimeout = setTimeout(() => {
+                // ✅ Include BOTH from_user AND to_sub_warehouse in search URL
+                const url = `{% url 'item_search_return' %}?q=${encodeURIComponent(query)}&from_user=${encodeURIComponent(fromUserId)}&to_sub_warehouse=${encodeURIComponent(toSubWarehouseId)}`;
+                
+                fetch(url)
+                    .then(response => response.json())
+                    .then(data => {
+                        suggestionsContainer.innerHTML = '';
+                        
+                        if (data.error) {
+                            suggestionsContainer.innerHTML = `<div class="search-suggestion"><span class="theme-text-danger">${data.error}</span></div>`;
+                            suggestionsContainer.style.display = 'block';
+                            return;
+                        }
+                        
+                        if (data.results?.length) {
+                            data.results.forEach(item => {
+                                const div = document.createElement('div');
+                                div.className = 'search-suggestion';
+                                
+                                // Show employee's quantity + optional warehouse context
+                                const qtyBadge = item.quantity > 0 
+                                    ? `<span class="badge bg-success">${item.quantity} ${item.unit}</span>`
+                                    : `<span class="badge bg-secondary">0</span>`;
+                                
+                                const whBadge = item.warehouse_quantity > 0
+                                    ? `<span class="badge bg-info text-dark ms-1">المخزن: ${item.warehouse_quantity}</span>`
+                                    : '';
+                                
+                                div.innerHTML = `
+                                    ${item.name}
+                                    <small class="text-muted d-block mt-1">
+                                        ${item.category} • ${qtyBadge} ${whBadge}
+                                    </small>
+                                `;
+                                
+                                div.addEventListener('click', () => {
+                                    hiddenInput.value = item.id;
+                                    searchInput.value = item.name;
+                                    if (stockInput) {
+                                        stockInput.value = item.quantity || 0;
+                                    }
+                                    // Set max quantity for validation
+                                    const qtyInput = row.querySelector('input[name$="-approved_quantity"]');
+                                    if (qtyInput) {
+                                        qtyInput.setAttribute('max', item.quantity);
+                                        qtyInput.setAttribute('data-max', item.quantity);
+                                    }
+                                    suggestionsContainer.style.display = 'none';
+                                });
+                                
+                                div.addEventListener('mouseenter', () => {
+                                    div.style.backgroundColor = 'var(--bg-table-row-hover, #f8f9fa)';
+                                });
+                                div.addEventListener('mouseleave', () => {
+                                    div.style.backgroundColor = '';
+                                });
+                                suggestionsContainer.appendChild(div);
+                            });
+                            suggestionsContainer.style.display = 'block';
+                        } else {
+                            suggestionsContainer.innerHTML = '<div class="search-suggestion"><span class="theme-text-muted">لا توجد أصناف مطابقة في عهدة الموظف لهذا المخزن</span></div>';
+                            suggestionsContainer.style.display = 'block';
+                        }
+                    })
+                    .catch(err => {
+                        console.error('Search error:', err);
+                        suggestionsContainer.innerHTML = '<div class="search-suggestion"><span class="theme-text-danger">خطأ في البحث</span></div>';
+                        suggestionsContainer.style.display = 'block';
+                    });
+            }, 300);
+        });
+        
+        // Close dropdown on outside click
+        document.addEventListener('click', (e) => {
+            if (!row.contains(e.target)) {
+                suggestionsContainer.style.display = 'none';
+            }
+        });
+        
+        // Add quantity validation
+        const qtyInput = row.querySelector('input[name$="-approved_quantity"]');
+        if (qtyInput) {
+            qtyInput.addEventListener('input', function() {
+                const maxQty = parseInt(this.getAttribute('data-max')) || Infinity;
+                const currentQty = parseInt(this.value) || 0;
+                if (currentQty > maxQty) {
+                    alert(`الكمية لا يمكن أن تتجاوز ${maxQty}`);
+                    this.value = maxQty;
+                }
+            });
+        }
+    }
+    
+    // ================== RESTORE ITEM NAMES ==================
+    function restoreItemNames() {
+        document.querySelectorAll('.form-row').forEach(row => {
+            const itemInput = row.querySelector('input[name$="-item"]');
+            const searchInput = row.querySelector('.item-search');
+            const stockInput = row.querySelector('.item-stock');
+            const qtyInput = row.querySelector('input[name$="-approved_quantity"]');
+            
+            if (itemInput && itemInput.value && searchInput) {
+                fetch(buildItemLookupUrl(itemInput.value))
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.name) {
+                            searchInput.value = data.name;
+                        }
+                        if (stockInput && data.quantity !== undefined) {
+                            stockInput.value = data.quantity;
+                        }
+                        if (qtyInput && data.quantity !== undefined) {
+                            qtyInput.setAttribute('max', data.quantity);
+                            qtyInput.setAttribute('data-max', data.quantity);
+                        }
+                    })
+                    .catch(err => console.error('Failed to restore item name:', err));
+            }
+        });
+    }
+    
+    // Initialize existing rows
+    document.querySelectorAll('#details-table .form-row').forEach(row => {
+        // Ensure stock input exists
+        if (!row.querySelector('.item-stock')) {
+            const stockInput = document.createElement('input');
+            stockInput.type = 'hidden';
+            stockInput.className = 'item-stock';
+            const itemInput = row.querySelector('input[name$="-item"]');
+            if (itemInput) {
+                stockInput.name = itemInput.name.replace('-item', '-stock');
+            }
+            row.querySelector('td:first-child').appendChild(stockInput);
+        }
+        attachSearchToRow(row);
+    });
+    
+    restoreItemNames();
+    syncFromUserPreviousValue();
+    
+    // HTMX: After swapping from_user container, restore item names
+    document.body.addEventListener('htmx:afterSwap', function(event) {
+        if (event.detail.target.id === 'from-user-container') {
+            syncFromUserPreviousValue();
+            restoreItemNames();
+        }
+        if (event.detail.target.id === 'inventory-user-container') {
+            // Optional: Could trigger re-validation if needed
+        }
+    });
+    
+    // Confirm changes to from_department
+    const fromDepartmentSelect = document.getElementById('id_from_department');
+    if (fromDepartmentSelect) {
+        fromDepartmentSelect.dataset.previousValue = fromDepartmentSelect.value;
+        fromDepartmentSelect.addEventListener('change', function() {
+            if (!confirmSourceChange('تغيير القسم سيؤدي إلى مسح الأصناف المختارة لأن عهدة المصدر ستتغير.\nهل تريد المتابعة؟')) {
+                this.value = this.dataset.previousValue || '';
+                return;
+            }
+            this.dataset.previousValue = this.value;
+        });
+    }
+    
+    // Confirm changes to from_user
+    document.body.addEventListener('change', function(event) {
+        if (event.target?.id !== 'id_from_user') return;
+        const fromUserSelect = event.target;
+        const previousValue = fromUserSelect.dataset.previousValue || '';
+        if (!confirmSourceChange('تغيير الموظف المرسل سيؤدي إلى مسح الأصناف المختارة.\nهل تريد المتابعة؟')) {
+            fromUserSelect.value = previousValue;
+            return;
+        }
+        fromUserSelect.dataset.previousValue = fromUserSelect.value;
+    });
+    
+    // ================== ADD NEW ROW ==================
+    document.getElementById('add-row')?.addEventListener('click', function() {
+        const tbody = document.querySelector('#details-table tbody');
+        const rows = tbody.querySelectorAll('.form-row');
+        if (rows.length === 0) return;
+        
+        const newIndex = parseInt(totalFormsInput.value);
+        const lastRow = rows[rows.length - 1].cloneNode(true);
+        
+        // Update names/IDs for new row
+        lastRow.querySelectorAll('input, select, textarea').forEach(el => {
+            if (el.name) el.name = el.name.replace(/-\d+-(.+)/, `-${newIndex}-$1`);
+            if (el.id) el.id = el.id.replace(/-\d+-(.+)/, `-${newIndex}-$1`);
+            if (el.type === 'checkbox') el.checked = false;
+            else el.value = '';
+        });
+        
+        // Ensure stock input exists with correct name
+        const stockInput = lastRow.querySelector('.item-stock');
+        if (stockInput) {
+            stockInput.name = `${prefix}-${newIndex}-stock`;
+            stockInput.value = '';
+        } else {
+            const newStockInput = document.createElement('input');
+            newStockInput.type = 'hidden';
+            newStockInput.className = 'item-stock';
+            newStockInput.name = `${prefix}-${newIndex}-stock`;
+            lastRow.querySelector('td:first-child').appendChild(newStockInput);
+        }
+        
+        // Reset delete button
+        const deleteCell = lastRow.querySelector('td:last-child');
+        if (deleteCell) {
+            deleteCell.innerHTML = '';
+            const hiddenDiv = document.createElement('div');
+            hiddenDiv.className = 'hide-delete';
+            const chk = document.createElement('input');
+            chk.type = 'checkbox';
+            chk.name = `${prefix}-${newIndex}-DELETE`;
+            chk.id = `id_${prefix}-${newIndex}-DELETE`;
+            hiddenDiv.appendChild(chk);
+            deleteCell.appendChild(hiddenDiv);
+            
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'btn btn-sm btn-link text-danger delete-row';
+            btn.title = 'حذف الصنف';
+            btn.innerHTML = '<i class="bi bi-trash"></i>';
+            deleteCell.appendChild(btn);
+            attachDeleteListener(btn);
+        }
+        
+        // Clear dynamic content
+        lastRow.querySelectorAll('.search-dropdown, .text-danger, .text-warning, .text-muted.small').forEach(el => el.remove());
+        lastRow.classList.remove('table-danger', 'low-stock');
+        
+        tbody.appendChild(lastRow);
+        attachSearchToRow(lastRow);
+        totalFormsInput.value = newIndex + 1;
+        updateDeleteButtons();
+    });
+    
+    // Initialize delete buttons
+    document.querySelectorAll('.delete-row').forEach(attachDeleteListener);
+    updateDeleteButtons();
+    
+    // ================== INITIAL STATE HANDLING ==================
+    // Set initial state for inventory user container
+    const subWarehouseSelect = document.getElementById('id_to_sub_warehouse');
+    if (subWarehouseSelect && !subWarehouseSelect.value) {
+        document.getElementById('inventory-user-container').innerHTML = `
+            <div class="form-control text-muted" disabled>
+                اختر المخزن الفرعي أولاً
+            </div>
+        `;
+    }
+    
+    // Trigger HTMX load for from_user when editing
+    const isEditing = {{ editing|default:'false'|lower }};
+    if (isEditing && fromDepartmentSelect && fromDepartmentSelect.value) {
+        suppressSourceChangeConfirmation = true;
+        fromDepartmentSelect.dispatchEvent(new Event('change'));
+        suppressSourceChangeConfirmation = false;
+    }
+    if (isEditing && subWarehouseSelect && subWarehouseSelect.value) {
+        // Simulate change event to load inventory users
+        const event = new Event('change');
+        subWarehouseSelect.dispatchEvent(event);
+    }
+});
+</script>
+
+<!-- Search dropdown styles -->
+<style>
+.search-dropdown {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    background: var(--bg-card, white);
+    border: 1px solid var(--border-color, #ddd);
+    border-radius: 4px;
+    box-shadow: var(--shadow, 0 4px 6px rgba(0, 0, 0, 0.1));
+    max-height: 300px;
+    overflow-y: auto;
+}
+.search-suggestion {
+    padding: 8px 12px;
+    cursor: pointer;
+    border-bottom: 1px solid var(--border-color, #eee);
+    transition: background-color 0.2s;
+}
+.search-suggestion:hover {
+    background-color: var(--bg-table-row-hover, #f8f9fa);
+}
+.search-suggestion:last-child {
+    border-bottom: none;
+}
+[data-theme="dark"] .search-dropdown {
+    background: var(--bg-card, #2d3136);
+    border-color: var(--border-color, #495057);
+}
+[data-theme="dark"] .search-suggestion {
+    border-color: var(--border-color, #3a3f44);
+    color: var(--text-primary, #f8f9fa);
+}
+[data-theme="dark"] .search-suggestion:hover {
+    background-color: var(--bg-table-row-hover, #3a3f44);
+}
+</style>
 {% endblock scripts %}

@@ -1566,7 +1566,7 @@ def export_inventory_excel(request):
         return HttpResponseForbidden("ليس لديك صلاحية.")
 
     faculty = user.profile.faculty
-    open_year = InventoryYear.get_open_year()
+
     sub_warehouse_id = request.GET.get("warehouse_id")
     category_id = request.GET.get("category_id")
 
@@ -3569,8 +3569,9 @@ def employee_custody_details(request):
 
 def get_employee_custody_data(employee, date_from=None, date_to=None, limit=None):
     """
-    Show only items currently in employee's custody.
-    Uses ItemTransactionDetails.price instead of global ItemPriceHistory
+    Show EVERY custody transaction detail row individually (no aggregation).
+    Each ItemTransactionDetails record is shown separately with its own quantity/price.
+    Ordered by: Custody Type → Item Name → Transaction Date
     """
     faculty_id = getattr(getattr(employee, "profile", None), "faculty_id", None)
     if not faculty_id:
@@ -3592,131 +3593,98 @@ def get_employee_custody_data(employee, date_from=None, date_to=None, limit=None
     if date_to:
         base_filters &= Q(transaction__created_at__lte=date_to)
 
-    # 1. Fetch custody-affecting transactions
-    custody_qs = ItemTransactionDetails.objects.filter(
-        Q(transaction__to_user=employee, transaction__transaction_type__in=["D", "T"])
-        | Q(transaction__from_user=employee, transaction__transaction_type="R")
-        | Q(
-            transaction__from_user=employee,
-            transaction__transaction_type="T",
-            transaction__to_user__isnull=False,
-            transaction__castody_type=ItemTransactions.CASTODY_TYPES.Personal,
-        ),
-        base_filters,
-    ).annotate(
-        signed_qty=Case(
-            When(transaction__to_user=employee, then=F("approved_quantity")),
-            default=-F("approved_quantity"),
-            output_field=IntegerField(),
+    # ✅ Fetch EVERY custody-affecting transaction detail individually
+    # No grouping, no aggregation - each row is separate
+    custody_details = (
+        ItemTransactionDetails.objects.filter(
+            Q(
+                transaction__to_user=employee,
+                transaction__transaction_type__in=["D", "T"],
+            )
+            | Q(transaction__from_user=employee, transaction__transaction_type="R")
+            | Q(
+                transaction__from_user=employee,
+                transaction__transaction_type="T",
+                transaction__to_user__isnull=False,
+                transaction__castody_type=ItemTransactions.CASTODY_TYPES.Personal,
+            ),
+            base_filters,
         )
+        .select_related("item", "transaction", "transaction__from_sub_warehouse")
+        .order_by(
+            "transaction__castody_type", "item__name", "transaction__created_at"
+        )  # ✅ Order: Type → Item → Date
     )
 
-    # 2. Group net quantity per (item, custody_type)
-    net_items_qs = (
-        custody_qs.values("item_id", "transaction__castody_type")
-        .annotate(net_quantity=Sum("signed_qty"))
-        .filter(net_quantity__gt=0)
-    )
+    # Apply limit if specified
     if limit:
-        net_items_qs = net_items_qs[:limit]
+        custody_details = custody_details[:limit]
 
-    if not net_items_qs.exists():
-        return {
-            k: {"items": [], "total_quantity": 0, "total_value": 0}
-            for k in ["warehouse", "personal", "branch"]
-        }
-
-    # 3. Fetch items efficiently
-    item_ids = list({row["item_id"] for row in net_items_qs})
-    items_map = {
-        item.id: item
-        for item in Item.objects.filter(id__in=item_ids).only("id", "name", "unit")
-    }
-
-    # Fetch actual custody price from latest relevant transaction detail
-    custody_prices = {}
-    price_qs = (
-        ItemTransactionDetails.objects.filter(
-            item_id__in=item_ids,
-            transaction__to_user=employee,
-            transaction__approval_status=ItemTransactions.APPROVAL_STATUS.APPROVED,
-            transaction__deleted=False,
-            transaction__is_reversed=False,
-            price__isnull=False,
-        )
-        .values("item_id", "transaction__castody_type", "price")
-        .order_by("item_id", "transaction__castody_type", "-transaction__created_at")
-    )
-
-    seen = set()
-    for row in price_qs:
-        key = (row["item_id"], row["transaction__castody_type"])
-        if key not in seen:
-            custody_prices[key] = row["price"]
-            seen.add(key)
-
-    # 4. Fetch latest transaction reference
-    latest_tx_map = {}
-    latest_txs = (
-        ItemTransactionDetails.objects.filter(
-            item_id__in=item_ids,
-            transaction__approval_status=ItemTransactions.APPROVAL_STATUS.APPROVED,
-            transaction__deleted=False,
-            transaction__is_reversed=False,
-            transaction__faculty_id=faculty_id,
-        )
-        .filter(Q(transaction__to_user=employee) | Q(transaction__from_user=employee))
-        .values("item_id", "transaction__document_number", "transaction__created_at")
-        .order_by("item_id", "-transaction__created_at")
-    )
-    for tx in latest_txs:
-        if tx["item_id"] not in latest_tx_map:
-            latest_tx_map[tx["item_id"]] = {
-                "doc_number": tx["transaction__document_number"] or "—",
-                "date": tx["transaction__created_at"],
-            }
-
-    # 5. Build final structure
+    # Build result structure with EVERY detail row (no aggregation)
     custody_data = {
         k: {"items": [], "total_quantity": 0, "total_value": Decimal("0")}
         for k in ["warehouse", "personal", "branch"]
     }
+
     castody_map = {
         ItemTransactions.CASTODY_TYPES.Warehouse: "warehouse",
         ItemTransactions.CASTODY_TYPES.Personal: "personal",
         ItemTransactions.CASTODY_TYPES.Branch: "branch",
     }
 
-    for row in net_items_qs:
-        item_id = row["item_id"]
-        castody_type = row["transaction__castody_type"]
-        net_qty = row["net_quantity"]
+    for detail in custody_details:
+        # Only include positive quantities (items currently in custody)
+        if (
+            detail.transaction.transaction_type in ["D", "T"]
+            and detail.transaction.to_user == employee
+        ):
+            qty = detail.approved_quantity  # Incoming: positive
+        elif (
+            detail.transaction.transaction_type == "R"
+            and detail.transaction.from_user == employee
+        ):
+            qty = -detail.approved_quantity  # Return: negative (removes from custody)
+        elif (
+            detail.transaction.transaction_type == "T"
+            and detail.transaction.from_user == employee
+            and detail.transaction.to_user is not None
+            and detail.transaction.castody_type
+            == ItemTransactions.CASTODY_TYPES.Personal
+        ):
+            qty = -detail.approved_quantity  # Personal transfer out: negative
+        else:
+            continue  # Skip if not relevant to employee's current custody
 
-        item = items_map.get(item_id)
-        if not item:
+        # Only show items with positive net quantity in custody
+        if qty <= 0:
             continue
 
-        price = custody_prices.get((item_id, castody_type), 0) or 0
+        item = detail.item
+        price = detail.price or 0
         price_dec = Decimal(str(price))
-        total_val = Decimal(str(net_qty)) * price_dec
+        total_val = Decimal(str(qty)) * price_dec
 
-        custody_key = castody_map.get(castody_type, "personal")
-        tx_ref = latest_tx_map.get(item_id, {})
+        custody_key = castody_map.get(detail.transaction.castody_type, "personal")
 
         custody_data[custody_key]["items"].append(
             {
                 "item": item,
-                "quantity": net_qty,
-                "latest_price": price,
+                "quantity": qty,  # ✅ Individual transaction quantity (not aggregated)
+                "latest_price": price,  # ✅ Price from THIS transaction
                 "total_value": total_val,
-                "last_doc": tx_ref.get("doc_number", "—"),
-                "last_date": tx_ref.get("date"),
+                "last_doc": detail.transaction.document_number
+                or "—",  # ✅ Source document
+                "last_date": detail.transaction.created_at,  # ✅ Transaction date
+                "sub_warehouse": detail.transaction.from_sub_warehouse.name
+                if detail.transaction.from_sub_warehouse
+                else "—",  # ✅ Source warehouse
+                "detail_id": detail.id,  # ✅ For potential editing
             }
         )
-        custody_data[custody_key]["total_quantity"] += net_qty
+        custody_data[custody_key]["total_quantity"] += qty
         custody_data[custody_key]["total_value"] += total_val
 
-    # 6. Serialize for template/JSON
+    # Serialize for template/JSON
     for key in custody_data:
         custody_data[key]["total_value"] = float(custody_data[key]["total_value"])
         custody_data[key]["total_quantity"] = int(custody_data[key]["total_quantity"])
@@ -3824,14 +3792,11 @@ def export_employee_custody_excel(request, employee_id):
 
 
 def _generate_custody_excel(custody_data, employee):
-    """Generate complete Excel workbook for employee custody - HELPER FUNCTION"""
+    """Generate complete Excel workbook for employee custody"""
     wb = Workbook()
-
-    # Remove default sheet
     default_sheet = wb.active
     wb.remove(default_sheet)
 
-    # Create sheets for each custody type
     if custody_data["warehouse"]["items"]:
         _create_custody_sheet(wb, "عهدة مخزنية", custody_data["warehouse"], employee)
     if custody_data["personal"]["items"]:
@@ -3839,32 +3804,35 @@ def _generate_custody_excel(custody_data, employee):
     if custody_data["branch"]["items"]:
         _create_custody_sheet(wb, "عهدة فرعية", custody_data["branch"], employee)
 
-    # If no sheets created, create a summary sheet
-    if len(wb.sheetnames) == 0:
+    if not wb.sheetnames:
         ws = wb.create_sheet(title="لا توجد عهدة")
         ws.cell(
-            row=1, column=1, value=f"لا يوجد عهدة للموظف: {employee.get_full_name()}"
+            row=1,
+            column=1,
+            value=f"لا يوجد عهدة للموظف: {employee.get_full_name() or employee.username}",
         )
         ws.cell(row=1, column=1).font = Font(bold=True, size=14)
 
-    # Return Excel response
     response = HttpResponse(
         content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
-    filename = (
-        f"عهدة_{employee.first_name}_{timezone.now().strftime('%Y%m%d_%H%M')}.xlsx"
+    emp_name = employee.first_name or employee.username
+    safe_name = quote(
+        f"عهدة_{emp_name}_{timezone.now().strftime('%Y%m%d_%H%M')}.xlsx", safe=""
     )
-    response["Content-Disposition"] = f"attachment; filename={filename}"
+    response["Content-Disposition"] = f"attachment; filename*=UTF-8''{safe_name}"
     wb.save(response)
     return response
 
 
 def _create_custody_sheet(workbook, sheet_name, custody_data, employee):
-    """Create a single custody sheet in the workbook - HELPER FUNCTION"""
-    ws = workbook.create_sheet(title=sheet_name[:31])
+    """Create a single custody sheet with individual transaction rows."""
+    # OpenPyXL sheet names max 31 chars
+    safe_title = sheet_name[:31]
+    ws = workbook.create_sheet(title=safe_title)
     ws.sheet_view.rightToLeft = True
 
-    # ROW 1: Employee Name Header (MERGED A1:D1)
+    # ROW 1: Employee Name Header (MERGED A1:G1)
     employee_name = (
         f"{employee.first_name} {employee.last_name}"
         if employee.last_name
@@ -3874,10 +3842,18 @@ def _create_custody_sheet(workbook, sheet_name, custody_data, employee):
     cell.font = Font(bold=True, color="FFFFFF", size=14)
     cell.fill = PatternFill(start_color="343a40", end_color="343a40", fill_type="solid")
     cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
-    ws.merge_cells("A1:D1")
+    ws.merge_cells("A1:G1")
 
-    # ROW 2: Table Headers (Removed Doc Number & Date)
-    headers = ["اسم الصنف", "الكمية", "السعر (ج.م)", "القيمة (ج.م)"]
+    # ROW 2: Table Headers (7 columns to match new data structure)
+    headers = [
+        "اسم الصنف",
+        "الكمية",
+        "السعر (ج.م)",
+        "القيمة (ج.م)",
+        "المستند",
+        "التاريخ",
+        "المخزن الفرعي",
+    ]
     header_font = Font(bold=True, color="FFFFFF")
     header_fill = PatternFill(
         start_color="343a40", end_color="343a40", fill_type="solid"
@@ -3891,19 +3867,37 @@ def _create_custody_sheet(workbook, sheet_name, custody_data, employee):
             horizontal="center", vertical="center", wrap_text=True
         )
 
-    # ROWS 3+: Data Rows
+    # ROWS 3+: Data Rows (Individual transaction details)
     items = custody_data.get("items", [])
     for row_num, item_data in enumerate(items, 3):
+        # Item
         ws.cell(row=row_num, column=1, value=item_data["item"].name)
+        # Quantity
         ws.cell(row=row_num, column=2, value=item_data["quantity"])
 
+        # Price
         price = float(item_data.get("latest_price", 0) or 0)
         ws.cell(row=row_num, column=3, value=price if price > 0 else "غير متوفر")
 
+        # Value
         total_value = float(item_data.get("total_value", 0) or 0)
         ws.cell(row=row_num, column=4, value=total_value if total_value > 0 else 0)
 
-        # Style price and value columns
+        # Document Number
+        ws.cell(row=row_num, column=5, value=item_data.get("last_doc", "—"))
+
+        # Date (format safely)
+        last_date = item_data.get("last_date")
+        ws.cell(
+            row=row_num,
+            column=6,
+            value=last_date.strftime("%Y-%m-%d %H:%M") if last_date else "—",
+        )
+
+        # Sub-Warehouse
+        ws.cell(row=row_num, column=7, value=item_data.get("sub_warehouse", "—"))
+
+        # Styling
         if price > 0:
             ws.cell(row=row_num, column=3).fill = PatternFill(
                 start_color="E8F5E9", end_color="E8F5E9", fill_type="solid"
@@ -3914,14 +3908,16 @@ def _create_custody_sheet(workbook, sheet_name, custody_data, employee):
             )
             ws.cell(row=row_num, column=4).font = Font(bold=True, color="1B5E20")
 
-    # FOOTER: Total Row (4 columns)
+    # FOOTER: Total Row (7 columns)
     total_row = len(items) + 3
     ws.cell(row=total_row, column=1, value="المجموع")
     ws.cell(row=total_row, column=2, value=custody_data.get("total_quantity", 0))
     ws.cell(row=total_row, column=3, value="-")
     ws.cell(row=total_row, column=4, value=float(custody_data.get("total_value", 0)))
+    for col in range(5, 8):
+        ws.cell(row=total_row, column=col, value="")
 
-    for col in range(1, 5):
+    for col in range(1, 8):
         cell = ws.cell(row=total_row, column=col)
         cell.font = Font(bold=True, size=11)
         cell.fill = PatternFill(
@@ -3929,17 +3925,18 @@ def _create_custody_sheet(workbook, sheet_name, custody_data, employee):
         )
         cell.alignment = Alignment(horizontal="center")
 
-    # Auto-adjust Column Widths (A, B, C, D)
-    for col_idx, letter in enumerate(["A", "B", "C", "D"], 1):
+    # Auto-adjust Column Widths (A to G)
+    for col_idx in range(1, 8):
         max_length = 0
+        letter = get_column_letter(col_idx)
         for row_num in range(2, total_row + 1):
-            cell = ws.cell(row=row_num, column=col_idx)
-            if cell.value:
+            val = ws.cell(row=row_num, column=col_idx).value
+            if val:
                 try:
-                    max_length = max(max_length, len(str(cell.value)))
+                    max_length = max(max_length, len(str(val)))
                 except Exception:
                     pass
-        ws.column_dimensions[letter].width = min(max_length + 2, 30)
+        ws.column_dimensions[letter].width = min(max_length + 4, 35)
 
 
 @login_required
@@ -4985,115 +4982,72 @@ def item_search_addition(request):
 @login_required
 def item_search_return(request):
     """
-    Search items that a user can return (items they currently own).
-    FILTERS: Items whose category belongs to the user's faculty sub_warehouses.
+    Search items that:
+    1. The selected employee has in custody (net positive quantity)
+    2. Can be returned to the selected destination sub-warehouse
     """
-    from_user_id = request.GET.get("from_user")
     query = request.GET.get("q", "").strip()
-    faculty = getattr(getattr(request.user, "profile", None), "faculty", None)
+    from_user_id = request.GET.get("from_user")
+    to_sub_warehouse_id = request.GET.get("to_sub_warehouse")
 
-    if not from_user_id or not from_user_id.isdigit() or not faculty:
+    # Validate required params
+    if not query or len(query) < 2:
         return JsonResponse({"results": []})
 
-    try:
-        # Verify user belongs to same faculty
-        if not User.objects.filter(id=from_user_id, profile__faculty=faculty).exists():
-            return JsonResponse({"results": []})
-
-        from inventory.models import ItemCategory
-
-        # Get all sub_warehouses for this faculty
-        faculty_sub_warehouses = (
-            SubWarehouse.objects.filter(item_stocks__faculty=faculty)
-            .values_list("id", flat=True)
-            .distinct()
+    if not from_user_id or not to_sub_warehouse_id:
+        return JsonResponse(
+            {"error": "يرجى اختيار الموظف المرسل والمخزن المستقبل أولاً"}, status=400
         )
 
-        # Get category IDs that belong to any of these sub_warehouses
-        valid_category_ids = ItemCategory.objects.filter(
-            sub_warehouse_id__in=faculty_sub_warehouses
-        ).values_list("id", flat=True)
+    # Faculty isolation: get faculty from from_user's profile
+    from_user = get_object_or_404(User, id=from_user_id)
+    faculty_id = getattr(getattr(from_user, "profile", None), "faculty_id", None)
+    if not faculty_id:
+        return JsonResponse({"error": "المستخدم ليس له كلية مرتبطة"}, status=400)
 
-        if not valid_category_ids:
-            return JsonResponse({"results": []})
+    # Base item search (name or code)
+    items = (
+        Item.objects.filter(Q(name__icontains=query) | Q(code__icontains=query))
+        .select_related("category")
+        .only("id", "name", "code", "category__name", "unit", "limit_quantity")[:50]
+    )  # Limit for performance
 
-        # Single query to calculate owned quantities per item
-        # IN: Disbursements & Transfers TO user
-        in_qty = (
-            ItemTransactionDetails.objects.filter(
-                transaction__to_user_id=from_user_id,
-                transaction__faculty=faculty,
-                transaction__approval_status=ItemTransactions.APPROVAL_STATUS.APPROVED,
-                transaction__deleted=False,
-                transaction__transaction_type__in=[
-                    ItemTransactions.TRANSACTION_TYPES.Disbursement,
-                    ItemTransactions.TRANSACTION_TYPES.Transfer,
-                ],
-            )
-            .values("item_id")
-            .annotate(total=Sum("approved_quantity"))
-        )
+    results = []
+    for item in items:
+        # ✅ 1. Check if employee has this item in custody (net positive)
+        employee_qty = item.current_quantity_for_user(from_user)
+        if employee_qty <= 0:
+            continue  # Skip items employee doesn't own
 
-        # OUT: Transfers & Returns FROM user
-        out_qty = (
-            ItemTransactionDetails.objects.filter(
-                transaction__from_user_id=from_user_id,
-                transaction__faculty=faculty,
-                transaction__approval_status=ItemTransactions.APPROVAL_STATUS.APPROVED,
-                transaction__deleted=False,
-                transaction__transaction_type__in=[
-                    ItemTransactions.TRANSACTION_TYPES.Transfer,
-                    ItemTransactions.TRANSACTION_TYPES.Return,
-                ],
-            )
-            .values("item_id")
-            .annotate(total=Sum("approved_quantity"))
-        )
+        # ✅ 2. Check destination warehouse stock (optional business rule)
+        # For returns, we typically allow any item the employee owns,
+        # but you can enforce that the warehouse must already track it:
+        warehouse_stock = FacultyItemStock.objects.filter(
+            item=item, sub_warehouse_id=to_sub_warehouse_id, faculty_id=faculty_id
+        ).first()
 
-        # Build lookup dicts
-        in_dict = {row["item_id"]: row["total"] for row in in_qty}
-        out_dict = {row["item_id"]: row["total"] for row in out_qty}
+        # Optional: Skip if warehouse doesn't track this item
+        # (Remove this check to allow returns of new items to warehouse)
+        # if not warehouse_stock:
+        #     continue
 
-        # Get item IDs that have net quantity > 0 AND category belongs to faculty sub_warehouses
-        owned_item_ids = set(in_dict.keys())
-        net_quantities = {}
-        for item_id in owned_item_ids:
-            # Check if item's category belongs to valid categories
-            item = Item.objects.filter(
-                id=item_id, category_id__in=valid_category_ids
-            ).first()
-            if item:
-                net = in_dict.get(item_id, 0) - out_dict.get(item_id, 0)
-                if net > 0:
-                    net_quantities[item_id] = net
-
-        if not net_quantities:
-            return JsonResponse({"results": []})
-
-        # Fetch items in ONE query
-        items_qs = Item.objects.filter(id__in=net_quantities.keys()).select_related(
-            "category"
-        )
-
-        if query:
-            items_qs = items_qs.filter(name__icontains=query)
-
-        items = items_qs[:20]
-
-        results = [
+        results.append(
             {
                 "id": item.id,
-                "name": f"{item.name} (#{item.id})"
-                + (f" - {item.category.name}" if item.category else ""),
-                "quantity": net_quantities.get(item.id, 0),
+                "name": item.name,
+                "code": item.code or "-",
+                "category": item.category.name if item.category else "-",
+                "unit": item.get_unit_display(),
+                "quantity": employee_qty,  # How much employee owns (for return)
+                "warehouse_quantity": warehouse_stock.cached_quantity
+                if warehouse_stock
+                else 0,  # Optional context
+                "is_low_stock": employee_qty <= item.limit_quantity
+                and employee_qty > 0,
             }
-            for item in items
-        ]
-        return JsonResponse({"results": results})
+        )
 
-    except Exception as e:
-        logger.error(f"Item search return error: {str(e)}", exc_info=True)
-        return JsonResponse({"results": []}, status=500)
+    return JsonResponse({"results": results})
 
 
 @login_required
@@ -5990,7 +5944,10 @@ def admin_faculty_stock_view(request):
 @login_required
 @user_passes_test(lambda u: u.is_superuser)
 def admin_edit_custody_prices(request):
-    """Main view: Handles cascading selection & atomic price updates."""
+    """
+    Admin-only view to select faculty → department → employee,
+    then edit custody prices for EACH transaction detail row (no deduplication).
+    """
     faculties = Faculty.objects.all().order_by("name")
     selected_faculty_id = request.GET.get("faculty_id")
     selected_dept_id = request.GET.get("department_id")
@@ -5998,7 +5955,7 @@ def admin_edit_custody_prices(request):
 
     departments = Department.objects.none()
     employees = User.objects.none()
-    custody_records = []
+    custody_records = []  # Now holds EVERY detail row, not deduplicated
     selected_employee = None
 
     if selected_faculty_id and selected_faculty_id.isdigit():
@@ -6036,28 +5993,27 @@ def admin_edit_custody_prices(request):
                 transaction__is_reversed=False,
                 transaction__faculty_id=selected_faculty_id,
             )
-            .select_related("item", "transaction")
+            .select_related("item", "transaction", "transaction__from_sub_warehouse")
             .order_by("transaction__castody_type", "item__name")
         )
 
-        # Deduplicate by (item, custody_type) to show one editable row per custody item
-        seen = set()
+        # NO DEDUPLICATION: Append every detail row individually
         for d in details_qs:
-            key = (d.item_id, d.transaction.castody_type)
-            if key not in seen:
-                seen.add(key)
-                custody_records.append(
-                    {
-                        "detail_id": d.id,
-                        "item_name": d.item.name,
-                        "unit": d.item.get_unit_display(),
-                        "quantity": d.approved_quantity,
-                        "price": d.price,
-                        "castody_type": d.transaction.get_castody_type_display(),
-                        "doc_number": d.transaction.document_number,
-                        "date": d.transaction.created_at,
-                    }
-                )
+            custody_records.append(
+                {
+                    "detail_id": d.id,
+                    "item_name": d.item.name,
+                    "unit": d.item.get_unit_display(),
+                    "quantity": d.approved_quantity,
+                    "price": d.price,
+                    "castody_type": d.transaction.get_castody_type_display(),
+                    "doc_number": d.transaction.document_number,
+                    "date": d.transaction.created_at,
+                    "sub_warehouse": d.transaction.from_sub_warehouse.name
+                    if d.transaction.from_sub_warehouse
+                    else "—",
+                }
+            )
 
     # Handle POST for price updates
     if request.method == "POST" and selected_employee:
@@ -6071,10 +6027,14 @@ def admin_edit_custody_prices(request):
                 try:
                     new_price = Decimal(raw_price)
                     if new_price < 0:
-                        ignored_errors.append(f"قيمة سالبة: {rec['item_name']}")
+                        ignored_errors.append(
+                            f"قيمة سالبة: {rec['item_name']} (سند: {rec['doc_number']})"
+                        )
                         continue
                 except InvalidOperation:
-                    ignored_errors.append(f"قيمة غير صالحة: {rec['item_name']}")
+                    ignored_errors.append(
+                        f"قيمة غير صالحة: {rec['item_name']} (سند: {rec['doc_number']})"
+                    )
                     continue
 
                 detail = ItemTransactionDetails.objects.select_for_update().get(
@@ -6094,6 +6054,7 @@ def admin_edit_custody_prices(request):
         else:
             messages.info(request, "ℹ️ لم يتم إجراء أي تغييرات على الأسعار.")
 
+        # Redirect to preserve selection state
         return redirect(
             f"{request.path}?faculty_id={selected_faculty_id}&department_id={selected_dept_id}&employee_id={selected_emp_id}"
         )
