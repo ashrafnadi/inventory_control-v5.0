@@ -26,11 +26,17 @@ def settings_processor(request):
 
     user = getattr(request, "user", None)
     user_display_name = "زائر"
+    faculty_name = ""
     department_name = ""
     if user and user.is_authenticated:
         user_display_name = user.get_full_name() or user.username
         department = getattr(getattr(user, "profile", None), "department", None)
         faculty = getattr(getattr(user, "profile", None), "faculty", None)
+        if faculty:
+            faculty_name = faculty.name
+        else:
+            faculty_name = ""
+
         department_name = (
             department.name if department else (faculty.name if faculty else "")
         )
@@ -52,7 +58,7 @@ def settings_processor(request):
         "session_warning_ms": session_warning_ms,
         "user_display_name": user_display_name,
         "department": department_name,
-        "faculty": faculty.name if faculty else "",
+        "faculty": faculty_name,
     }
 
 
