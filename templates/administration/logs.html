@@ -1,6 +1,8 @@
 {% extends "base.html" %}
 {% load static %}
-{% block title %}سجلات النظام{% endblock %}
+{% block title %}
+    سجلات النظام
+{% endblock title %}
 {% block content %}
     <style>
     .logs-container { max-height: 85vh; overflow-y: auto; }
@@ -56,7 +58,7 @@
             </div>
         </div>
     </div>
-{% endblock %}
+{% endblock content %}
 {% block scripts %}
     {{ block.super }}
     <script>
@@ -74,4 +76,4 @@
         });
     });
     </script>
-{% endblock %}
+{% endblock scripts %}

@@ -1,6 +1,8 @@
 {% extends "base.html" %}
 {% load static %}
-{% block title %}تفاصيل السند: {{ transaction.document_number }}{% endblock %}
+{% block title %}
+    تفاصيل السند: {{ transaction.document_number }}
+{% endblock title %}
 {% block content %}
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2>تفاصيل السند</h2>
@@ -148,7 +150,7 @@
             </div>
         </div>
     </div>
-{% endblock %}
+{% endblock content %}
 {% block scripts %}
     {{ block.super }}
     <script>
@@ -162,4 +164,4 @@
         });
     });
     </script>
-{% endblock %}
+{% endblock scripts %}

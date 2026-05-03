@@ -1,5 +1,8 @@
 {% extends "base.html" %}
 {% load static %}
+{% block title %}
+    تعديل أسعار عهدة الموظفين
+{% endblock title %}
 {% block content %}
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2>تعديل أسعار عهدة الموظفين</h2>
@@ -106,4 +109,4 @@
             <i class="bi bi-info-circle me-2"></i> لا توجد أصناف مسجلة في عهدة هذا الموظف حالياً.
         </div>
     {% endif %}
-{% endblock %}
+{% endblock content %}

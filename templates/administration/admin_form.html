@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}{{ title }}{% endblock %}
+{% block title %}{{ title }}{% endblock title %}
 {% block content %}
     <div class="card col-lg-8 mx-auto">
         <div class="card-header">
@@ -22,7 +22,7 @@
             </form>
         </div>
     </div>
-{% endblock %}
+{% endblock content %}
 {% block scripts %}
     {{ block.super }}
     <script>
@@ -118,4 +118,4 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 });
     </script>
-{% endblock %}
+{% endblock scripts %}
