@@ -55,7 +55,7 @@
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
-                        <table class="table table-striped table-hover align-middle mb-0">
+                        <table class="table table-striped table-hover align-middle mb-0" id="custody_prices_list">
                             <thead class="table-light">
                                 <tr>
                                     <th>اسم الصنف</th>
@@ -110,3 +110,100 @@
         </div>
     {% endif %}
 {% endblock content %}
+{% block scripts %}
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Initialize DataTables with state saving enabled
+        const table = $('#custody_prices_list').DataTable({
+            processing: false,
+            serverSide: false,
+            stateSave: true,
+            stateDuration: 0,
+
+            language: {
+                url: "{% static 'ar.json' %}"
+            },
+            layout: {
+                bottomEnd: { inputPaging: true }
+            },
+            lengthMenu: [10, 25, 50, -1],
+            responsive: true,
+            columnDefs: [
+                { className: 'text-right', targets: '_all' },
+                { orderable: false, targets: -1 },
+            ],
+            autoWidth: true,
+            order: [[2, 'asc']],
+        });
+
+        // Safe function to get DataTables state (with null check)
+        function getDataTablesState() {
+            try {
+                const state = table.state();
+                // Check if state is valid
+                if (!state || typeof state !== 'object') {
+                    console.warn('DataTables state not ready, using current URL');
+                    return window.location.search;  // Fallback to current params
+                }
+
+                const params = new URLSearchParams(window.location.search);
+
+                // Safely add DataTables params
+                if (state.start !== undefined && state.start !== null) {
+                    params.set('start', state.start);
+                }
+                if (state.length !== undefined && state.length !== null) {
+                    params.set('length', state.length);
+                }
+                if (state.search?.value) {
+                    params.set('search[value]', state.search.value);
+                }
+
+                // Ordering
+                if (state.order && Array.isArray(state.order)) {
+                    state.order.forEach((order, idx) => {
+                        if (order.column !== undefined) params.set(`order[${idx}][column]`, order.column);
+                        if (order.dir) params.set(`order[${idx}][dir]`, order.dir);
+                    });
+                }
+
+                return params.toString();
+            } catch (e) {
+                console.error('Error getting DataTables state:', e);
+                return window.location.search;  // Safe fallback
+            }
+        }
+
+        // Update edit links with current state (with error handling)
+        function updateEditLinks() {
+            try {
+                const dtState = getDataTablesState();
+                const basePath = window.location.pathname;
+
+                document.querySelectorAll('a[href*="item_edit"]').forEach(link => {
+                    try {
+                        const itemId = link.href.match(/\/(\d+)\/edit/)?.[1];
+                        if (itemId) {
+                            const returnUrl = `${basePath}?${dtState}`;
+                            link.href = `${basePath}${itemId}/edit/?return_url=${encodeURIComponent(returnUrl)}`;
+                        }
+                    } catch (e) {
+                        console.warn('Failed to update edit link:', e);
+                    }
+                });
+            } catch (e) {
+                console.error('Error in updateEditLinks:', e);
+            }
+        }
+
+        // Update links after every draw (pagination, search, etc.)
+        table.on('draw', function () {
+            updateEditLinks();
+        });
+
+        // Initial link update (with slight delay to ensure DataTables is ready)
+        setTimeout(updateEditLinks, 100);
+    });
+    </script>
+{% endblock scripts %}
+
