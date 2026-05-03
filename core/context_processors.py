@@ -52,6 +52,7 @@ def settings_processor(request):
         "session_warning_ms": session_warning_ms,
         "user_display_name": user_display_name,
         "department": department_name,
+        "faculty": faculty.name if faculty else "",
     }
 
 

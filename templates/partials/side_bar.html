@@ -4,19 +4,25 @@
         <div>
             <div class="sidebar-greeting">مرحباً،</div>
             <div class="sidebar-name">{{ user_display_name }}</div>
-            {% if request.session.user_type == 'inventory_employee' %}
-                موظف مخزن
-            {% elif request.session.user_type == 'inventory_manager' %}
-                مدير مخازن
-            {% elif request.session.user_type == 'admin' %}
-                مدير نظام
-            {% elif request.session.user_type == 'administration_manager' %}
-                مدير إدارة
-            {% elif request.session.user_type == 'faculty_manager' %}
-                مدير كلية
-            {% elif request.session.user_type == 'user' %}
-                موظف
-            {% endif %}
+            <div>
+                {% if request.session.user_type == 'inventory_employee' %}
+                    موظف مخزن
+                {% elif request.session.user_type == 'inventory_manager' %}
+                    مدير مخازن
+                {% elif request.session.user_type == 'admin' %}
+                    مدير نظام
+                {% elif request.session.user_type == 'administration_manager' %}
+                    مدير إدارة
+                {% elif request.session.user_type == 'faculty_manager' %}
+                    مدير كلية
+                {% elif request.session.user_type == 'user' %}
+                    موظف
+                {% endif %}
+            </div>
+            <div>{{ faculty }}</div>
+            <div>
+                {% if request.session.user_type == 'user' %}{{ department }}{% endif %}
+            </div>
         </div>
     </section>
     {% if request.user.is_superuser %}
