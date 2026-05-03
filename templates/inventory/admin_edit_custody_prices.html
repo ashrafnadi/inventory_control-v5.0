@@ -1,105 +1,109 @@
 {% extends "base.html" %}
 {% load static %}
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h2>تعديل أسعار عهدة الموظفين</h2>
-</div>
-
-<!-- Cascading Selection Form -->
-<form id="selection-form" class="row g-3 mb-4">
-    <div class="col-md-4">
-        <label class="form-label fw-bold">اختر الكلية</label>
-        <select name="faculty_id" class="form-select" hx-get="{% url 'htmx_load_departments' %}"
-            hx-target="#dept-container" hx-swap="innerHTML" hx-include="[name='faculty_id']"
-            hx-indicator="#dept-spinner">
-            <option value="">-- اختر الكلية --</option>
-            {% for f in faculties %}
-            <option value="{{ f.id }}" {% if selected_faculty_id == f.id|stringformat:"d" %}selected{% endif %}>
-                {{ f.name }}</option>
-            {% endfor %}
-        </select>
-        <div id="dept-spinner" class="htmx-indicator hide"><small class="text-primary">جاري تحميل الأقسام...</small>
-        </div>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>تعديل أسعار عهدة الموظفين</h2>
     </div>
-
-    <div class="col-md-4" id="dept-container">
-        {% if departments %}
-        {% include "inventory/partials/department_dropdown.html" %}
-        {% endif %}
-    </div>
-
-    <div class="col-md-4" id="emp-container">
-        {% if employees %}
-        {% include "inventory/partials/employee_dropdown.html" %}
-        {% endif %}
-    </div>
-</form>
-
-<!-- Price Editing Form -->
-{% if custody_records %}
-<form method="post">
-    {% csrf_token %}
-    <div class="card border-info">
-        <div class="card-header bg-info text-dark d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">
-                عهدة: {{ selected_employee.get_full_name|default:selected_employee.username }}
-                <span class="badge bg-light text-dark ms-2">{{ custody_records|length }} صنف</span>
-            </h5>
-            <button type="submit" class="btn btn-light text-dark fw-bold">
-                💾 حفظ التعديلات
-            </button>
-        </div>
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-striped table-hover align-middle mb-0">
-                    <thead class="table-light">
-                        <tr>
-                            <th>اسم الصنف</th>
-                            <th>نوع العهدة</th>
-                            <th>الكمية</th>
-                            <th>السعر الحالي</th>
-                            <th>السعر الجديد</th>
-                            <th>مصدر العهدة</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for rec in custody_records %}
-                        <tr>
-                            <td class="fw-bold">{{ rec.item_name }}</td>
-                            <td>
-                                <span
-                                    class="badge bg-{% if 'مخزنية' in rec.castody_type %}primary{% elif 'شخصية' in rec.castody_type %}success{% else %}warning text-dark{% endif %}">
-                                    {{ rec.castody_type }}
-                                </span>
-                            </td>
-                            <td>{{ rec.quantity }} {{ rec.unit }}</td>
-                            <td>
-                                {% if rec.price %}
-                                <span class="text-success fw-bold">{{ rec.price|floatformat:2 }} ج.م</span>
-                                {% else %}
-                                <span class="text-muted">غير محدد</span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                <input type="number" step="0.01" min="0" name="price_{{ rec.detail_id }}"
-                                    class="form-control form-control-sm"
-                                    value="{{ rec.price|floatformat:2|default:'' }}" placeholder="أدخل السعر الجديد">
-                            </td>
-                            <td class="text-muted small">
-                                <div>{{ rec.doc_number }}</div>
-                                <div>{{ rec.date|date:"Y-m-d" }}</div>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+    <!-- Cascading Selection Form -->
+    <form id="selection-form" class="row g-3 mb-4">
+        <div class="col-md-4">
+            <label class="form-label fw-bold">اختر الكلية</label>
+            <select name="faculty_id"
+                    class="form-select"
+                    hx-get="{% url 'htmx_load_departments' %}"
+                    hx-target="#dept-container"
+                    hx-swap="innerHTML"
+                    hx-include="[name='faculty_id']"
+                    hx-indicator="#dept-spinner">
+                <option value="">-- اختر الكلية --</option>
+                {% for f in faculties %}
+                    <option value="{{ f.id }}"
+                            {% if selected_faculty_id == f.id|stringformat:"d" %}selected{% endif %}>
+                        {{ f.name }}
+                    </option>
+                {% endfor %}
+            </select>
+            <div id="dept-spinner" class="htmx-indicator hide">
+                <small class="text-primary">جاري تحميل الأقسام...</small>
             </div>
         </div>
-    </div>
-</form>
-{% elif selected_employee %}
-<div class="alert alert-info">
-    <i class="bi bi-info-circle me-2"></i> لا توجد أصناف مسجلة في عهدة هذا الموظف حالياً.
-</div>
-{% endif %}
+        <div class="col-md-4" id="dept-container">
+            {% if departments %}
+                {% include "inventory/partials/department_dropdown.html" %}
+            {% endif %}
+        </div>
+        <div class="col-md-4" id="emp-container">
+            {% if employees %}
+                {% include "inventory/partials/employee_dropdown.html" %}
+            {% endif %}
+        </div>
+    </form>
+    <!-- Price Editing Form -->
+    {% if custody_records %}
+        <form method="post">
+            {% csrf_token %}
+            <div class="card border-info">
+                <div class="card-header bg-info text-dark d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        عهدة: {{ selected_employee.get_full_name|default:selected_employee.username }}
+                        <span class="badge bg-light text-dark ms-2">{{ custody_records|length }} صنف</span>
+                    </h5>
+                    <button type="submit" class="btn btn-light text-dark fw-bold">💾 حفظ التعديلات</button>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>اسم الصنف</th>
+                                    <th>نوع العهدة</th>
+                                    <th>الكمية</th>
+                                    <th>السعر الحالي</th>
+                                    <th>السعر الجديد</th>
+                                    <th>مصدر العهدة</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for rec in custody_records %}
+                                    <tr>
+                                        <td class="fw-bold">{{ rec.item_name }}</td>
+                                        <td>
+                                            <span class="badge bg-{% if 'مخزنية' in rec.castody_type %}primary{% elif 'شخصية' in rec.castody_type %}success{% else %}warning text-dark{% endif %}">
+                                                {{ rec.castody_type }}
+                                            </span>
+                                        </td>
+                                        <td>{{ rec.quantity }} {{ rec.unit }}</td>
+                                        <td>
+                                            {% if rec.price %}
+                                                <span class="text-success fw-bold">{{ rec.price|floatformat:2 }} ج.م</span>
+                                            {% else %}
+                                                <span class="text-muted">غير محدد</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <input type="number"
+                                                   step="0.01"
+                                                   min="0"
+                                                   name="price_{{ rec.detail_id }}"
+                                                   class="form-control form-control-sm"
+                                                   value="{{ rec.price|floatformat:2|default:'' }}"
+                                                   placeholder="أدخل السعر الجديد">
+                                        </td>
+                                        <td class="text-muted small">
+                                            <div>{{ rec.doc_number }}</div>
+                                            <div>{{ rec.date|date:"Y-m-d" }}</div>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </form>
+    {% elif selected_employee %}
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle me-2"></i> لا توجد أصناف مسجلة في عهدة هذا الموظف حالياً.
+        </div>
+    {% endif %}
 {% endblock %}

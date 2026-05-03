@@ -8,9 +8,7 @@
         <!-- Parent Form: ItemTransactions -->
         <div class="card mb-4 overflow-visible">
             <div class="card-header bg-primary text-white">
-                <h5 class="mb-0">
-                    نموذج 8: طلب ارتجاع أصناف
-                </h5>
+                <h5 class="mb-0">نموذج 8: طلب ارتجاع أصناف</h5>
             </div>
             <input type="hidden"
                    name="approval_status"
@@ -19,9 +17,7 @@
                 <div class="row">
                     <!-- 1. document_number -->
                     <div class="col-md-3 mb-3">
-                        <label>
-                            رقم المستند
-                        </label>
+                        <label>رقم المستند</label>
                         <input type="text"
                                class="form-control"
                                value="{{ form.instance.document_number|default:'سيتم الإنشاء تلقائياً' }}"
@@ -31,11 +27,7 @@
                     <div class="col-md-3 mb-3">
                         {{ form.document_type.label_tag }}
                         {{ form.document_type|add_class:"form-select" }}
-                        {% if form.document_type.errors %}
-                            <div class="text-danger mt-1">
-                                {{ form.document_type.errors }}
-                            </div>
-                        {% endif %}
+                        {% if form.document_type.errors %}<div class="text-danger mt-1">{{ form.document_type.errors }}</div>{% endif %}
                     </div>
                     <!-- 3. from_department -->
                     <div class="col-md-3 mb-3">
@@ -47,25 +39,17 @@
                                 hx-trigger="change"
                                 hx-target="#from-user-container"
                                 hx-include="[name='from_department']">
-                            <option value="">
-                                ---------
-                            </option>
+                            <option value="">---------</option>
                             {% for value, label in form.from_department.field.choices %}
                                 {% if value %}
                                     <option value="{{ value }}"
-                                            {% if form.from_department.value == value|default_if_none:"" %}
-                                                selected
-                                            {% endif %}>
+                                            {% if form.from_department.value == value|default_if_none:"" %}selected{% endif %}>
                                         {{ label }}
                                     </option>
                                 {% endif %}
                             {% endfor %}
                         </select>
-                        {% if form.from_department.errors %}
-                            <div class="text-danger mt-1">
-                                {{ form.from_department.errors }}
-                            </div>
-                        {% endif %}
+                        {% if form.from_department.errors %}<div class="text-danger mt-1">{{ form.from_department.errors }}</div>{% endif %}
                     </div>
                     <!-- 4. from_user -->
                     <div class="col-md-3 mb-3">
@@ -75,17 +59,11 @@
                                 {{ form.from_user|add_class:"form-select" }}
                             {% else %}
                                 <select class="form-select" disabled>
-                                    <option>
-                                        اختر القسم أولاً
-                                    </option>
+                                    <option>اختر القسم أولاً</option>
                                 </select>
                             {% endif %}
                         </div>
-                        {% if form.from_user.errors %}
-                            <div class="text-danger mt-1">
-                                {{ form.from_user.errors }}
-                            </div>
-                        {% endif %}
+                        {% if form.from_user.errors %}<div class="text-danger mt-1">{{ form.from_user.errors }}</div>{% endif %}
                     </div>
                     <!-- 5. to_sub_warehouse (FIXED FIELD) -->
                     <div class="col-md-3 mb-3">
@@ -97,25 +75,17 @@
                                 hx-trigger="change"
                                 hx-target="#inventory-user-container"
                                 hx-include="[name='to_sub_warehouse']">
-                            <option value="">
-                                ---------
-                            </option>
+                            <option value="">---------</option>
                             {% for value, label in form.to_sub_warehouse.field.choices %}
                                 {% if value %}
                                     <option value="{{ value }}"
-                                            {% if form.to_sub_warehouse.value == value|default_if_none:"" %}
-                                                selected
-                                            {% endif %}>
+                                            {% if form.to_sub_warehouse.value == value|default_if_none:"" %}selected{% endif %}>
                                         {{ label }}
                                     </option>
                                 {% endif %}
                             {% endfor %}
                         </select>
-                        {% if form.to_sub_warehouse.errors %}
-                            <div class="text-danger mt-1">
-                                {{ form.to_sub_warehouse.errors }}
-                            </div>
-                        {% endif %}
+                        {% if form.to_sub_warehouse.errors %}<div class="text-danger mt-1">{{ form.to_sub_warehouse.errors }}</div>{% endif %}
                     </div>
                     <!-- 6. inventory_user -->
                     <div class="col-md-3 mb-3">
@@ -124,16 +94,10 @@
                             {% if form.inventory_user.field.queryset.exists %}
                                 {{ form.inventory_user|add_class:"form-select" }}
                             {% else %}
-                                <div class="form-control text-muted" disabled>
-                                    اختر المخزن الفرعي أولاً
-                                </div>
+                                <div class="form-control text-muted" disabled>اختر المخزن الفرعي أولاً</div>
                             {% endif %}
                         </div>
-                        {% if form.inventory_user.errors %}
-                            <div class="text-danger mt-1">
-                                {{ form.inventory_user.errors }}
-                            </div>
-                        {% endif %}
+                        {% if form.inventory_user.errors %}<div class="text-danger mt-1">{{ form.inventory_user.errors }}</div>{% endif %}
                     </div>
                     <!-- Other fields -->
                     {% for field in form %}
@@ -145,11 +109,7 @@
                                 {% else %}
                                     {{ field|add_class:"form-control" }}
                                 {% endif %}
-                                {% if field.errors %}
-                                    <div class="text-danger mt-1">
-                                        {{ field.errors }}
-                                    </div>
-                                {% endif %}
+                                {% if field.errors %}<div class="text-danger mt-1">{{ field.errors }}</div>{% endif %}
                             </div>
                         {% endif %}
                     {% endfor %}
@@ -159,11 +119,7 @@
                     <div class="col-12 mb-3">
                         {{ form.notes.label_tag }}
                         {{ form.notes|add_class:"form-control" }}
-                        {% if form.notes.errors %}
-                            <div class="text-danger mt-1">
-                                {{ form.notes.errors }}
-                            </div>
-                        {% endif %}
+                        {% if form.notes.errors %}<div class="text-danger mt-1">{{ form.notes.errors }}</div>{% endif %}
                     </div>
                 </div>
             </div>
@@ -173,35 +129,21 @@
             {{ details_formset.management_form }}
             <div id="formset-config"
                  data-prefix="{{ details_formset.prefix }}"
-                 class="hide">
-            </div>
+                 class="hide"></div>
             <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">
-                    تفاصيل الأصناف
-                </h5>
-                <button type="button" id="add-row" class="btn btn-light btn-sm">
-                    إضافة صنف +
-                </button>
+                <h5 class="mb-0">تفاصيل الأصناف</h5>
+                <button type="button" id="add-row" class="btn btn-light btn-sm">إضافة صنف +</button>
             </div>
             <div class="card-body">
                 <div class="table-responsive overflow-visible">
                     <table class="table table-bordered form-table" id="details-table">
                         <thead class="table-light">
                             <tr>
-                                <th width="600px">
-                                    الصنف
-                                </th>
-                                <th width="150px">
-                                    الكمية المسترجعة
-                                </th>
-                                <th width="150px">
-                                    الحالة
-                                </th>
-                                <th>
-                                    ملاحظات
-                                </th>
-                                <th class="operations">
-                                </th>
+                                <th width="600px">الصنف</th>
+                                <th width="150px">الكمية المسترجعة</th>
+                                <th width="150px">الحالة</th>
+                                <th>ملاحظات</th>
+                                <th class="operations"></th>
                             </tr>
                         </thead>
                         <tbody>
@@ -221,26 +163,16 @@
                                     <td>
                                         {{ form.approved_quantity|add_class:"form-control form-control-sm" }}
                                         {% if form.approved_quantity.errors %}
-                                            <div class="text-danger small">
-                                                {{ form.approved_quantity.errors }}
-                                            </div>
+                                            <div class="text-danger small">{{ form.approved_quantity.errors }}</div>
                                         {% endif %}
                                     </td>
-                                    <td>
-                                        {{ form.status|add_class:"form-select form-select-sm" }}
-                                    </td>
+                                    <td>{{ form.status|add_class:"form-select form-select-sm" }}</td>
                                     <td>
                                         {{ form.notes|add_class:"form-control form-control-sm border-0 bg-transparent shadow-none" }}
-                                        {% if form.notes.errors %}
-                                            <div class="text-danger small">
-                                                {{ form.notes.errors }}
-                                            </div>
-                                        {% endif %}
+                                        {% if form.notes.errors %}<div class="text-danger small">{{ form.notes.errors }}</div>{% endif %}
                                     </td>
                                     <td class="text-center align-middle">
-                                        <div class="hide-delete">
-                                            {{ form.DELETE }}
-                                        </div>
+                                        <div class="hide-delete">{{ form.DELETE }}</div>
                                         <button type="button"
                                                 class="btn btn-sm btn-link text-danger delete-row"
                                                 title="حذف الصنف">
@@ -256,10 +188,9 @@
         </div>
         <input type="hidden" name="created_by" value="{{ request.user.id }}" />
         <div class="d-flex justify-content-between">
-            <a href="{{ return_url|default:'/inventory/items/' }}" class="btn btn-secondary">إلغاء</a>
-            <button type="submit" class="btn btn-primary">
-                حفظ
-            </button>
+            <a href="{{ return_url|default:'/inventory/items/' }}"
+               class="btn btn-secondary">إلغاء</a>
+            <button type="submit" class="btn btn-primary">حفظ</button>
         </div>
     </form>
 {% endblock content %}
@@ -603,8 +534,7 @@
             }
 
             // Trigger HTMX load for inventory user when editing
-            const isEditing = {{ editing|default: 'false' | lower
-        }};
+            const isEditing = "{{ editing|yesno:'true,false' }}" === "true";
             if (isEditing && fromDepartmentSelect && fromDepartmentSelect.value) {
                 suppressSourceChangeConfirmation = true;
                 fromDepartmentSelect.dispatchEvent(new Event('change'));

@@ -55,12 +55,8 @@
             <div class="card stat-card shadow-sm text-center">
                 <div class="card-body">
                     <i class="bi bi-building text-primary icon"></i>
-                    <h6 class="mt-2">
-                        إجمالي الجهات
-                    </h6>
-                    <p class="display-6 text-primary fw-bold mb-0">
-                        {{ total_faculties }}
-                    </p>
+                    <h6 class="mt-2">إجمالي الجهات</h6>
+                    <p class="display-6 text-primary fw-bold mb-0">{{ total_faculties }}</p>
                 </div>
             </div>
         </div>
@@ -68,12 +64,8 @@
             <div class="card stat-card shadow-sm text-center">
                 <div class="card-body">
                     <i class="bi bi-house-door-fill text-success icon"></i>
-                    <h6 class="mt-2">
-                        إجمالي المخازن
-                    </h6>
-                    <p class="display-6 text-success fw-bold mb-0">
-                        {{ total_warehouses }}
-                    </p>
+                    <h6 class="mt-2">إجمالي المخازن</h6>
+                    <p class="display-6 text-success fw-bold mb-0">{{ total_warehouses }}</p>
                 </div>
             </div>
         </div>
@@ -81,12 +73,8 @@
             <div class="card stat-card shadow-sm text-center">
                 <div class="card-body">
                     <i class="bi bi-grid-3x3-gap text-warning icon"></i>
-                    <h6 class="mt-2">
-                        إجمالي الأصناف
-                    </h6>
-                    <p class="display-6 text-warning fw-bold mb-0">
-                        {{ total_items }}
-                    </p>
+                    <h6 class="mt-2">إجمالي الأصناف</h6>
+                    <p class="display-6 text-warning fw-bold mb-0">{{ total_items }}</p>
                 </div>
             </div>
         </div>
@@ -94,12 +82,8 @@
             <div class="card stat-card shadow-sm text-center">
                 <div class="card-body">
                     <i class="bi bi-exclamation-triangle text-danger icon"></i>
-                    <h6 class="mt-2">
-                        احتياطي منخفض
-                    </h6>
-                    <p class="display-6 text-danger fw-bold mb-0">
-                        {{ total_low_stock }}
-                    </p>
+                    <h6 class="mt-2">احتياطي منخفض</h6>
+                    <p class="display-6 text-danger fw-bold mb-0">{{ total_low_stock }}</p>
                 </div>
             </div>
         </div>
@@ -108,14 +92,10 @@
     <div class="row g-4 mb-5">
         <div class="col-md-6">
             <div class="card shadow-sm h-100">
-                <div class="card-header bg-primary text-white text-center">
-                    الأصناف حسب الجهات
-                </div>
+                <div class="card-header bg-primary text-white text-center">الأصناف حسب الجهات</div>
                 <div class="card-body">
                     <div class="chart-container">
-                        <div class="chart-loader" id="itemsLoader">
-                            جارٍ التحميل...
-                        </div>
+                        <div class="chart-loader" id="itemsLoader">جارٍ التحميل...</div>
                         <canvas id="chartItemsPerFaculty"></canvas>
                     </div>
                 </div>
@@ -123,14 +103,10 @@
         </div>
         <div class="col-md-6">
             <div class="card shadow-sm h-100">
-                <div class="card-header bg-success text-white text-center">
-                    المخازن حسب الجهات
-                </div>
+                <div class="card-header bg-success text-white text-center">المخازن حسب الجهات</div>
                 <div class="card-body">
                     <div class="chart-container">
-                        <div class="chart-loader" id="warehousesLoader">
-                            جارٍ التحميل...
-                        </div>
+                        <div class="chart-loader" id="warehousesLoader">جارٍ التحميل...</div>
                         <canvas id="chartWarehousesPerFaculty"></canvas>
                     </div>
                 </div>
@@ -140,14 +116,10 @@
     <div class="row g-4">
         <div class="col-md-12">
             <div class="card shadow-sm">
-                <div class="card-header bg-warning text-dark text-center">
-                    حالة المخزون (جميع الجهات)
-                </div>
+                <div class="card-header bg-warning text-dark text-center">حالة المخزون (جميع الجهات)</div>
                 <div class="card-body">
                     <div class="chart-container">
-                        <div class="chart-loader" id="stockLoader">
-                            جارٍ التحميل...
-                        </div>
+                        <div class="chart-loader" id="stockLoader">جارٍ التحميل...</div>
                         <canvas id="chartStockStatus"></canvas>
                     </div>
                 </div>
@@ -157,61 +129,33 @@
     <!-- Faculty Details Table -->
     <div class="mt-5">
         <div class="card shadow-sm">
-            <div class="card-header bg-secondary text-white">
-                تفاصيل الجهات
-            </div>
+            <div class="card-header bg-secondary text-white">تفاصيل الجهات</div>
             <div class="card-body">
                 <div class="table-responsive">
                     <table class="table table-hover text-center" dir="rtl">
                         <thead class="table-light">
                             <tr>
-                                <th>
-                                    الجهات
-                                </th>
-                                <th>
-                                    المخازن
-                                </th>
-                                <th>
-                                    الفئات
-                                </th>
-                                <th>
-                                    الأصناف
-                                </th>
-                                <th>
-                                    غير متوفر
-                                </th>
-                                <th>
-                                    احتياطي منخفض
-                                </th>
+                                <th>الجهات</th>
+                                <th>المخازن</th>
+                                <th>الفئات</th>
+                                <th>الأصناف</th>
+                                <th>غير متوفر</th>
+                                <th>احتياطي منخفض</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for stat in faculty_stats %}
                                 <tr>
-                                    <td>
-                                        {{ stat.faculty.name }}
-                                    </td>
-                                    <td>
-                                        {{ stat.warehouses }}
-                                    </td>
-                                    <td>
-                                        {{ stat.categories }}
-                                    </td>
-                                    <td>
-                                        {{ stat.items }}
-                                    </td>
-                                    <td class="text-danger fw-bold">
-                                        {{ stat.out_of_stock }}
-                                    </td>
-                                    <td class="text-warning fw-bold">
-                                        {{ stat.low_stock }}
-                                    </td>
+                                    <td>{{ stat.faculty.name }}</td>
+                                    <td>{{ stat.warehouses }}</td>
+                                    <td>{{ stat.categories }}</td>
+                                    <td>{{ stat.items }}</td>
+                                    <td class="text-danger fw-bold">{{ stat.out_of_stock }}</td>
+                                    <td class="text-warning fw-bold">{{ stat.low_stock }}</td>
                                 </tr>
                             {% empty %}
                                 <tr>
-                                    <td colspan="6" class="text-muted">
-                                        لا توجد جهات مسجلة.
-                                    </td>
+                                    <td colspan="6" class="text-muted">لا توجد جهات مسجلة.</td>
                                 </tr>
                             {% endfor %}
                         </tbody>

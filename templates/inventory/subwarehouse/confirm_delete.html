@@ -4,9 +4,7 @@
         <div class="col-md-6">
             <div class="card">
                 <div class="card-header bg-danger text-white">
-                    <h4>
-                        تأكيد الحذف
-                    </h4>
+                    <h4>تأكيد الحذف</h4>
                 </div>
                 <div class="card-body">
                     <p>
@@ -14,9 +12,7 @@
                     </p>
                     <form method="post">
                         {% csrf_token %}
-                        <button type="submit" class="btn btn-danger">
-                            نعم، احذف
-                        </button>
+                        <button type="submit" class="btn btn-danger">نعم، احذف</button>
                         <a href="{% url 'subwarehouse_list' %}" class="btn btn-secondary">إلغاء</a>
                     </form>
                 </div>

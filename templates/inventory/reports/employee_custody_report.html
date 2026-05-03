@@ -1,7 +1,6 @@
 {% load static %}
 <!DOCTYPE html>
 <html dir="rtl" lang="ar">
-
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -203,13 +202,21 @@
                 margin-top: 20px;
                 border: 1px dashed #dee2e6;
             }
+
+            .mt-mb-5 { margin-top: 5px; margin-bottom: 5px; }
+            .sign-cell { text-align: right; border: none; width: 50%; }
+            .sign-cell-date { text-align: right; border: none; }
+            .report-date { text-align: center; font-size: 9px; color: #6c757d; margin-top: 5px; }
+            .total-val-lg { font-size: 18px; font-weight: bold; color: #d32f2f; }
+            .custody-summary { font-size: 14px; font-weight: normal; }
+            .empty-icon { font-size: 48px; margin-bottom: 15px; }
+            .empty-msg { margin-top: 10px; color: #6c757d; }
         </style>
     </head>
-
     <body>
         <!-- REPEATING SIGNATURE FOOTER (Defined once, cloned by WeasyPrint to every page) -->
         <div class="signature-footer">
-            <div style="margin-top: 5px; margin-bottom: 5px;">
+            <div class="mt-mb-5">
                 أقر أنا /
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
                 بأن الأصناف التي بعهدتي والموضحة بعاليه موجودة حتى الآن فعلا وبحالة جيدة.
@@ -219,258 +226,310 @@
             <table>
                 <tbody>
                     <tr height="40px">
-                        <td style="text-align: right; border: none; width: 50%;">توقيع كاتب العهدة</td>
-                        <td style="text-align: right; border: none; width: 50%;">توقيع صاحب العهدة</td>
+                        <td class="sign-cell">توقيع كاتب العهدة</td>
+                        <td class="sign-cell">توقيع صاحب العهدة</td>
                     </tr>
                     <tr height="40px">
-                        <td style="text-align: right; border: none;">تحريرا في : {{ current_date|date:"d-m-Y" }}</td>
-                        <td style="text-align: right; border: none;">مدير المخازن</td>
+                        <td class="sign-cell-date">تحريرا في : {{ current_date|date:"d-m-Y" }}</td>
+                        <td class="sign-cell-date">مدير المخازن</td>
                     </tr>
                 </tbody>
             </table>
-            <div style="text-align: center; font-size: 9px; color: #6c757d; margin-top: 5px;">
+            <div class="report-date">
                 تاريخ التقرير: {{ current_date|date:"Y-m-d" }} | {{ user.get_full_name|default:user.username }}
             </div>
         </div>
-
         <div class="content-container">
             {% if show_header or not show_header|default:False %}
-
-            <!-- WAREHOUSE CUSTODY -->
-            {% if custody_data.warehouse.items %}
-            <div class="custody-page">
-                <div class="header-group">
-                    <div class="page-header">
-                        <div class="report-info">
-                            <p class="report-title">إقرار بعهدة مخزنية طبقا للمادة (411) من لآئحة المخازن</p>
+                <!-- WAREHOUSE CUSTODY -->
+                {% if custody_data.warehouse.items %}
+                    <div class="custody-page">
+                        <div class="header-group">
+                            <div class="page-header">
+                                <div class="report-info">
+                                    <p class="report-title">إقرار بعهدة مخزنية طبقا للمادة (411) من لآئحة المخازن</p>
+                                </div>
+                            </div>
+                            <div class="employee-info">
+                                <strong>الموظف:</strong> {{ employee.get_full_name|default:employee.username }}
+                                <br />
+                                <strong>القسم:</strong> {{ employee.profile.department.name|default:"غير محدد" }}
+                                <br />
+                                <strong>التاريخ:</strong> {{ current_date|date:"Y-m-d H:i" }}
+                                <br />
+                                <strong>إجمالي العهدة المخزنية:</strong>
+                                <span class="total-val-lg">{{ custody_data.warehouse.total_value|floatformat:2 }} ج.م</span>
+                            </div>
+                        </div>
+                        <div class="table-wrapper">
+                            <div class="custody-header warehouse">
+                                <span>بعهدة مخزنية طبقا للمادة (411) من لآئحة المخازن</span>
+                                <span class="custody-summary">
+                                    الإجمالي: {{ custody_data.warehouse.total_quantity }} وحدة |
+                                    القيمة: {{ custody_data.warehouse.total_value|floatformat:2 }} ج.م
+                                </span>
+                            </div>
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>اسم الصنف</th>
+                                        <th>الكمية</th>
+                                        <th>السعر (ج.م)</th>
+                                        <th>القيمة (ج.م)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item_data in custody_data.warehouse.items %}
+                                        <tr>
+                                            <td>{{ item_data.item.name }}</td>
+                                            <td>{{ item_data.quantity }}</td>
+                                            <td>
+                                                {% if item_data.latest_price %}
+                                                    {{ item_data.latest_price|floatformat:2 }}
+                                                {% else %}
+                                                    <span class="price-missing">غير متوفر</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if item_data.total_value %}
+                                                    {{ item_data.total_value|floatformat:2 }}
+                                                    ج.م
+                                                {% else %}
+                                                    <span class="price-missing">-</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                                <tfoot>
+                                    <tr class="total-row">
+                                        <td>
+                                            <strong>المجموع</strong>
+                                        </td>
+                                        <td>
+                                            <strong>{{ custody_data.warehouse.total_quantity }}</strong>
+                                        </td>
+                                        <td class="price-col">
+                                            <strong>-</strong>
+                                        </td>
+                                        <td class="value-col">
+                                            <strong>{{ custody_data.warehouse.total_value|floatformat:2 }}
+                                            ج.م</strong>
+                                        </td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                            <div class="section-summary">
+                                <strong>ملاحظة:</strong> القيمة المحسوبة تعتمد على أحدث سعر مسجل لكل صنف في تاريخ التقرير.
+                            </div>
                         </div>
                     </div>
-                    <div class="employee-info">
-                        <strong>الموظف:</strong> {{ employee.get_full_name|default:employee.username }}<br />
-                        <strong>القسم:</strong> {{ employee.profile.department.name|default:"غير محدد" }}<br />
-                        <strong>التاريخ:</strong> {{ current_date|date:"Y-m-d H:i" }}<br />
-                        <strong>إجمالي العهدة المخزنية:</strong>
-                        <span style="font-size: 18px; font-weight: bold; color: #d32f2f;">
-                            {{ custody_data.warehouse.total_value|floatformat:2 }} ج.م
-                        </span>
-                    </div>
-                </div>
-                <div class="table-wrapper">
-                    <div class="custody-header warehouse">
-                        <span>بعهدة مخزنية طبقا للمادة (411) من لآئحة المخازن</span>
-                        <span style="font-size: 14px; font-weight: normal;">
-                            الإجمالي: {{ custody_data.warehouse.total_quantity }} وحدة |
-                            القيمة: {{ custody_data.warehouse.total_value|floatformat:2 }} ج.م
-                        </span>
-                    </div>
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>اسم الصنف</th>
-                                <th>الكمية</th>
-                                <th>السعر (ج.م)</th>
-                                <th>القيمة (ج.م)</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for item_data in custody_data.warehouse.items %}
-                            <tr>
-                                <td>{{ item_data.item.name }}</td>
-                                <td>{{ item_data.quantity }}</td>
-                                <td>{% if item_data.latest_price %}{{ item_data.latest_price|floatformat:2 }}{% else %}<span
-                                        class="price-missing">غير متوفر</span>{% endif %}</td>
-                                <td>{% if item_data.total_value %}{{ item_data.total_value|floatformat:2 }}
-                                    ج.م{% else %}<span class="price-missing">-</span>{% endif %}</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                        <tfoot>
-                            <tr class="total-row">
-                                <td><strong>المجموع</strong></td>
-                                <td><strong>{{ custody_data.warehouse.total_quantity }}</strong></td>
-                                <td class="price-col"><strong>-</strong></td>
-                                <td class="value-col"><strong>{{ custody_data.warehouse.total_value|floatformat:2 }}
-                                        ج.م</strong></td>
-                            </tr>
-                        </tfoot>
-                    </table>
-                    <div class="section-summary">
-                        <strong>ملاحظة:</strong> القيمة المحسوبة تعتمد على أحدث سعر مسجل لكل صنف في تاريخ التقرير.
-                    </div>
-                </div>
-            </div>
-            {% endif %}
-
-            <!-- PERSONAL CUSTODY -->
-            {% if custody_data.personal.items %}
-            <div class="custody-page">
-                <div class="header-group">
-                    <div class="page-header">
-                        <div class="report-info">
-                            <p class="report-title">إقرار بعهدة شخصية طبقا للمادة (411) من لآئحة المخازن</p>
+                {% endif %}
+                <!-- PERSONAL CUSTODY -->
+                {% if custody_data.personal.items %}
+                    <div class="custody-page">
+                        <div class="header-group">
+                            <div class="page-header">
+                                <div class="report-info">
+                                    <p class="report-title">إقرار بعهدة شخصية طبقا للمادة (411) من لآئحة المخازن</p>
+                                </div>
+                            </div>
+                            <div class="employee-info">
+                                <strong>الموظف:</strong> {{ employee.get_full_name|default:employee.username }}
+                                <br />
+                                <strong>القسم:</strong> {{ employee.profile.department.name|default:"غير محدد" }}
+                                <br />
+                                <strong>التاريخ:</strong> {{ current_date|date:"Y-m-d H:i" }}
+                                <br />
+                                <strong>إجمالي العهدة الشخصية:</strong>
+                                <span class="total-val-lg">{{ custody_data.personal.total_value|floatformat:2 }} ج.م</span>
+                            </div>
+                        </div>
+                        <div class="table-wrapper">
+                            <div class="custody-header personal">
+                                <span>بعهدة شخصية طبقا للمادة (411) من لآئحة المخازن</span>
+                                <span class="custody-summary">
+                                    الإجمالي: {{ custody_data.personal.total_quantity }} وحدة |
+                                    القيمة: {{ custody_data.personal.total_value|floatformat:2 }} ج.م
+                                </span>
+                            </div>
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>اسم الصنف</th>
+                                        <th>الكمية</th>
+                                        <th>السعر (ج.م)</th>
+                                        <th>القيمة (ج.م)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item_data in custody_data.personal.items %}
+                                        <tr>
+                                            <td>{{ item_data.item.name }}</td>
+                                            <td>{{ item_data.quantity }}</td>
+                                            <td>
+                                                {% if item_data.latest_price %}
+                                                    {{ item_data.latest_price|floatformat:2 }}
+                                                    ج.م
+                                                {% else %}
+                                                    <span class="price-missing">غير متوفر</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if item_data.total_value %}
+                                                    {{ item_data.total_value|floatformat:2 }}
+                                                    ج.م
+                                                {% else %}
+                                                    <span class="price-missing">-</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                                <tfoot>
+                                    <tr class="total-row">
+                                        <td>
+                                            <strong>المجموع</strong>
+                                        </td>
+                                        <td>
+                                            <strong>{{ custody_data.personal.total_quantity }}</strong>
+                                        </td>
+                                        <td>
+                                            <strong>-</strong>
+                                        </td>
+                                        <td>
+                                            <strong>{{ custody_data.personal.total_value|floatformat:2 }} ج.م</strong>
+                                        </td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                            <div class="section-summary">
+                                <strong>ملاحظة:</strong> القيمة المحسوبة تعتمد على أحدث سعر مسجل لكل صنف في تاريخ التقرير.
+                            </div>
                         </div>
                     </div>
-                    <div class="employee-info">
-                        <strong>الموظف:</strong> {{ employee.get_full_name|default:employee.username }}<br />
-                        <strong>القسم:</strong> {{ employee.profile.department.name|default:"غير محدد" }}<br />
-                        <strong>التاريخ:</strong> {{ current_date|date:"Y-m-d H:i" }}<br />
-                        <strong>إجمالي العهدة الشخصية:</strong>
-                        <span style="font-size: 18px; font-weight: bold; color: #d32f2f;">
-                            {{ custody_data.personal.total_value|floatformat:2 }} ج.م
-                        </span>
-                    </div>
-                </div>
-                <div class="table-wrapper">
-                    <div class="custody-header personal">
-                        <span>بعهدة شخصية طبقا للمادة (411) من لآئحة المخازن</span>
-                        <span style="font-size: 14px; font-weight: normal;">
-                            الإجمالي: {{ custody_data.personal.total_quantity }} وحدة |
-                            القيمة: {{ custody_data.personal.total_value|floatformat:2 }} ج.م
-                        </span>
-                    </div>
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>اسم الصنف</th>
-                                <th>الكمية</th>
-                                <th>السعر (ج.م)</th>
-                                <th>القيمة (ج.م)</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for item_data in custody_data.personal.items %}
-                            <tr>
-                                <td>{{ item_data.item.name }}</td>
-                                <td>{{ item_data.quantity }}</td>
-                                <td>{% if item_data.latest_price %}{{ item_data.latest_price|floatformat:2 }}
-                                    ج.م{% else %}<span class="price-missing">غير متوفر</span>{% endif %}</td>
-                                <td>{% if item_data.total_value %}{{ item_data.total_value|floatformat:2 }}
-                                    ج.م{% else %}<span class="price-missing">-</span>{% endif %}</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                        <tfoot>
-                            <tr class="total-row">
-                                <td><strong>المجموع</strong></td>
-                                <td><strong>{{ custody_data.personal.total_quantity }}</strong></td>
-                                <td><strong>-</strong></td>
-                                <td><strong>{{ custody_data.personal.total_value|floatformat:2 }} ج.م</strong></td>
-                            </tr>
-                        </tfoot>
-                    </table>
-                    <div class="section-summary">
-                        <strong>ملاحظة:</strong> القيمة المحسوبة تعتمد على أحدث سعر مسجل لكل صنف في تاريخ التقرير.
-                    </div>
-                </div>
-            </div>
-            {% endif %}
-
-            <!-- BRANCH CUSTODY -->
-            {% if custody_data.branch.items %}
-            <div class="custody-page">
-                <div class="header-group">
-                    <div class="page-header">
-                        <div class="report-info">
-                            <p class="report-title">إقرار بعهدة فرعية طبقا للمادة (411) من لآئحة المخازن</p>
+                {% endif %}
+                <!-- BRANCH CUSTODY -->
+                {% if custody_data.branch.items %}
+                    <div class="custody-page">
+                        <div class="header-group">
+                            <div class="page-header">
+                                <div class="report-info">
+                                    <p class="report-title">إقرار بعهدة فرعية طبقا للمادة (411) من لآئحة المخازن</p>
+                                </div>
+                            </div>
+                            <div class="employee-info">
+                                <strong>الموظف:</strong> {{ employee.get_full_name|default:employee.username }}
+                                <br />
+                                <strong>القسم:</strong> {{ employee.profile.department.name|default:"غير محدد" }}
+                                <br />
+                                <strong>التاريخ:</strong> {{ current_date|date:"Y-m-d H:i" }}
+                                <br />
+                                <strong>إجمالي العهدة الفرعية:</strong>
+                                <span class="total-val-lg">{{ custody_data.branch.total_value|floatformat:2 }} ج.م</span>
+                            </div>
+                        </div>
+                        <div class="table-wrapper">
+                            <div class="custody-header branch">
+                                <span>بعهدة فرعية طبقا للمادة (411) من لآئحة المخازن</span>
+                                <span class="custody-summary">
+                                    الإجمالي: {{ custody_data.branch.total_quantity }} وحدة |
+                                    القيمة: {{ custody_data.branch.total_value|floatformat:2 }} ج.م
+                                </span>
+                            </div>
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>اسم الصنف</th>
+                                        <th>الكمية</th>
+                                        <th>السعر (ج.م)</th>
+                                        <th>القيمة (ج.م)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item_data in custody_data.branch.items %}
+                                        <tr>
+                                            <td>{{ item_data.item.name }}</td>
+                                            <td>{{ item_data.quantity }}</td>
+                                            <td>
+                                                {% if item_data.latest_price %}
+                                                    {{ item_data.latest_price|floatformat:2 }}
+                                                    ج.م
+                                                {% else %}
+                                                    <span class="price-missing">غير متوفر</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if item_data.total_value %}
+                                                    {{ item_data.total_value|floatformat:2 }}
+                                                    ج.م
+                                                {% else %}
+                                                    <span class="price-missing">-</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                                <tfoot>
+                                    <tr class="total-row">
+                                        <td>
+                                            <strong>المجموع</strong>
+                                        </td>
+                                        <td>
+                                            <strong>{{ custody_data.branch.total_quantity }}</strong>
+                                        </td>
+                                        <td>
+                                            <strong>-</strong>
+                                        </td>
+                                        <td>
+                                            <strong>{{ custody_data.branch.total_value|floatformat:2 }} ج.م</strong>
+                                        </td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                            <div class="section-summary">
+                                <strong>ملاحظة:</strong> القيمة المحسوبة تعتمد على أحدث سعر مسجل لكل صنف في تاريخ التقرير.
+                            </div>
                         </div>
                     </div>
-                    <div class="employee-info">
-                        <strong>الموظف:</strong> {{ employee.get_full_name|default:employee.username }}<br />
-                        <strong>القسم:</strong> {{ employee.profile.department.name|default:"غير محدد" }}<br />
-                        <strong>التاريخ:</strong> {{ current_date|date:"Y-m-d H:i" }}<br />
-                        <strong>إجمالي العهدة الفرعية:</strong>
-                        <span style="font-size: 18px; font-weight: bold; color: #d32f2f;">
-                            {{ custody_data.branch.total_value|floatformat:2 }} ج.م
-                        </span>
-                    </div>
-                </div>
-                <div class="table-wrapper">
-                    <div class="custody-header branch">
-                        <span>بعهدة فرعية طبقا للمادة (411) من لآئحة المخازن</span>
-                        <span style="font-size: 14px; font-weight: normal;">
-                            الإجمالي: {{ custody_data.branch.total_quantity }} وحدة |
-                            القيمة: {{ custody_data.branch.total_value|floatformat:2 }} ج.م
-                        </span>
-                    </div>
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>اسم الصنف</th>
-                                <th>الكمية</th>
-                                <th>السعر (ج.م)</th>
-                                <th>القيمة (ج.م)</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for item_data in custody_data.branch.items %}
-                            <tr>
-                                <td>{{ item_data.item.name }}</td>
-                                <td>{{ item_data.quantity }}</td>
-                                <td>{% if item_data.latest_price %}{{ item_data.latest_price|floatformat:2 }}
-                                    ج.م{% else %}<span class="price-missing">غير متوفر</span>{% endif %}</td>
-                                <td>{% if item_data.total_value %}{{ item_data.total_value|floatformat:2 }}
-                                    ج.م{% else %}<span class="price-missing">-</span>{% endif %}</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                        <tfoot>
-                            <tr class="total-row">
-                                <td><strong>المجموع</strong></td>
-                                <td><strong>{{ custody_data.branch.total_quantity }}</strong></td>
-                                <td><strong>-</strong></td>
-                                <td><strong>{{ custody_data.branch.total_value|floatformat:2 }} ج.م</strong></td>
-                            </tr>
-                        </tfoot>
-                    </table>
-                    <div class="section-summary">
-                        <strong>ملاحظة:</strong> القيمة المحسوبة تعتمد على أحدث سعر مسجل لكل صنف في تاريخ التقرير.
-                    </div>
-                </div>
-            </div>
+                {% endif %}
             {% endif %}
-
-            {% endif %}
-
             <!-- NO CUSTODY FALLBACK -->
             {% if not custody_data.warehouse.items and not custody_data.personal.items and not custody_data.branch.items %}
-            <div class="custody-page">
-                <div class="header-group">
-                    <div class="page-header">
-                        <div class="report-info">
-                            <p class="report-title">إقرار بعهدة طبقا للمادة (411) من لآئحة المخازن</p>
+                <div class="custody-page">
+                    <div class="header-group">
+                        <div class="page-header">
+                            <div class="report-info">
+                                <p class="report-title">إقرار بعهدة طبقا للمادة (411) من لآئحة المخازن</p>
+                            </div>
+                        </div>
+                        <div class="employee-info">
+                            <strong>الموظف:</strong> {{ employee.get_full_name|default:employee.username }}
+                            <br />
+                            <strong>القسم:</strong> {{ employee.profile.department.name|default:"غير محدد" }}
+                            <br />
+                            <strong>التاريخ:</strong> {{ current_date|date:"Y-m-d H:i" }}
+                            <br />
+                            <strong>إجمالي العهدة الفرعية:</strong>
+                            <span class="total-val-lg">{{ custody_data.branch.total_value|floatformat:2 }} ج.م</span>
                         </div>
                     </div>
-                    <div class="employee-info">
-                        <strong>الموظف:</strong> {{ employee.get_full_name|default:employee.username }}<br />
-                        <strong>القسم:</strong> {{ employee.profile.department.name|default:"غير محدد" }}<br />
-                        <strong>التاريخ:</strong> {{ current_date|date:"Y-m-d H:i" }}<br />
-                        <strong>إجمالي العهدة الفرعية:</strong>
-                        <span style="font-size: 18px; font-weight: bold; color: #d32f2f;">
-                            {{ custody_data.branch.total_value|floatformat:2 }} ج.م
-                        </span>
+                    <div class="table-wrapper">
+                        <div class="custody-header branch">
+                            <span>إقرار بعهدة طبقا للمادة (411) من لآئحة المخازن</span>
+                            <span class="custody-summary">
+                                الإجمالي: {{ custody_data.branch.total_quantity }} وحدة |
+                                القيمة: {{ custody_data.branch.total_value|floatformat:2 }} ج.م
+                            </span>
+                        </div>
+                        <div class="no-custody">
+                            <div class="empty-icon">📦</div>
+                            <strong>لا يوجد عهدة لهذا الموظف.</strong>
+                            <p class="empty-msg">لم يتم تسجيل أي عهدة لهذا الموظف في النظام حتى تاريخ {{ current_date|date:"Y-m-d" }}</p>
+                        </div>
                     </div>
                 </div>
-                <div class="table-wrapper">
-                    <div class="custody-header branch">
-                        <span>إقرار بعهدة طبقا للمادة (411) من لآئحة المخازن</span>
-                        <span style="font-size: 14px; font-weight: normal;">
-                            الإجمالي: {{ custody_data.branch.total_quantity }} وحدة |
-                            القيمة: {{ custody_data.branch.total_value|floatformat:2 }} ج.م
-                        </span>
-                    </div>
-                    <div class="no-custody">
-                        <div style="font-size: 48px; margin-bottom: 15px;">📦</div>
-                        <strong>لا يوجد عهدة لهذا الموظف.</strong>
-                        <p style="margin-top: 10px; color: #6c757d;">
-                            لم يتم تسجيل أي عهدة لهذا الموظف في النظام حتى تاريخ {{ current_date|date:"Y-m-d" }}
-                        </p>
-                    </div>
-
-                </div>
-            </div>
-
             {% endif %}
         </div>
     </body>
-
 </html>

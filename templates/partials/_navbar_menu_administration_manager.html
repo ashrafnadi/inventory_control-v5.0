@@ -2,17 +2,11 @@
 <div class="collapse navbar-collapse" id="navbarNav">
     <ul class="navbar-nav mx-auto">
         <li class="nav-item mx-2">
-            <a class="nav-link
-                      {% if page_title == 'I' %}
-                          active
-                      {% endif %}"
+            <a class="nav-link {% if page_title == 'I' %}active{% endif %}"
                href="{% url 'home' %}"><i class="bi bi-house-door me-1"></i>الرئيسية</a>
         </li>
         <li class="nav-item mx-2">
-            <a class="nav-link
-                      {% if page_title == 'Administration Item Search' %}
-                          active
-                      {% endif %}"
+            <a class="nav-link {% if page_title == 'Administration Item Search' %}active{% endif %}"
                href="{% url 'administration_item_search' %}"><i class="bi bi-search me-1"></i>بحث عن صنف</a>
         </li>
     </ul>

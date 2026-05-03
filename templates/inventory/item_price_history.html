@@ -1,33 +1,42 @@
 {% extends "base.html" %}
 {% load static %}
-{% block title %}تاريخ أسعار الصنف{% endblock title %}
+{% block title %}
+    تاريخ أسعار الصنف
+{% endblock title %}
 {% block content %}
-<div class="row">
-    <div class="col-md-12">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="card-title">سجل أسعار الصنف</h5> : {{item.name }}
-            </div>
-            <div class="card-body">
-                <table class="table table-bordered">
-                    <thead>
-                        <tr>
-                            <th>تاريخ السعر</th>
-                            <th>السعر (ج.م)</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for item_data in price_history %}
-                        <tr>
-                            <td>{{ item_data.date }}</td>
-                            <td>{% if item_data.price %}{{ item_data.price|floatformat:2 }}
-                                ج.م{% else %}<span class="price-missing">غير متوفر</span>{% endif %}</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">سجل أسعار الصنف</h5>
+                    : {{ item.name }}
+                </div>
+                <div class="card-body">
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>تاريخ السعر</th>
+                                <th>السعر (ج.م)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item_data in price_history %}
+                                <tr>
+                                    <td>{{ item_data.date }}</td>
+                                    <td>
+                                        {% if item_data.price %}
+                                            {{ item_data.price|floatformat:2 }}
+                                            ج.م
+                                        {% else %}
+                                            <span class="price-missing">غير متوفر</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
-</div>
 {% endblock content %}

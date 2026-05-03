@@ -1,64 +1,65 @@
 {% extends "base.html" %}
 {% load static %}
 {% block title %}سجلات النظام{% endblock %}
-
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h2>سجلات النظام</h2>
-    <a href="{% url 'view_logs' %}" class="btn btn-outline-primary">
-        <i class="bi bi-arrow-clockwise"></i> تحديث
-    </a>
-</div>
-
-<div class="card">
-    <div class="card-body p-0">
-        <div class="table-responsive" style="max-height: 85vh; overflow-y: auto;">
-            {% if log_entries %}
-            <table id="logsTable" class="table table-hover table-striped mb-0">
-                <thead class="sticky-top bg-light">
-                    <tr>
-                        <th style="width: 170px;">الوقت</th>
-                        <th style="width: 100px;">المستوى</th>
-                        <th style="width: 140px;">الوحدة</th>
-                        <th>الرسالة / التتبع الكامل</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for log in log_entries %}
-                    <tr
-                        class="{% if 'ERROR' in log.level %}table-danger{% elif 'WARNING' in log.level %}table-warning{% elif 'INFO' in log.level %}table-info{% endif %}">
-                        <td class="text-nowrap font-monospace small align-top">{{ log.time }}</td>
-                        <td class="text-center align-top">
-                            <span
-                                class="badge bg-{% if 'ERROR' in log.level %}danger{% elif 'WARNING' in log.level %}warning{% elif 'INFO' in log.level %}info{% else %}secondary{% endif %}">
-                                {{ log.level }}
-                            </span>
-                        </td>
-                        <td class="small font-monospace align-top">{{ log.module }}</td>
-                        <td class="font-monospace small text-break align-top"
-                            style="white-space: pre-wrap; word-wrap: break-word;">{{ log.message }}</td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="4" class="text-center text-muted py-4">لا توجد سجلات حالياً</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-            {% else %}
-            <div class="text-center py-5">
-                <i class="bi bi-inbox fs-1 text-muted mb-3"></i>
-                <p>لا توجد سجلات متاحة حالياً</p>
+    <style>
+    .logs-container { max-height: 85vh; overflow-y: auto; }
+    .col-time { width: 170px; }
+    .col-level { width: 100px; }
+    .col-module { width: 140px; }
+    .msg-cell { white-space: pre-wrap; word-wrap: break-word; }
+    </style>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>سجلات النظام</h2>
+        <a href="{% url 'view_logs' %}" class="btn btn-outline-primary">
+            <i class="bi bi-arrow-clockwise"></i> تحديث
+        </a>
+    </div>
+    <div class="card">
+        <div class="card-body p-0">
+            <div class="table-responsive logs-container">
+                {% if log_entries %}
+                    <table id="logsTable" class="table table-hover table-striped mb-0">
+                        <thead class="sticky-top bg-light">
+                            <tr>
+                                <th class="col-time">الوقت</th>
+                                <th class="col-level">المستوى</th>
+                                <th class="col-module">الوحدة</th>
+                                <th>الرسالة / التتبع الكامل</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for log in log_entries %}
+                                <tr class="{% if 'ERROR' in log.level %}table-danger{% elif 'WARNING' in log.level %}table-warning{% elif 'INFO' in log.level %}table-info{% endif %}">
+                                    <td class="text-nowrap font-monospace small align-top">{{ log.time }}</td>
+                                    <td class="text-center align-top">
+                                        <span class="badge bg-{% if 'ERROR' in log.level %}danger{% elif 'WARNING' in log.level %}warning{% elif 'INFO' in log.level %}info{% else %}secondary{% endif %}">
+                                            {{ log.level }}
+                                        </span>
+                                    </td>
+                                    <td class="small font-monospace align-top">{{ log.module }}</td>
+                                    <td class="font-monospace small text-break align-top msg-cell">{{ log.message }}</td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center text-muted py-4">لا توجد سجلات حالياً</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="bi bi-inbox fs-1 text-muted mb-3"></i>
+                        <p>لا توجد سجلات متاحة حالياً</p>
+                    </div>
+                {% endif %}
             </div>
-            {% endif %}
         </div>
     </div>
-</div>
 {% endblock %}
-
 {% block scripts %}
-{{ block.super }}
-<script>
+    {{ block.super }}
+    <script>
     $(document).ready(function () {
         $('#logsTable').DataTable({
             language: { url: "{% static 'ar.json' %}" },
@@ -72,5 +73,5 @@
             ]
         });
     });
-</script>
+    </script>
 {% endblock %}

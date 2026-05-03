@@ -1,8 +1,6 @@
 <!-- templates/inventory/partials/employee_select_for_custody.html -->
 {% if employees %}
-    <label for="id_employee" class="form-label">
-        اختر الموظف
-    </label>
+    <label for="id_employee" class="form-label">اختر الموظف</label>
     <select id="id_employee"
             name="employee_id"
             class="form-select"
@@ -10,25 +8,17 @@
             hx-include="#id_department"
             hx-target="#employee-custody-container"
             hx-push-url="true">
-        <option value="">
-            اختر موظف...
-        </option>
+        <option value="">اختر موظف...</option>
         {% for emp in employees %}
             <option value="{{ emp.id }}"
-                    {% if emp.id|stringformat:"s" == selected_employee_id %}
-                        selected
-                    {% endif %}>
+                    {% if emp.id|stringformat:"s" == selected_employee_id %}selected{% endif %}>
                 {{ emp.get_full_name|default:emp.username }}
             </option>
         {% endfor %}
     </select>
 {% else %}
-    <label class="form-label">
-        اختر الموظف
-    </label>
+    <label class="form-label">اختر الموظف</label>
     <select class="form-select" disabled>
-        <option>
-            لا يوجد موظفين في هذا القسم
-        </option>
+        <option>لا يوجد موظفين في هذا القسم</option>
     </select>
 {% endif %}

@@ -4,6 +4,8 @@
 <html dir="rtl" lang="ar">
     <head>
         <meta charset="UTF-8" />
+        <meta name="description" content="كشف المخزون للأصناف بالمستودعات" />
+        <meta name="keywords" content="تقرير, مخزون, مستودعات, أصناف" />
         <title>كشف المخزون</title>
         <style>
             body { font-family: "Arial", sans-serif; font-size: 11px; margin: 0; padding: 0; }
@@ -23,48 +25,51 @@
             .header-info { text-align: center; margin-bottom: 15px; border-bottom: 2px solid #343a40; padding-bottom: 10px; }
             .report-title { font-size: 14px; font-weight: bold; color: #2c3e50; margin: 0 0 5px 0; }
             .report-meta { font-size: 10px; color: #7f8c8d; margin: 0; }
+            .w-5 { width: 5%; }
+            .w-35 { width: 35%; }
+            .w-15 { width: 15%; }
+            .w-8 { width: 8%; }
+            .w-7 { width: 7%; }
+            .text-right-pad { text-align: right; padding-right: 8px; }
+            .empty-state { text-align: center; color: #95a5a6; margin-top: 50px; font-size: 12px; }
         </style>
     </head>
     <body>
         <div class="header-info">
             <p class="report-title">كشف المخزون - {{ faculty.name }}</p>
             <p class="report-meta">
-                {% if sub_warehouse_name and sub_warehouse_name != "الكل" %}
-                    المخزن: {{ sub_warehouse_name }}
-                {% endif %}
-                {% if category_name and category_name != "الكل" %}
-                    | الفئة: {{ category_name }}
-                {% endif %}
+                {% if sub_warehouse_name and sub_warehouse_name != "الكل" %}المخزن: {{ sub_warehouse_name }}{% endif %}
+                {% if category_name and category_name != "الكل" %}| الفئة: {{ category_name }}{% endif %}
                 | التاريخ: {{ current_date|date:"Y-m-d H:i" }}
             </p>
         </div>
-
         {% if items %}
             <table>
                 <thead>
                     <tr>
-                        <th style="width: 5%;">م</th>
-                        <th style="width: 35%;">اسم الصنف</th>
-                        <th style="width: 15%;">المخزن الفرعي</th>
-                        <th style="width: 15%;">الفئة</th>
-                        <th style="width: 8%;">الوحدة</th>
-                        <th style="width: 8%;">الكمية</th>
-                        <th style="width: 7%;">الحد الأدنى</th>
-                        <th style="width: 7%;">الحالة</th>
+                        <th class="w-5">م</th>
+                        <th class="w-35">اسم الصنف</th>
+                        <th class="w-15">المخزن الفرعي</th>
+                        <th class="w-15">الفئة</th>
+                        <th class="w-8">الوحدة</th>
+                        <th class="w-8">الكمية</th>
+                        <th class="w-7">الحد الأدنى</th>
+                        <th class="w-7">الحالة</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for item_data in items %}
                         <tr>
                             <td>{{ forloop.counter }}</td>
-                            <td style="text-align: right; padding-right: 8px;">{{ item_data.item.name }}</td>
+                            <td class="text-right-pad">{{ item_data.item.name }}</td>
                             <td>{{ item_data.sub_warehouse.name|default:"-" }}</td>
                             <td>{{ item_data.item.category.name|default:"-" }}</td>
                             <td>{{ item_data.item.get_unit_display }}</td>
                             <td>
                                 <strong>{{ item_data.quantity }}</strong>
                                 {% if not item_data.has_stock_record %}
-                                    <br/><span class="no-stock">(لا يوجد سجل)</span>
+                                    <br />
+                                    <span class="no-stock">(لا يوجد سجل)</span>
                                 {% endif %}
                             </td>
                             <td>{{ item_data.limit_quantity }}</td>
@@ -86,9 +91,7 @@
                 </tbody>
             </table>
         {% else %}
-            <p style="text-align: center; color: #95a5a6; margin-top: 50px; font-size: 12px;">
-                لا توجد أصناف مسجلة لهذه الفئة أو المخزن المحدد.
-            </p>
+            <p class="empty-state">لا توجد أصناف مسجلة لهذه الفئة أو المخزن المحدد.</p>
         {% endif %}
     </body>
 </html>

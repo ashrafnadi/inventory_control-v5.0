@@ -2,30 +2,31 @@
 {% extends "base.html" %}
 {% load static %}
 {% block title %}
-Administration
+    Administration
 {% endblock title %}
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h2>🛠️ لوحة تحكم المدير</h2>
-    <div>
-        {% if is_postgres %}
-        <form method="post" action="{% url 'admin_backup_db' %}" style="display: inline;">
-            {% csrf_token %}
-            <button type="submit" class="btn btn-outline-success me-2"
-                onclick="return confirm('هل تريد إنشاء نسخة احتياطية الآن؟')">
-                <i class="bi bi-database-down"></i> نسخ احتياطي
-            </button>
-        </form>
-        {% else %}
-        <!-- Hidden button for SQLite development -->
-        <span class="small me-2">(SQLite Detected - Backup Disabled)</span>
-        {% endif %}
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>🛠️ لوحة تحكم المدير</h2>
+        <div>
+            {% if is_postgres %}
+                <form method="post" action="{% url 'admin_backup_db' %}" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit"
+                            class="btn btn-outline-success me-2"
+                            onclick="return confirm('هل تريد إنشاء نسخة احتياطية الآن؟')">
+                        <i class="bi bi-database-down"></i> نسخ احتياطي
+                    </button>
+                </form>
+            {% else %}
+                <!-- Hidden button for SQLite development -->
+                <span class="small me-2">(SQLite Detected - Backup Disabled)</span>
+            {% endif %}
+        </div>
     </div>
-</div>
-{% include "administration/partials/users_roles.html" %}
+    {% include "administration/partials/users_roles.html" %}
 {% endblock content %}
 {% block scripts %}
-<script type="text/javascript">
+    <script type="text/javascript">
     new DataTable('#users_list', {
         processing: true,
         deferRender: true,
@@ -51,5 +52,5 @@ Administration
             [0, 'asc']
         ] // sort by 2nd column (name)
     })
-</script>
+    </script>
 {% endblock scripts %}

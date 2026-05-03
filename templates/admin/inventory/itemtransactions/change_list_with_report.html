@@ -5,9 +5,7 @@
     {{ block.super }}
     {% if request.user.is_superuser or request.user.is_staff %}
         <li>
-            <a href="{% url 'admin:user_custody_report' %}" class="addlink">
-                📋 تقرير عهدة الموظفين
-            </a>
+            <a href="{% url 'admin:user_custody_report' %}" class="addlink">📋 تقرير عهدة الموظفين</a>
         </li>
     {% endif %}
 {% endblock object-tools-items %}

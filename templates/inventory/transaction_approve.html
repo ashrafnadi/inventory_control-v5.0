@@ -7,9 +7,7 @@
 {% block content %}
     <div class="card">
         <div class="card-header bg-info text-white">
-            <h3 class="mb-0">
-                اعتماد سند الإضافة
-            </h3>
+            <h3 class="mb-0">اعتماد سند الإضافة</h3>
         </div>
         <div class="card-body">
             <div class="alert alert-info">
@@ -21,42 +19,24 @@
                 <br />
                 <strong>التاريخ:</strong> {{ transaction.created_at|date:"Y-m-d H:i" }}
             </div>
-            <h4 class="mb-3 mt-4">
-                تفاصيل الأصناف
-            </h4>
+            <h4 class="mb-3 mt-4">تفاصيل الأصناف</h4>
             <div class="table-responsive">
                 <table class="table table-bordered">
                     <thead class="table-light">
                         <tr>
-                            <th>
-                                اسم الصنف
-                            </th>
-                            <th>
-                                الكمية المطلوبة
-                            </th>
-                            <th>
-                                الكمية المعتمدة
-                            </th>
-                            <th>
-                                السعر
-                            </th>
+                            <th>اسم الصنف</th>
+                            <th>الكمية المطلوبة</th>
+                            <th>الكمية المعتمدة</th>
+                            <th>السعر</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for detail in items %}
                             <tr>
-                                <td>
-                                    {{ detail.item.name }}
-                                </td>
-                                <td>
-                                    {{ detail.order_quantity }}
-                                </td>
-                                <td>
-                                    {{ detail.approved_quantity }}
-                                </td>
-                                <td>
-                                    {{ detail.price|default:"-" }}
-                                </td>
+                                <td>{{ detail.item.name }}</td>
+                                <td>{{ detail.order_quantity }}</td>
+                                <td>{{ detail.approved_quantity }}</td>
+                                <td>{{ detail.price|default:"-" }}</td>
                             </tr>
                         {% endfor %}
                     </tbody>
@@ -65,9 +45,7 @@
             <form method="post" class="mt-4">
                 {% csrf_token %}
                 <div class="mb-3">
-                    <label class="form-label">
-                        ملاحظات الاعتماد/الرفض
-                    </label>
+                    <label class="form-label">ملاحظات الاعتماد/الرفض</label>
                     <textarea name="approval_notes"
                               class="form-control"
                               placeholder="اكتب ملاحظاتك هنا..."

@@ -4,29 +4,21 @@
         <div class="col-md-6">
             <div class="card">
                 <div class="card-header">
-                    <h4>
-                        {{ title }}
-                    </h4>
+                    <h4>{{ title }}</h4>
                 </div>
                 <div class="card-body">
                     <form method="post">
                         {% csrf_token %}
                         <div class="mb-3">
-                            <label class="form-label">
-                                اسم المخزن الفرعي
-                            </label>
+                            <label class="form-label">اسم المخزن الفرعي</label>
                             {{ form.name }}
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">
-                                المخزن الرئيسي
-                            </label>
+                            <label class="form-label">المخزن الرئيسي</label>
                             {{ form.warehouse }}
                         </div>
                         {{ form.faculty }} <!-- Hidden field -->
-                        <button type="submit" class="btn btn-success">
-                            حفظ
-                        </button>
+                        <button type="submit" class="btn btn-success">حفظ</button>
                         <a href="{% url 'subwarehouse_list' %}" class="btn btn-secondary">إلغاء</a>
                     </form>
                 </div>

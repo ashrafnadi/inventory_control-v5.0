@@ -172,21 +172,30 @@
                 color: #343a40;
                 pointer-events: none;
             }
+
+            .notes-box {
+                margin-bottom: 20px;
+                padding: 10px;
+                background: #f8f9fa;
+                border-radius: 5px;
+            }
+
+            .empty-row {
+                text-align: center;
+                color: #6c757d;
+            }
+
+            .signature-hint {
+                font-size: 10px;
+                color: #6c757d;
+            }
         </style>
     </head>
     <body>
-        {% if transaction.deleted %}
-            <div class="watermark">
-                محذوف
-            </div>
-        {% endif %}
+        {% if transaction.deleted %}<div class="watermark">محذوف</div>{% endif %}
         <div class="header">
-            <h1>
-                {{ transaction.get_transaction_type_display }}
-            </h1>
-            <div>
-                رقم المستند: {{ transaction.document_number }}
-            </div>
+            <h1>{{ transaction.get_transaction_type_display }}</h1>
+            <div>رقم المستند: {{ transaction.document_number }}</div>
         </div>
         <div class="transaction-info">
             <div class="info-item">
@@ -257,48 +266,27 @@
             {% endif %}
         </div>
         {% if transaction.notes %}
-            <div style="margin-bottom: 20px;
-                        padding: 10px;
-                        background: #f8f9fa;
-                        border-radius: 5px">
+            <div class="notes-box">
                 <strong>ملاحظات:</strong> {{ transaction.notes }}
             </div>
         {% endif %}
         <table class="items-table">
             <thead>
                 <tr>
-                    <th>
-                        اسم الصنف
-                    </th>
-                    <th>
-                        الكمية المطلوبة
-                    </th>
-                    <th>
-                        الكمية المنصرفة
-                    </th>
-                    <th>
-                        السعر
-                    </th>
-                    <th>
-                        الحالة
-                    </th>
-                    <th>
-                        ملاحظات
-                    </th>
+                    <th>اسم الصنف</th>
+                    <th>الكمية المطلوبة</th>
+                    <th>الكمية المنصرفة</th>
+                    <th>السعر</th>
+                    <th>الحالة</th>
+                    <th>ملاحظات</th>
                 </tr>
             </thead>
             <tbody>
                 {% for detail in transaction.itemtransactiondetails_set.all %}
                     <tr>
-                        <td>
-                            {{ detail.item.name }}
-                        </td>
-                        <td>
-                            {{ detail.order_quantity|default:"-" }}
-                        </td>
-                        <td>
-                            {{ detail.approved_quantity }}
-                        </td>
+                        <td>{{ detail.item.name }}</td>
+                        <td>{{ detail.order_quantity|default:"-" }}</td>
+                        <td>{{ detail.approved_quantity }}</td>
                         <td>
                             {% if detail.item.itempricehistory_set.exists %}
                                 {{ detail.item.itempricehistory_set.last.price }} ج.م
@@ -307,47 +295,29 @@
                             {% endif %}
                         </td>
                         <td>
-                            <span class="status-badge status-{{ detail.get_status_display|lower }}">
-                                {{ detail.get_status_display }}
-                            </span>
+                            <span class="status-badge status-{{ detail.get_status_display|lower }}">{{ detail.get_status_display }}</span>
                         </td>
-                        <td>
-                            {{ detail.notes|default:"-" }}
-                        </td>
+                        <td>{{ detail.notes|default:"-" }}</td>
                     </tr>
                 {% empty %}
                     <tr>
-                        <td colspan="6" style="text-align: center; color: #6c757d;">
-                            لا توجد أصناف
-                        </td>
+                        <td colspan="6" class="empty-row">لا توجد أصناف</td>
                     </tr>
                 {% endfor %}
             </tbody>
         </table>
         <div class="signature-section">
             <div class="signature-box">
-                <div class="signature-label">
-                    موظف المخزن
-                </div>
-                <div style="font-size: 10px; color: #6c757d;">
-                    الاسم والتوقيع
-                </div>
+                <div class="signature-label">موظف المخزن</div>
+                <div class="signature-hint">الاسم والتوقيع</div>
             </div>
             <div class="signature-box">
-                <div class="signature-label">
-                    المستلم
-                </div>
-                <div style="font-size: 10px; color: #6c757d;">
-                    الاسم والتوقيع
-                </div>
+                <div class="signature-label">المستلم</div>
+                <div class="signature-hint">الاسم والتوقيع</div>
             </div>
             <div class="signature-box">
-                <div class="signature-label">
-                    المشرف
-                </div>
-                <div style="font-size: 10px; color: #6c757d;">
-                    الاسم والتوقيع
-                </div>
+                <div class="signature-label">المشرف</div>
+                <div class="signature-hint">الاسم والتوقيع</div>
             </div>
         </div>
         {% if transaction.created_by or transaction.modified_by %}

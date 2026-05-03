@@ -3,138 +3,159 @@
 {% load static %}
 {% block title %}كشف المخزون — جميع الكليات{% endblock %}
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h2><i class="bi bi-grid-3x3-gap me-2"></i>المخزون — جميع الكليات</h2>
-    <div class="d-flex gap-2">
-        <a href="{% url 'export_inventory_excel' %}?{% if selected_faculty_id %}faculty_id={{ selected_faculty_id }}{% endif %}{% if selected_warehouse_id %}{% if selected_faculty_id %}&{% endif %}warehouse_id={{ selected_warehouse_id }}{% endif %}{% if selected_category_id %}{% if selected_faculty_id or selected_warehouse_id %}&{% endif %}category_id={{ selected_category_id }}{% endif %}{% if search_q %}{% if selected_faculty_id or selected_warehouse_id or selected_category_id %}&{% endif %}q={{ search_q|urlencode }}{% endif %}" class="btn btn-success">
-            <i class="bi bi-file-earmark-excel me-1"></i> Excel
-        </a>
-        <a href="{% url 'export_inventory_pdf' %}?{% if selected_faculty_id %}faculty_id={{ selected_faculty_id }}{% endif %}{% if selected_warehouse_id %}{% if selected_faculty_id %}&{% endif %}warehouse_id={{ selected_warehouse_id }}{% endif %}{% if selected_category_id %}{% if selected_faculty_id or selected_warehouse_id %}&{% endif %}category_id={{ selected_category_id }}{% endif %}{% if search_q %}{% if selected_faculty_id or selected_warehouse_id or selected_category_id %}&{% endif %}q={{ search_q|urlencode }}{% endif %}" class="btn btn-danger">
-            <i class="bi bi-file-earmark-pdf me-1"></i> PDF
-        </a>
-    </div>
-</div>
-
-<!-- Filters -->
-<div class="card mb-4">
-    <div class="card-body py-2">
-        <form method="get" class="row g-2 align-items-end">
-            <div class="col-md-3">
-                <label class="form-label mb-1 small fw-bold">الكلية</label>
-                <select name="faculty_id" class="form-select form-select-sm">
-                    <option value="">-- جميع الكليات --</option>
-                    {% for f in faculties %}
-                        <option value="{{ f.id }}" {% if selected_faculty_id == f.id|stringformat:"s" %}selected{% endif %}>{{ f.name }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="col-md-3">
-                <label class="form-label mb-1 small fw-bold">المخزن الفرعي</label>
-                <select name="warehouse_id" class="form-select form-select-sm">
-                    <option value="">-- الكل --</option>
-                    {% for sw in sub_warehouses %}
-                        <option value="{{ sw.id }}" {% if selected_warehouse_id == sw.id|stringformat:"s" %}selected{% endif %}>
-                            {{ sw.name }} ({{ sw.warehouse.name }})
-                        </option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="col-md-3">
-                <label class="form-label mb-1 small fw-bold">الفئة</label>
-                <select name="category_id" class="form-select form-select-sm">
-                    <option value="">-- الكل --</option>
-                    {% for cat in categories %}
-                        <option value="{{ cat.id }}" {% if selected_category_id == cat.id|stringformat:"s" %}selected{% endif %}>{{ cat.name }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="col-md-2">
-                <label class="form-label mb-1 small fw-bold">بحث</label>
-                <input type="text" name="q" value="{{ search_q }}" class="form-control form-control-sm" placeholder="اسم أو كود...">
-            </div>
-            <div class="col-md-1">
-                <button type="submit" class="btn btn-primary btn-sm w-100">بحث</button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<!-- Results table -->
-<div class="card">
-    <div class="card-body">
-        <div class="table-responsive">
-            <table class="table table-striped table-hover" id="admin-items-table" dir="rtl">
-                <thead class="table-dark">
-                    <tr>
-                        <th>#</th>
-                        <th>كود الصنف</th>
-                        <th>اسم الصنف</th>
-                        <th>الفئة</th>
-                        <th>الكلية</th>
-                        <th>المخزن الفرعي</th>
-                        <th class="bg-success text-white">الكمية المعتمدة</th>
-                        <th>حد الكمية</th>
-                        <th>الحالة</th>
-                        <th>آخر تحديث</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for stock in stocks %}
-                    <tr class="{% if stock.cached_quantity == 0 %}table-danger{% elif stock.cached_quantity <= stock.limit_quantity %}table-warning{% endif %}">
-                        <td>{{ forloop.counter }}</td>
-                        <td><span dir="ltr">{{ stock.item.code|default:"-" }}</span></td>
-                        <td><strong>{{ stock.item.name }}</strong></td>
-                        <td>{{ stock.item.category.name|default:"-" }}</td>
-                        <td>
-                            <span class="badge bg-primary">{{ stock.faculty.name }}</span>
-                        </td>
-                        <td>{{ stock.sub_warehouse.name }}</td>
-                        <td class="text-center">
-                            {% if stock.cached_quantity == 0 %}
-                                <span class="badge bg-danger">نافد</span>
-                            {% elif stock.cached_quantity <= stock.limit_quantity %}
-                                <span class="badge bg-warning text-dark">{{ stock.cached_quantity }}</span>
-                            {% else %}
-                                <span class="badge bg-success">{{ stock.cached_quantity }}</span>
-                            {% endif %}
-                        </td>
-                        <td class="text-center">{{ stock.limit_quantity }}</td>
-                        <td>
-                            {% if stock.cached_quantity == 0 %}
-                                <span class="badge bg-danger">نافد</span>
-                            {% elif stock.cached_quantity <= stock.limit_quantity %}
-                                <span class="badge bg-warning text-dark">منخفض</span>
-                            {% else %}
-                                <span class="badge bg-success">متوفر</span>
-                            {% endif %}
-                        </td>
-                        <td><small class="text-muted">{{ stock.last_quantity_update|date:"Y-m-d"|default:"-" }}</small></td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="10" class="text-center text-muted py-4">
-                            <i class="bi bi-inbox display-6 d-block mb-2"></i>
-                            لا توجد نتائج لهذه الفلاتر.
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-                {% if stocks %}
-                <tfoot class="table-light">
-                    <tr>
-                        <td colspan="6" class="text-end fw-bold">الإجمالي:</td>
-                        <td class="fw-bold text-success">{{ stocks|length }} سجل</td>
-                        <td colspan="3"></td>
-                    </tr>
-                </tfoot>
-                {% endif %}
-            </table>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>
+            <i class="bi bi-grid-3x3-gap me-2"></i>المخزون — جميع الكليات
+        </h2>
+        <div class="d-flex gap-2">
+            <a href="{% url 'export_inventory_excel' %}?{% if selected_faculty_id %}faculty_id={{ selected_faculty_id }}{% endif %}{% if selected_warehouse_id %}{% if selected_faculty_id %}&{% endif %}warehouse_id={{ selected_warehouse_id }}{% endif %}{% if selected_category_id %}{% if selected_faculty_id or selected_warehouse_id %}&{% endif %}category_id={{ selected_category_id }}{% endif %}{% if search_q %}{% if selected_faculty_id or selected_warehouse_id or selected_category_id %}&{% endif %}q={{ search_q|urlencode }}{% endif %}"
+               class="btn btn-success">
+                <i class="bi bi-file-earmark-excel me-1"></i> Excel
+            </a>
+            <a href="{% url 'export_inventory_pdf' %}?{% if selected_faculty_id %}faculty_id={{ selected_faculty_id }}{% endif %}{% if selected_warehouse_id %}{% if selected_faculty_id %}&{% endif %}warehouse_id={{ selected_warehouse_id }}{% endif %}{% if selected_category_id %}{% if selected_faculty_id or selected_warehouse_id %}&{% endif %}category_id={{ selected_category_id }}{% endif %}{% if search_q %}{% if selected_faculty_id or selected_warehouse_id or selected_category_id %}&{% endif %}q={{ search_q|urlencode }}{% endif %}"
+               class="btn btn-danger">
+                <i class="bi bi-file-earmark-pdf me-1"></i> PDF
+            </a>
         </div>
     </div>
-</div>
+    <!-- Filters -->
+    <div class="card mb-4">
+        <div class="card-body py-2">
+            <form method="get" class="row g-2 align-items-end">
+                <div class="col-md-3">
+                    <label class="form-label mb-1 small fw-bold">الكلية</label>
+                    <select name="faculty_id" class="form-select form-select-sm">
+                        <option value="">-- جميع الكليات --</option>
+                        {% for f in faculties %}
+                            <option value="{{ f.id }}"
+                                    {% if selected_faculty_id == f.id|stringformat:"s" %}selected{% endif %}>
+                                {{ f.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label mb-1 small fw-bold">المخزن الفرعي</label>
+                    <select name="warehouse_id" class="form-select form-select-sm">
+                        <option value="">-- الكل --</option>
+                        {% for sw in sub_warehouses %}
+                            <option value="{{ sw.id }}"
+                                    {% if selected_warehouse_id == sw.id|stringformat:"s" %}selected{% endif %}>
+                                {{ sw.name }} ({{ sw.warehouse.name }})
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label mb-1 small fw-bold">الفئة</label>
+                    <select name="category_id" class="form-select form-select-sm">
+                        <option value="">-- الكل --</option>
+                        {% for cat in categories %}
+                            <option value="{{ cat.id }}"
+                                    {% if selected_category_id == cat.id|stringformat:"s" %}selected{% endif %}>
+                                {{ cat.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label mb-1 small fw-bold">بحث</label>
+                    <input type="text"
+                           name="q"
+                           value="{{ search_q }}"
+                           class="form-control form-control-sm"
+                           placeholder="اسم أو كود...">
+                </div>
+                <div class="col-md-1">
+                    <button type="submit" class="btn btn-primary btn-sm w-100">بحث</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <!-- Results table -->
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover"
+                       id="admin-items-table"
+                       dir="rtl">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>#</th>
+                            <th>كود الصنف</th>
+                            <th>اسم الصنف</th>
+                            <th>الفئة</th>
+                            <th>الكلية</th>
+                            <th>المخزن الفرعي</th>
+                            <th class="bg-success text-white">الكمية المعتمدة</th>
+                            <th>حد الكمية</th>
+                            <th>الحالة</th>
+                            <th>آخر تحديث</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for stock in stocks %}
+                            <tr class="{% if stock.cached_quantity == 0 %}table-danger{% elif stock.cached_quantity <= stock.limit_quantity %}table-warning{% endif %}">
+                                <td>{{ forloop.counter }}</td>
+                                <td>
+                                    <span dir="ltr">{{ stock.item.code|default:"-" }}</span>
+                                </td>
+                                <td>
+                                    <strong>{{ stock.item.name }}</strong>
+                                </td>
+                                <td>{{ stock.item.category.name|default:"-" }}</td>
+                                <td>
+                                    <span class="badge bg-primary">{{ stock.faculty.name }}</span>
+                                </td>
+                                <td>{{ stock.sub_warehouse.name }}</td>
+                                <td class="text-center">
+                                    {% if stock.cached_quantity == 0 %}
+                                        <span class="badge bg-danger">نافد</span>
+                                    {% elif stock.cached_quantity <= stock.limit_quantity %}
+                                        <span class="badge bg-warning text-dark">{{ stock.cached_quantity }}</span>
+                                    {% else %}
+                                        <span class="badge bg-success">{{ stock.cached_quantity }}</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">{{ stock.limit_quantity }}</td>
+                                <td>
+                                    {% if stock.cached_quantity == 0 %}
+                                        <span class="badge bg-danger">نافد</span>
+                                    {% elif stock.cached_quantity <= stock.limit_quantity %}
+                                        <span class="badge bg-warning text-dark">منخفض</span>
+                                    {% else %}
+                                        <span class="badge bg-success">متوفر</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <small class="text-muted">{{ stock.last_quantity_update|date:"Y-m-d"|default:"-" }}</small>
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="10" class="text-center text-muted py-4">
+                                    <i class="bi bi-inbox display-6 d-block mb-2"></i>
+                                    لا توجد نتائج لهذه الفلاتر.
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                    {% if stocks %}
+                        <tfoot class="table-light">
+                            <tr>
+                                <td colspan="6" class="text-end fw-bold">الإجمالي:</td>
+                                <td class="fw-bold text-success">{{ stocks|length }} سجل</td>
+                                <td colspan="3"></td>
+                            </tr>
+                        </tfoot>
+                    {% endif %}
+                </table>
+            </div>
+        </div>
+    </div>
 {% endblock %}
 {% block scripts %}
-<script>
+    <script>
 (function () {
     if (window.__adminItemsDT) {
         try { window.__adminItemsDT.destroy(); } catch(e) {}
@@ -166,5 +187,5 @@
         init();
     }
 })();
-</script>
+    </script>
 {% endblock %}

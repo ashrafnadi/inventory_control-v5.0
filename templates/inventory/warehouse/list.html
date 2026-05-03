@@ -3,13 +3,11 @@
 {% load static %}
 {% block content %}
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <h4>
-            قائمة المخازن
-        </h4>
+        <h4>قائمة المخازن</h4>
         {% if request.session.user_type == "inventory_admin" %}
-        <a href="{% url 'warehouse_create' %}" class="btn btn-primary">
-            <i class="bi bi-plus"></i> إضافة مخزن
-        </a>
+            <a href="{% url 'warehouse_create' %}" class="btn btn-primary">
+                <i class="bi bi-plus"></i> إضافة مخزن
+            </a>
         {% endif %}
     </div>
     {% if warehouses %}
@@ -18,28 +16,16 @@
                    id="warehouse_table">
                 <thead>
                     <tr>
-                        <th width="120px">
-                            :كود المخزن
-                        </th>
-                        <th>
-                            اسم المخزن
-                        </th>
-                        {% if request.session.user_type == "inventory_admin" %}
-                            <th width="170px">
-                                الإجراءات
-                            </th>
-                        {% endif %}
+                        <th width="120px">:كود المخزن</th>
+                        <th>اسم المخزن</th>
+                        {% if request.session.user_type == "inventory_admin" %}<th width="170px">الإجراءات</th>{% endif %}
                     </tr>
                 </thead>
                 <tbody>
                     {% for w in warehouses %}
                         <tr>
-                            <td>
-                                {{ w.id }}
-                            </td>
-                            <td>
-                                {{ w.name }}
-                            </td>
+                            <td>{{ w.id }}</td>
+                            <td>{{ w.name }}</td>
                             {% if request.session.user_type == "inventory_admin" %}
                                 <td>
                                     <a href="{% url 'warehouse_update' w.pk %}"
@@ -58,9 +44,7 @@
             </table>
         </div>
     {% else %}
-        <div class="alert alert-info">
-            لا توجد مخازن مضافة حتى الآن.
-        </div>
+        <div class="alert alert-info">لا توجد مخازن مضافة حتى الآن.</div>
     {% endif %}
 {% endblock content %}
 {% block scripts %}

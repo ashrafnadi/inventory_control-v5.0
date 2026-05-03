@@ -2,82 +2,93 @@
 {% extends "base.html" %}
 {% load static %}
 {% load widget_tweaks %}
-{% block title %}{% if editing %}تعديل صنف{% else %}إضافة صنف{% endif %}{% endblock title %}
+{% block title %}
+    {% if editing %}
+        تعديل صنف
+    {% else %}
+        إضافة صنف
+    {% endif %}
+{% endblock title %}
 {% block content %}
-<div class="card">
-    <div class="card-header bg-primary text-white">
-        <h3 class="mb-0">
-            {% if editing %}
-                <i class="bi bi-pencil me-2"></i>تعديل صنف
-            {% else %}
-                <i class="bi bi-plus-circle me-2"></i>إضافة صنف جديد للكتالوج
-            {% endif %}
-        </h3>
-    </div>
-    <div class="card-body">
-        <form method="post" enctype="multipart/form-data" dir="rtl">
-            {% csrf_token %}
-
-            {% if not editing %}
-            <div class="alert alert-info">
-                <i class="bi bi-info-circle me-2"></i>
-                <strong>خطوات إنشاء صنف جديد:</strong>
-                <ol class="mb-0 mt-2">
-                    <li>اختر المخزن الفرعي <span class="text-danger">*</span></li>
-                    <li>اختر الفئة المتاحة في هذا المخزن <span class="text-danger">*</span></li>
-                    <li>أكمل باقي بيانات الصنف</li>
-                </ol>
-                <hr class="my-2">
-                <small>
-                    ⚠️ سيتم إضافة الصنف لجميع الكليات بكمية 0. 
-                    الكميات ستُحدّث لاحقاً عبر المعاملات (إضافة، صرف، نقل، إرجاع).
-                </small>
-            </div>
-            {% endif %}
-
-            <div class="row">
-                <!-- Code -->
-                <div class="col-md-6 mb-3">
-                    <label class="form-label"><i class="bi bi-upc-scan me-1"></i>كود الصنف</label>
-                    <div class="input-group">
-                        {{ form.code|add_class:"form-control"|attr:"dir:ltr" }}
-                        {% if not editing and not form.code.value %}
-                            <span class="input-group-text bg-light" title="سيتم الإنشاء تلقائياً إذا تركته فارغاً">
-                                <i class="bi bi-robot text-primary"></i>
-                            </span>
-                        {% endif %}
+    <style>.img-preview { max-height: 100px; width: auto; object-fit: contain; }</style>
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h3 class="mb-0">
+                {% if editing %}
+                    <i class="bi bi-pencil me-2"></i>تعديل صنف
+                {% else %}
+                    <i class="bi bi-plus-circle me-2"></i>إضافة صنف جديد للكتالوج
+                {% endif %}
+            </h3>
+        </div>
+        <div class="card-body">
+            <form method="post" enctype="multipart/form-data" dir="rtl">
+                {% csrf_token %}
+                {% if not editing %}
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle me-2"></i>
+                        <strong>خطوات إنشاء صنف جديد:</strong>
+                        <ol class="mb-0 mt-2">
+                            <li>
+                                اختر المخزن الفرعي <span class="text-danger">*</span>
+                            </li>
+                            <li>
+                                اختر الفئة المتاحة في هذا المخزن <span class="text-danger">*</span>
+                            </li>
+                            <li>أكمل باقي بيانات الصنف</li>
+                        </ol>
+                        <hr class="my-2">
+                        <small>
+                            ⚠️ سيتم إضافة الصنف لجميع الكليات بكمية 0.
+                            الكميات ستُحدّث لاحقاً عبر المعاملات (إضافة، صرف، نقل، إرجاع).
+                        </small>
                     </div>
-                    <small class="text-muted">
-                        {% if editing %}
-                        يمكن تعديل الكود، يجب أن يكون فريداً - أي لا يتكرر أو يكون هناك صنف بنفس الكود
-                        {% else %}
-                        اتركه فارغاً للإنشاء التلقائي
-                        {% endif %}
-                    </small>
-                    {% if form.code.errors %}<div class="text-danger mt-1">{{ form.code.errors }}</div>{% endif %}
-                </div>
-
-                <!-- Name -->
-                <div class="col-md-6 mb-3">
-                    <label class="form-label"><i class="bi bi-tag me-1"></i>اسم الصنف</label>
-                    {{ form.name|add_class:"form-control"|attr:"dir:rtl" }}
-                    {% if form.name.errors %}<div class="text-danger mt-1">{{ form.name.errors }}</div>{% endif %}
-                </div>
-
-                <div class="col-md-12 mb-3">
-                    <label class="form-label">
-                        <i class="bi bi-folder me-1"></i>الفئة
-                        <span class="text-danger">*</span>
-                    </label>
-                    
+                {% endif %}
+                <div class="row">
+                    <!-- Code -->
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">
+                            <i class="bi bi-upc-scan me-1"></i>كود الصنف
+                        </label>
+                        <div class="input-group">
+                            {{ form.code|add_class:"form-control"|attr:"dir:ltr" }}
+                            {% if not editing and not form.code.value %}
+                                <span class="input-group-text bg-light"
+                                      title="سيتم الإنشاء تلقائياً إذا تركته فارغاً">
+                                    <i class="bi bi-robot text-primary"></i>
+                                </span>
+                            {% endif %}
+                        </div>
+                        <small class="text-muted">
+                            {% if editing %}
+                                يمكن تعديل الكود، يجب أن يكون فريداً - أي لا يتكرر أو يكون هناك صنف بنفس الكود
+                            {% else %}
+                                اتركه فارغاً للإنشاء التلقائي
+                            {% endif %}
+                        </small>
+                        {% if form.code.errors %}<div class="text-danger mt-1">{{ form.code.errors }}</div>{% endif %}
+                    </div>
+                    <!-- Name -->
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">
+                            <i class="bi bi-tag me-1"></i>اسم الصنف
+                        </label>
+                        {{ form.name|add_class:"form-control"|attr:"dir:rtl" }}
+                        {% if form.name.errors %}<div class="text-danger mt-1">{{ form.name.errors }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-12 mb-3">
+                        <label class="form-label">
+                            <i class="bi bi-folder me-1"></i>الفئة
+                            <span class="text-danger">*</span>
+                        </label>
                         <div id="category-select-wrapper">
-                            <select name="category" 
-                                    id="id_category" 
-                                    class="form-select" 
-                                    required>
-                                    {% for category in categories %}
-                                        <option value="{{ category.id }}" {% if editing and item.category.id == category.id %}selected{% endif %}>{{ category.name }}</option>
-                                    {% endfor %}
+                            <select name="category" id="id_category" class="form-select" required>
+                                {% for category in categories %}
+                                    <option value="{{ category.id }}"
+                                            {% if editing and item.category.id == category.id %}selected{% endif %}>
+                                        {{ category.name }}
+                                    </option>
+                                {% endfor %}
                             </select>
                         </div>
                         <div id="category-loading" class="htmx-indicator">
@@ -86,65 +97,77 @@
                             </small>
                         </div>
                         <small class="text-muted" id="category-help-text">يجب اختيار المخزن الفرعي أولاً</small>
-                    {% if form.category.errors %}<div class="text-danger mt-1">{{ form.category.errors }}</div>{% endif %}
+                        {% if form.category.errors %}<div class="text-danger mt-1">{{ form.category.errors }}</div>{% endif %}
+                    </div>
+                    <!-- Limit Quantity -->
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">
+                            <i class="bi bi-exclamation-triangle me-1"></i>حد الكمية
+                        </label>
+                        {{ form.limit_quantity|add_class:"form-control" }}
+                        <small class="text-muted">يُستخدم كقيمة افتراضية عند إنشاء مخزون جديد للكليات</small>
+                        {% if form.limit_quantity.errors %}<div class="text-danger mt-1">{{ form.limit_quantity.errors }}</div>{% endif %}
+                    </div>
+                    <!-- Unit -->
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">
+                            <i class="bi bi-box me-1"></i>وحدة القياس
+                        </label>
+                        {{ form.unit|add_class:"form-select" }}
+                        {% if form.unit.errors %}<div class="text-danger mt-1">{{ form.unit.errors }}</div>{% endif %}
+                    </div>
+                    <!-- Unit Fraction -->
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">
+                            <i class="bi bi-calculator me-1"></i>كسر الوحدة
+                        </label>
+                        {{ form.unit_fraction|add_class:"form-control" }}
+                        {% if form.unit_fraction.errors %}<div class="text-danger mt-1">{{ form.unit_fraction.errors }}</div>{% endif %}
+                    </div>
+                    <!-- Specification -->
+                    <div class="col-12 mb-3">
+                        <label class="form-label">
+                            <i class="bi bi-card-text me-1"></i>مواصفات الصنف
+                        </label>
+                        {{ form.spacefication|add_class:"form-control"|attr:"rows:3" }}
+                        {% if form.spacefication.errors %}<div class="text-danger mt-1">{{ form.spacefication.errors }}</div>{% endif %}
+                    </div>
+                    <!-- Image -->
+                    <div class="col-12 mb-3">
+                        <label class="form-label">
+                            <i class="bi bi-image me-1"></i>صورة الصنف
+                        </label>
+                        {{ form.item_image|add_class:"form-control" }}
+                        {% if form.item_image.errors %}<div class="text-danger mt-1">{{ form.item_image.errors }}</div>{% endif %}
+                        {% if editing and form.instance.item_image %}
+                            <div class="mt-2">
+                                <img src="{{ form.instance.item_image.url }}"
+                                     alt="صورة الصنف"
+                                     class="img-thumbnail img-preview"
+                                     width="100"
+                                     height="100" />
+                            </div>
+                        {% endif %}
+                    </div>
                 </div>
-
-                <!-- Limit Quantity -->
-                <div class="col-md-4 mb-3">
-                    <label class="form-label"><i class="bi bi-exclamation-triangle me-1"></i>حد الكمية</label>
-                    {{ form.limit_quantity|add_class:"form-control" }}
-                    <small class="text-muted">يُستخدم كقيمة افتراضية عند إنشاء مخزون جديد للكليات</small>
-                    {% if form.limit_quantity.errors %}<div class="text-danger mt-1">{{ form.limit_quantity.errors }}</div>{% endif %}
+                <div class="d-flex justify-content-between mt-4">
+                    <button type="submit" class="btn btn-primary">
+                        {% if editing %}
+                            <i class="bi bi-check-circle me-1"></i>تحديث
+                        {% else %}
+                            <i class="bi bi-save me-1"></i>إنشاء
+                        {% endif %}
+                    </button>
+                    <a href="{% url 'item_list' %}" class="btn btn-secondary">
+                        <i class="bi bi-x-circle me-1"></i>إلغاء
+                    </a>
                 </div>
-
-                <!-- Unit -->
-                <div class="col-md-4 mb-3">
-                    <label class="form-label"><i class="bi bi-box me-1"></i>وحدة القياس</label>
-                    {{ form.unit|add_class:"form-select" }}
-                    {% if form.unit.errors %}<div class="text-danger mt-1">{{ form.unit.errors }}</div>{% endif %}
-                </div>
-
-                <!-- Unit Fraction -->
-                <div class="col-md-4 mb-3">
-                    <label class="form-label"><i class="bi bi-calculator me-1"></i>كسر الوحدة</label>
-                    {{ form.unit_fraction|add_class:"form-control" }}
-                    {% if form.unit_fraction.errors %}<div class="text-danger mt-1">{{ form.unit_fraction.errors }}</div>{% endif %}
-                </div>
-
-                <!-- Specification -->
-                <div class="col-12 mb-3">
-                    <label class="form-label"><i class="bi bi-card-text me-1"></i>مواصفات الصنف</label>
-                    {{ form.spacefication|add_class:"form-control"|attr:"rows:3" }}
-                    {% if form.spacefication.errors %}<div class="text-danger mt-1">{{ form.spacefication.errors }}</div>{% endif %}
-                </div>
-
-                <!-- Image -->
-                <div class="col-12 mb-3">
-                    <label class="form-label"><i class="bi bi-image me-1"></i>صورة الصنف</label>
-                    {{ form.item_image|add_class:"form-control" }}
-                    {% if form.item_image.errors %}<div class="text-danger mt-1">{{ form.item_image.errors }}</div>{% endif %}
-                    {% if editing and form.instance.item_image %}
-                        <div class="mt-2">
-                            <img src="{{ form.instance.item_image.url }}" alt="صورة الصنف" class="img-thumbnail" style="max-height:100px" />
-                        </div>
-                    {% endif %}
-                </div>
-            </div>
-
-            <div class="d-flex justify-content-between mt-4">
-                <button type="submit" class="btn btn-primary">
-                    {% if editing %}<i class="bi bi-check-circle me-1"></i>تحديث{% else %}<i class="bi bi-save me-1"></i>إنشاء{% endif %}
-                </button>
-                <a href="{% url 'item_list' %}" class="btn btn-secondary">
-                    <i class="bi bi-x-circle me-1"></i>إلغاء
-                </a>
-            </div>
-        </form>
+            </form>
+        </div>
     </div>
-</div>
 {% endblock content %}
 {% block scripts %}
-<script>
+    <script>
 document.addEventListener('DOMContentLoaded', function () {
     // Code availability check
     const codeInput = document.querySelector('input[name="code"]');
@@ -194,5 +217,5 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 });
-</script>
+    </script>
 {% endblock scripts %}

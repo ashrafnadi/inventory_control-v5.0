@@ -6,12 +6,11 @@
         {{ message }}
     </div>
 {% elif items %}
- <div class="d-flex justify-content-between align-items-center mb-3">
+    <div class="d-flex justify-content-between align-items-center mb-3">
         <h5 class="mb-0">
             <i class="bi bi-box-seam me-2"></i>
             الأصناف
         </h5>
-       
     </div>
     <div class="card">
         <div class="card-header bg-light">
@@ -40,17 +39,20 @@
                         {% for item_data in items %}
                             <tr class="{% if item_data.approved_qty <= item_data.item.limit_quantity %}table-warning{% endif %}">
                                 <td>{{ forloop.counter }}</td>
-                                <td><span dir="ltr">{{ item_data.item.code|default:"-" }}</span></td>
-                                <td><strong>{{ item_data.item.name }}</strong></td>
+                                <td>
+                                    <span dir="ltr">{{ item_data.item.code|default:"-" }}</span>
+                                </td>
+                                <td>
+                                    <strong>{{ item_data.item.name }}</strong>
+                                </td>
                                 <td>{{ item_data.item.category.name|default:"-" }}</td>
-                                
                                 <td class="bg-success bg-opacity-10">
                                     <strong class="text-success">{{ item_data.approved_qty }}</strong>
                                     {% if not item_data.stock %}
-                                        <br /><small class="text-muted">(لا يوجد سجل مخزون)</small>
+                                        <br />
+                                        <small class="text-muted">(لا يوجد سجل مخزون)</small>
                                     {% endif %}
                                 </td>
-                                
                                 <td class="bg-warning bg-opacity-10">
                                     {% if item_data.pending_qty > 0 %}
                                         <strong class="text-warning">+{{ item_data.pending_qty }}</strong>
@@ -60,15 +62,11 @@
                                         <span class="text-muted">0</span>
                                     {% endif %}
                                     <br />
-                                    <small class="text-muted">
-                                        (معلق: +{{ item_data.pending_additions }} / -{{ item_data.pending_disbursements }})
-                                    </small>
+                                    <small class="text-muted">(معلق: +{{ item_data.pending_additions }} / -{{ item_data.pending_disbursements }})</small>
                                 </td>
-                                
                                 <td class="bg-info bg-opacity-10">
                                     <strong class="text-info">{{ item_data.future_qty }}</strong>
                                 </td>
-                                
                                 <td>{{ item_data.item.get_unit_display }}</td>
                                 <td>
                                     {% if item_data.approved_qty == 0 %}
@@ -93,7 +91,6 @@
             </div>
         </div>
     </div>
-    
     {# DataTables Initialization Script #}
     <script>
     (function () {

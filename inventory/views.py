@@ -5813,7 +5813,8 @@ def admin_transaction_list(request):
     """List ALL transactions across all faculties with filters."""
     open_year = InventoryYear.get_open_year()
     qs = (
-        ItemTransactions.objects.filter(year=open_year).select_related(
+        ItemTransactions.objects.filter(year=open_year)
+        .select_related(
             "faculty",
             "created_by",
             "approval_user",

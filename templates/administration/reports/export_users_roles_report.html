@@ -88,47 +88,27 @@
     </head>
     <body>
         <div class="header">
-            <h1>
-                تقرير المستخدمين والصلاحيات
-            </h1>
+            <h1>تقرير المستخدمين والصلاحيات</h1>
         </div>
         {% if users %}
             <table class="table table-hover table-bordered table-sm table-responsive"
                    id="users_list">
                 <thead>
                     <tr>
-                        <th>
-                            الكود
-                        </th>
-                        <th>
-                            اسم المستخدم
-                        </th>
-                        <th>
-                            الاسم
-                        </th>
-                        <th>
-                            الموظفين
-                        </th>
-                        <th>
-                            الحالة
-                        </th>
-                        <th>
-                            الصلاحية
-                        </th>
+                        <th>الكود</th>
+                        <th>اسم المستخدم</th>
+                        <th>الاسم</th>
+                        <th>الموظفين</th>
+                        <th>الحالة</th>
+                        <th>الصلاحية</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for user in users %}
                         <tr>
-                            <td>
-                                {{ user.id }}
-                            </td>
-                            <td>
-                                {{ user.username }}
-                            </td>
-                            <td>
-                                {{ user.first_name }} {{ user.last_name }}
-                            </td>
+                            <td>{{ user.id }}</td>
+                            <td>{{ user.username }}</td>
+                            <td>{{ user.first_name }} {{ user.last_name }}</td>
                             <td>
                                 {% if user.is_staff %}
                                     موظف
@@ -163,14 +143,10 @@
                 </tbody>
             </table>
         {% else %}
-            <p>
-                لا يوجد مستخدمين
-            </p>
+            <p>لا يوجد مستخدمين</p>
         {% endif %}
         <div class="footer">
-            <p>
-                {{ current_date }}
-            </p>
+            <p>{{ current_date }}</p>
         </div>
     </body>
 </html>

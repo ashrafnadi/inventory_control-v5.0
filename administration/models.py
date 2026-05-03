@@ -62,7 +62,9 @@ class InventoryYear(models.Model):
     year = models.PositiveIntegerField(unique=True, verbose_name="السنة")
     is_open = models.BooleanField(default=True, verbose_name="مفتوحة")
     opened_at = models.DateTimeField(default=timezone.now, verbose_name="تاريخ الفتح")
-    closed_at = models.DateTimeField(null=True, blank=True, verbose_name="تاريخ الإغلاق")
+    closed_at = models.DateTimeField(
+        null=True, blank=True, verbose_name="تاريخ الإغلاق"
+    )
 
     class Meta:
         verbose_name = "سنة المخزون"

@@ -3,234 +3,183 @@
 {% load static %}
 {% load widget_tweaks %}
 {% block content %}
-<form method="post" data-editing="{{ editing|default:'false'|lower }}">
-    {% csrf_token %}
-    <!-- Add hidden approval_status and created_by fields -->
-    <input type="hidden" name="approval_status"
-        value="{{ form.approval_status.value|default:form.approval_status.initial }}" />
-    <input type="hidden" name="created_by" value="{{ request.user.id }}" />
-    {% if form.non_field_errors or details_formset.non_form_errors %}
-    <div class="alert alert-danger">
-        <strong>أخطاء في النموذج:</strong>
-        {% for error in form.non_field_errors %}
-        <div>
-            {{ error }}
-        </div>
-        {% endfor %}
-        {% for error in details_formset.non_form_errors %}
-        <div>
-            {{ error }}
-        </div>
-        {% endfor %}
-    </div>
-    {% endif %}
-    <!-- Parent Form: ItemTransactions -->
-    <div class="card mb-4 overflow-visible">
-        <div class="card-header bg-primary text-white">
-            <h5 class="mb-0">
-                نموذج 1: إذن إضافة
-            </h5>
-        </div>
-        <div class="card-body overflow-visible">
-            <div class="row">
-                <!-- 1. document_number -->
-                <div class="col-md-3 mb-3">
-                    <label>
-                        رقم المستند
-                    </label>
-                    <input type="text" class="form-control"
-                        value="{{ form.instance.document_number|default:'سيتم الإنشاء تلقائياً' }}" readonly />
-                </div>
-                <!-- 2. document_type -->
-                <div class="col-md-3 mb-3">
-                    {{ form.document_type.label_tag }}
-                    {{ form.document_type|add_class:"form-select" }}
-                    {% if form.document_type.errors %}
-                    <div class="text-danger mt-1">
-                        {{ form.document_type.errors }}
+    <form method="post" data-editing="{{ editing|default:'false'|lower }}">
+        {% csrf_token %}
+        <!-- Add hidden approval_status and created_by fields -->
+        <input type="hidden"
+               name="approval_status"
+               value="{{ form.approval_status.value|default:form.approval_status.initial }}" />
+        <input type="hidden" name="created_by" value="{{ request.user.id }}" />
+        {% if form.non_field_errors or details_formset.non_form_errors %}
+            <div class="alert alert-danger">
+                <strong>أخطاء في النموذج:</strong>
+                {% for error in form.non_field_errors %}<div>{{ error }}</div>{% endfor %}
+                {% for error in details_formset.non_form_errors %}<div>{{ error }}</div>{% endfor %}
+            </div>
+        {% endif %}
+        <!-- Parent Form: ItemTransactions -->
+        <div class="card mb-4 overflow-visible">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">نموذج 1: إذن إضافة</h5>
+            </div>
+            <div class="card-body overflow-visible">
+                <div class="row">
+                    <!-- 1. document_number -->
+                    <div class="col-md-3 mb-3">
+                        <label>رقم المستند</label>
+                        <input type="text"
+                               class="form-control"
+                               value="{{ form.instance.document_number|default:'سيتم الإنشاء تلقائياً' }}"
+                               readonly />
                     </div>
-                    {% endif %}
-                </div>
-                <!-- 3. to_sub_warehouse-->
-                <div class="col-md-3 mb-3">
-                    {{ form.to_sub_warehouse.label_tag }}
-                    <select name="to_sub_warehouse" id="id_to_sub_warehouse" class="form-select">
-                        <option value="">
-                            ---------
-                        </option>
-                        {% for value, label in form.to_sub_warehouse.field.choices %}
-                        {% if value %}
-                        <option value="{{ value }}" {% if form.to_sub_warehouse.value|default:"" == value|default:"" %}
-                            selected {% endif %}>
-                            {{ label }}
-                        </option>
+                    <!-- 2. document_type -->
+                    <div class="col-md-3 mb-3">
+                        {{ form.document_type.label_tag }}
+                        {{ form.document_type|add_class:"form-select" }}
+                        {% if form.document_type.errors %}<div class="text-danger mt-1">{{ form.document_type.errors }}</div>{% endif %}
+                    </div>
+                    <!-- 3. to_sub_warehouse-->
+                    <div class="col-md-3 mb-3">
+                        {{ form.to_sub_warehouse.label_tag }}
+                        <select name="to_sub_warehouse" id="id_to_sub_warehouse" class="form-select">
+                            <option value="">---------</option>
+                            {% for value, label in form.to_sub_warehouse.field.choices %}
+                                {% if value %}
+                                    <option value="{{ value }}"
+                                            {% if form.to_sub_warehouse.value|default:"" == value|default:"" %}selected{% endif %}>
+                                        {{ label }}
+                                    </option>
+                                {% endif %}
+                            {% endfor %}
+                        </select>
+                        {% if form.to_sub_warehouse.errors %}<div class="text-danger mt-1">{{ form.to_sub_warehouse.errors }}</div>{% endif %}
+                    </div>
+                    <!-- 4. inventory_user -->
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">موظف المخزن</label>
+                        <input type="text"
+                               class="form-control"
+                               value="{{ request.user.get_full_name|default:request.user.username }}"
+                               readonly />
+                    </div>
+                    <!-- 5. supplier -->
+                    <div class="col-md-3 mb-3">
+                        {{ form.supplier.label_tag }}
+                        {{ form.supplier|add_class:"form-select" }}
+                        {% if form.supplier.errors %}<div class="text-danger mt-1">{{ form.supplier.errors }}</div>{% endif %}
+                    </div>
+                    {% for field in form %}
+                        {% if field.name not in "document_number document_type to_sub_warehouse inventory_user castody_type transaction_type supplier notes approval_user created_by approval_status id" %}
+                            <div class="col-md-3 mb-3">
+                                {{ field.label_tag }}
+                                {% if field.field.widget.input_type == 'select' %}
+                                    {{ field|add_class:"form-select" }}
+                                {% else %}
+                                    {{ field|add_class:"form-control" }}
+                                {% endif %}
+                                {% if field.errors %}<div class="text-danger mt-1">{{ field.errors }}</div>{% endif %}
+                            </div>
                         {% endif %}
-                        {% endfor %}
-                    </select>
-                    {% if form.to_sub_warehouse.errors %}
-                    <div class="text-danger mt-1">
-                        {{ form.to_sub_warehouse.errors }}
-                    </div>
-                    {% endif %}
+                    {% endfor %}
                 </div>
-                <!-- 4. inventory_user -->
-                <div class="col-md-3 mb-3">
-                    <label class="form-label">موظف المخزن</label>
-                    <input type="text" class="form-control"
-                        value="{{ request.user.get_full_name|default:request.user.username }}" readonly />
-                </div>
-                <!-- 5. supplier -->
-                <div class="col-md-3 mb-3">
-                    {{ form.supplier.label_tag }}
-                    {{ form.supplier|add_class:"form-select" }}
-                    {% if form.supplier.errors %}
-                    <div class="text-danger mt-1">
-                        {{ form.supplier.errors }}
+                <!-- Notes field on new line (full width) -->
+                <div class="row">
+                    <div class="col-12 mb-3">
+                        {{ form.notes.label_tag }}
+                        {{ form.notes|add_class:"form-control" }}
+                        {% if form.notes.errors %}<div class="text-danger mt-1">{{ form.notes.errors }}</div>{% endif %}
                     </div>
-                    {% endif %}
-                </div>
-                {% for field in form %}
-                {% if field.name not in "document_number document_type to_sub_warehouse inventory_user castody_type transaction_type supplier notes approval_user created_by approval_status id" %}
-                <div class="col-md-3 mb-3">
-                    {{ field.label_tag }}
-                    {% if field.field.widget.input_type == 'select' %}
-                    {{ field|add_class:"form-select" }}
-                    {% else %}
-                    {{ field|add_class:"form-control" }}
-                    {% endif %}
-                    {% if field.errors %}
-                    <div class="text-danger mt-1">
-                        {{ field.errors }}
-                    </div>
-                    {% endif %}
-                </div>
-                {% endif %}
-                {% endfor %}
-            </div>
-            <!-- Notes field on new line (full width) -->
-            <div class="row">
-                <div class="col-12 mb-3">
-                    {{ form.notes.label_tag }}
-                    {{ form.notes|add_class:"form-control" }}
-                    {% if form.notes.errors %}
-                    <div class="text-danger mt-1">
-                        {{ form.notes.errors }}
-                    </div>
-                    {% endif %}
                 </div>
             </div>
         </div>
-    </div>
-    <!-- Child Formset: ItemTransactionDetails -->
-    <div class="card mb-4 overflow-visible">
-        {{ details_formset.management_form }}
-        <div id="formset-config" data-prefix="{{ details_formset.prefix }}" class="hide">
-        </div>
-        <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">
-                تفاصيل الأصناف
-            </h5>
-            <button type="button" id="add-row" class="btn btn-light btn-sm">
-                إضافة صنف +
-            </button>
-        </div>
-        <div class="card-body">
-            <div class="table-responsive overflow-visible">
-                <table class="table table-bordered form-table" id="details-table">
-                    <thead class="table-light">
-                        <tr>
-                            <th width="600px">
-                                الصنف
-                            </th>
-                            <th width="150px">
-                                الكمية المضافة
-                            </th>
-                            <th width="150px">
-                                السعر
-                            </th>
-                            <th width="150px">
-                                الحالة
-                            </th>
-                            <th>
-                                ملاحظات
-                            </th>
-                            <th class="operations">
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for form in details_formset %}
-                        <tr class="form-row">
-                            <!-- Hidden id field -->
-                            {{ form.id }}
-                            <!-- Item -->
-                            <td>
-                                {{ form.item }} <!-- Required hidden field -->
-                                <input type="hidden" name="{{ details_formset.prefix }}-{{ forloop.counter0 }}-stock"
-                                    class="item-stock" value="{{ form.initial.stock|default:'' }}" />
-                                <input type="text" class="form-control form-control-sm item-search"
-                                    placeholder="ابحث عن الصنف..." autocomplete="off" value="{% if form.item.value %}
-                                                          {{ form.item.label }}
-                                                      {% endif %}" />
-                            </td>
-                            <!-- Approved Quantity -->
-                            <td>
-                                {{ form.approved_quantity|add_class:"form-control form-control-sm" }}
-                                {% if form.approved_quantity.errors %}
-                                <div class="text-danger small">
-                                    {{ form.approved_quantity.errors }}
-                                </div>
-                                {% endif %}
-                            </td>
-                            <!-- Price -->
-                            <td>
-                                {{ form.price|add_class:"form-control form-control-sm" }}
-                                {% if form.price.errors %}
-                                <div class="text-danger small mt-1">
-                                    <i class="bi bi-exclamation-circle"></i> {{ form.price.errors.0 }}
-                                </div>
-                                {% endif %}
-                            </td>
-                            <!-- Status -->
-                            <td>
-                                {{ form.status|add_class:"form-select form-select-sm" }}
-                            </td>
-                            <!-- Notes -->
-                            <td>
-                                {{ form.notes|add_class:"form-control form-control-sm border-0 bg-transparent shadow-none" }}
-                                {% if form.notes.errors %}
-                                <div class="text-danger small">
-                                    {{ form.notes.errors }}
-                                </div>
-                                {% endif %}
-                            </td>
-                            <!-- Delete -->
-                            <td class="text-center align-middle">
-                                <div class="hide-delete">
-                                    {{ form.DELETE }}
-                                </div>
-                                <button type="button" class="btn btn-sm btn-link text-danger delete-row"
-                                    title="حذف الصنف">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+        <!-- Child Formset: ItemTransactionDetails -->
+        <div class="card mb-4 overflow-visible">
+            {{ details_formset.management_form }}
+            <div id="formset-config"
+                 data-prefix="{{ details_formset.prefix }}"
+                 class="hide"></div>
+            <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">تفاصيل الأصناف</h5>
+                <button type="button" id="add-row" class="btn btn-light btn-sm">إضافة صنف +</button>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive overflow-visible">
+                    <table class="table table-bordered form-table" id="details-table">
+                        <thead class="table-light">
+                            <tr>
+                                <th width="600px">الصنف</th>
+                                <th width="150px">الكمية المضافة</th>
+                                <th width="150px">السعر</th>
+                                <th width="150px">الحالة</th>
+                                <th>ملاحظات</th>
+                                <th class="operations"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for form in details_formset %}
+                                <tr class="form-row">
+                                    <!-- Hidden id field -->
+                                    {{ form.id }}
+                                    <!-- Item -->
+                                    <td>
+                                        {{ form.item }} <!-- Required hidden field -->
+                                        <input type="hidden"
+                                               name="{{ details_formset.prefix }}-{{ forloop.counter0 }}-stock"
+                                               class="item-stock"
+                                               value="{{ form.initial.stock|default:'' }}" />
+                                        <input type="text"
+                                               class="form-control form-control-sm item-search"
+                                               placeholder="ابحث عن الصنف..."
+                                               autocomplete="off"
+                                               value="{% if form.item.value %} {{ form.item.label }} {% endif %}" />
+                                    </td>
+                                    <!-- Approved Quantity -->
+                                    <td>
+                                        {{ form.approved_quantity|add_class:"form-control form-control-sm" }}
+                                        {% if form.approved_quantity.errors %}
+                                            <div class="text-danger small">{{ form.approved_quantity.errors }}</div>
+                                        {% endif %}
+                                    </td>
+                                    <!-- Price -->
+                                    <td>
+                                        {{ form.price|add_class:"form-control form-control-sm" }}
+                                        {% if form.price.errors %}
+                                            <div class="text-danger small mt-1">
+                                                <i class="bi bi-exclamation-circle"></i> {{ form.price.errors.0 }}
+                                            </div>
+                                        {% endif %}
+                                    </td>
+                                    <!-- Status -->
+                                    <td>{{ form.status|add_class:"form-select form-select-sm" }}</td>
+                                    <!-- Notes -->
+                                    <td>
+                                        {{ form.notes|add_class:"form-control form-control-sm border-0 bg-transparent shadow-none" }}
+                                        {% if form.notes.errors %}<div class="text-danger small">{{ form.notes.errors }}</div>{% endif %}
+                                    </td>
+                                    <!-- Delete -->
+                                    <td class="text-center align-middle">
+                                        <div class="hide-delete">{{ form.DELETE }}</div>
+                                        <button type="button"
+                                                class="btn btn-sm btn-link text-danger delete-row"
+                                                title="حذف الصنف">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
-    </div>
-    <div class="d-flex justify-content-between">
-        <a href="{% url 'transaction_list' %}" class="btn btn-secondary">إلغاء</a>
-        <button type="submit" class="btn btn-primary">
-            حفظ
-        </button>
-    </div>
-</form>
+        <div class="d-flex justify-content-between">
+            <a href="{% url 'transaction_list' %}" class="btn btn-secondary">إلغاء</a>
+            <button type="submit" class="btn btn-primary">حفظ</button>
+        </div>
+    </form>
 {% endblock content %}
 {% block scripts %}
-<script>
+    <script>
     document.addEventListener('DOMContentLoaded', function () {
         const configDiv = document.getElementById('formset-config');
         if (!configDiv) {
@@ -679,5 +628,5 @@
             console.log(`Created by: ${document.querySelector('input[name="created_by"]').value}`);
         });
     });
-</script>
+    </script>
 {% endblock scripts %}

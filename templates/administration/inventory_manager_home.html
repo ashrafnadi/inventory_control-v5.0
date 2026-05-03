@@ -228,16 +228,12 @@
                             اختر المخزن الفرعي
                         </label>
                         <select class="form-select form-select" id="subwarehouse-select">
-                            <option value="">
-                                --------- اختر المخزن الفرعي من القائمة ---------
-                            </option>
+                            <option value="">--------- اختر المخزن الفرعي من القائمة ---------</option>
                             {% for sub_wh in sub_warehouses %}
                                 <option value="{{ sub_wh.id }}"
                                         data-warehouse="{{ sub_wh.warehouse.name }}"
-                                        {% if selected_sub_warehouse_id == sub_wh.id %}
-                                            selected
-                                        {% endif %}>
-                                    <span class="text-muted"> ({{ sub_wh.warehouse.name }})</span>
+                                        {% if selected_sub_warehouse_id == sub_wh.id %}selected{% endif %}>
+                                    <span class="text-muted">({{ sub_wh.warehouse.name }})</span>
                                     {{ sub_wh.name }}
                                 </option>
                             {% endfor %}
@@ -247,9 +243,7 @@
                 <div class="col-md-4">
                     <button class="btn btn-primary btn-lg w-100 btn-custom d-flex align-items-center justify-content-center"
                             id="show-charts-btn"
-                            {% if not selected_sub_warehouse %}
-                                disabled
-                            {% endif %}>
+                            {% if not selected_sub_warehouse %}disabled{% endif %}>
                         <i class="bi bi-bar-chart me-2"></i>
                         <span>عرض بيانات المخزن</span>
                     </button>
@@ -269,45 +263,29 @@
                     <div class="col-md-3">
                         <div class="text-center">
                             <i class="bi bi-house-door fs-1 mb-2 d-block"></i>
-                            <h5 class="mb-1">
-                                {{ selected_sub_warehouse.name }}
-                            </h5>
-                            <p class="mb-0 opacity-75">
-                                {{ selected_sub_warehouse.warehouse.name }}
-                            </p>
+                            <h5 class="mb-1">{{ selected_sub_warehouse.name }}</h5>
+                            <p class="mb-0 opacity-75">{{ selected_sub_warehouse.warehouse.name }}</p>
                         </div>
                     </div>
                     <div class="col-md-3">
                         <div class="text-center">
                             <i class="bi bi-grid-3x3-gap fs-1 mb-2 d-block"></i>
-                            <h5 class="mb-1">
-                                {{ items_count }}
-                            </h5>
-                            <p class="mb-0 opacity-75">
-                                إجمالي الأصناف
-                            </p>
+                            <h5 class="mb-1">{{ items_count }}</h5>
+                            <p class="mb-0 opacity-75">إجمالي الأصناف</p>
                         </div>
                     </div>
                     <div class="col-md-3">
                         <div class="text-center">
                             <i class="bi bi-tag fs-1 mb-2 d-block"></i>
-                            <h5 class="mb-1">
-                                {{ categories_count }}
-                            </h5>
-                            <p class="mb-0 opacity-75">
-                                الفئات
-                            </p>
+                            <h5 class="mb-1">{{ categories_count }}</h5>
+                            <p class="mb-0 opacity-75">الفئات</p>
                         </div>
                     </div>
                     <div class="col-md-3">
                         <div class="text-center">
                             <i class="bi bi-exclamation-triangle fs-1 mb-2 d-block"></i>
-                            <h5 class="mb-1">
-                                {{ low_stock_count }} / {{ out_of_stock_count }}
-                            </h5>
-                            <p class="mb-0 opacity-75">
-                                منخفض / نافد
-                            </p>
+                            <h5 class="mb-1">{{ low_stock_count }} / {{ out_of_stock_count }}</h5>
+                            <p class="mb-0 opacity-75">منخفض / نافد</p>
                         </div>
                     </div>
                 </div>
@@ -328,9 +306,7 @@
                         <div class="row g-4">
                             <div class="col-md-8">
                                 <div class="card shadow-sm h-100">
-                                    <div class="card-header bg-primary text-white text-center">
-                                        الأصناف حسب الفئة
-                                    </div>
+                                    <div class="card-header bg-primary text-white text-center">الأصناف حسب الفئة</div>
                                     <div class="card-body">
                                         <div class="chart-container position-relative">
                                             <canvas id="chartCat_{{ selected_sub_warehouse.id }}"></canvas>
@@ -338,9 +314,7 @@
                                                 <div class="spinner-border text-primary" role="status">
                                                     <span class="visually-hidden">جاري التحميل...</span>
                                                 </div>
-                                                <p class="mt-2 text-muted">
-                                                    جاري تحميل البيانات...
-                                                </p>
+                                                <p class="mt-2 text-muted">جاري تحميل البيانات...</p>
                                             </div>
                                         </div>
                                     </div>
@@ -348,9 +322,7 @@
                             </div>
                             <div class="col-md-4">
                                 <div class="card shadow-sm h-100">
-                                    <div class="card-header bg-warning text-dark text-center">
-                                        حالة المخزون
-                                    </div>
+                                    <div class="card-header bg-warning text-dark text-center">حالة المخزون</div>
                                     <div class="card-body">
                                         <div class="chart-container position-relative">
                                             <canvas id="chartStock_{{ selected_sub_warehouse.id }}"></canvas>
@@ -358,9 +330,7 @@
                                                 <div class="spinner-border text-warning" role="status">
                                                     <span class="visually-hidden">جاري التحميل...</span>
                                                 </div>
-                                                <p class="mt-2 text-muted">
-                                                    جاري تحميل البيانات...
-                                                </p>
+                                                <p class="mt-2 text-muted">جاري تحميل البيانات...</p>
                                             </div>
                                         </div>
                                     </div>
@@ -384,9 +354,7 @@
             {% endif %}
         </div>
         <!-- Low Stock Items Section -->
-        <div class="mt-5">
-            {% include "administration/partials/low_stock_items.html" %}
-        </div>
+        <div class="mt-5">{% include "administration/partials/low_stock_items.html" %}</div>
     </div>
 {% endblock content %}
 {% block scripts %}
@@ -424,6 +392,14 @@
     </script>
     <!-- CORRECT Chart.js script tag (NO spaces, proper closing) -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
+    {% if selected_sub_warehouse %}
+        {% for wh_data in per_warehouse_data %}
+            {% with cat_id="cat_data_"|add:wh_data.warehouse.id|stringformat:"s" stock_id="stock_data_"|add:wh_data.warehouse.id|stringformat:"s" %}
+                {{ wh_data.chart_category_json|json_script:cat_id }}
+                {{ wh_data.chart_stock_json|json_script:stock_id }}
+            {% endwith %}
+        {% endfor %}
+    {% endif %}
     <!-- Main script with REORDERED initialization -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -558,13 +534,13 @@
                         if (catCtx && stockCtx) {
                             new Chart(catCtx.getContext('2d'), {
                                 type: 'bar',
-                                data: JSON.parse('{{ wh_data.chart_category_json|escapejs }}'),
+                                data: JSON.parse(document.getElementById('cat_data_{{ wh_data.warehouse.id }}').textContent),
                                 options: barOptions
                             });
                             
                             new Chart(stockCtx.getContext('2d'), {
                                 type: 'doughnut',
-                                data: JSON.parse('{{ wh_data.chart_stock_json|escapejs }}'),
+                                data: JSON.parse(document.getElementById('stock_data_{{ wh_data.warehouse.id }}').textContent),
                                 options: doughnutOptions
                             });
                             console.log(`Charts initialized for warehouse {{ wh_data.warehouse.id }}`);

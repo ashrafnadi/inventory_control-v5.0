@@ -4,9 +4,7 @@
 {% block content %}
     <div class="container py-4">
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <h1 class="h3 mb-0">
-                تفاصيل المورد: {{ supplier.name }}
-            </h1>
+            <h1 class="h3 mb-0">تفاصيل المورد: {{ supplier.name }}</h1>
             <div class="d-flex gap-2">
                 {% if request.session.user_type == "inventory_manager" %}
                     <a href="{% url 'supplier_update' supplier.id %}"
@@ -34,34 +32,20 @@
                     </div>
                     <div class="card-body">
                         <div class="mb-3">
-                            <h6 class="text-muted">
-                                اسم الشركة
-                            </h6>
-                            <p class="fs-5 mb-0">
-                                {{ supplier.name }}
-                            </p>
+                            <h6 class="text-muted">اسم الشركة</h6>
+                            <p class="fs-5 mb-0">{{ supplier.name }}</p>
                         </div>
                         <div class="mb-3">
-                            <h6 class="text-muted">
-                                العنوان
-                            </h6>
-                            <p class="mb-0">
-                                {{ supplier.company_address }}
-                            </p>
+                            <h6 class="text-muted">العنوان</h6>
+                            <p class="mb-0">{{ supplier.company_address }}</p>
                         </div>
                         <div class="mb-3">
-                            <h6 class="text-muted">
-                                هاتف الشركة
-                            </h6>
-                            <p class="mb-0 dir-ltr">
-                                {{ supplier.company_phone }}
-                            </p>
+                            <h6 class="text-muted">هاتف الشركة</h6>
+                            <p class="mb-0 dir-ltr">{{ supplier.company_phone }}</p>
                         </div>
                         {% if supplier.company_email %}
                             <div class="mb-3">
-                                <h6 class="text-muted">
-                                    البريد الإلكتروني
-                                </h6>
+                                <h6 class="text-muted">البريد الإلكتروني</h6>
                                 <p class="mb-0">
                                     <a href="mailto:{{ supplier.company_email }}"
                                        class="text-decoration-none">
@@ -72,12 +56,8 @@
                         {% endif %}
                         {% if supplier.company_notes %}
                             <div class="mb-3">
-                                <h6 class="text-muted">
-                                    ملاحظات
-                                </h6>
-                                <p class="mb-0">
-                                    {{ supplier.company_notes|linebreaksbr }}
-                                </p>
+                                <h6 class="text-muted">ملاحظات</h6>
+                                <p class="mb-0">{{ supplier.company_notes|linebreaksbr }}</p>
                             </div>
                         {% endif %}
                     </div>
@@ -94,34 +74,20 @@
                     </div>
                     <div class="card-body">
                         <div class="mb-3">
-                            <h6 class="text-muted">
-                                اسم المندوب
-                            </h6>
-                            <p class="fs-5 mb-0">
-                                {{ supplier.contact_name }}
-                            </p>
+                            <h6 class="text-muted">اسم المندوب</h6>
+                            <p class="fs-5 mb-0">{{ supplier.contact_name }}</p>
                         </div>
                         <div class="mb-3">
-                            <h6 class="text-muted">
-                                العنوان
-                            </h6>
-                            <p class="mb-0">
-                                {{ supplier.contact_address }}
-                            </p>
+                            <h6 class="text-muted">العنوان</h6>
+                            <p class="mb-0">{{ supplier.contact_address }}</p>
                         </div>
                         <div class="mb-3">
-                            <h6 class="text-muted">
-                                هاتف المندوب
-                            </h6>
-                            <p class="mb-0 dir-ltr">
-                                {{ supplier.contact_phone }}
-                            </p>
+                            <h6 class="text-muted">هاتف المندوب</h6>
+                            <p class="mb-0 dir-ltr">{{ supplier.contact_phone }}</p>
                         </div>
                         {% if supplier.contact_email %}
                             <div class="mb-3">
-                                <h6 class="text-muted">
-                                    البريد الإلكتروني
-                                </h6>
+                                <h6 class="text-muted">البريد الإلكتروني</h6>
                                 <p class="mb-0">
                                     <a href="mailto:{{ supplier.contact_email }}"
                                        class="text-decoration-none">
@@ -132,12 +98,8 @@
                         {% endif %}
                         {% if supplier.contact_notes %}
                             <div class="mb-3">
-                                <h6 class="text-muted">
-                                    ملاحظات
-                                </h6>
-                                <p class="mb-0">
-                                    {{ supplier.contact_notes|linebreaksbr }}
-                                </p>
+                                <h6 class="text-muted">ملاحظات</h6>
+                                <p class="mb-0">{{ supplier.contact_notes|linebreaksbr }}</p>
                             </div>
                         {% endif %}
                     </div>

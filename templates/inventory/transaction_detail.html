@@ -12,15 +12,7 @@
                 <i class="bi bi-file-earmark-text me-2"></i>
                 تفاصيل السند: {{ transaction.document_number }}
             </h5>
-            <span class="badge
-                         {% if transaction.approval_status == 'P' %}
-                             bg-warning text-dark
-                         {% elif transaction.approval_status == 'A' %}
-                             bg-success
-                         {% elif transaction.approval_status == 'R' %}
-                             bg-danger
-                         {% endif %}
-                         fs-6">
+            <span class="badge {% if transaction.approval_status == 'P' %} bg-warning text-dark {% elif transaction.approval_status == 'A' %} bg-success {% elif transaction.approval_status == 'R' %} bg-danger {% endif %} fs-6">
                 {{ transaction.get_approval_status_display }}
             </span>
         </div>
@@ -83,33 +75,19 @@
                     <div class="card-header bg-light">
                         <i class="bi bi-chat-square-text me-2"></i>ملاحظات
                     </div>
-                    <div class="card-body">
-                        {{ transaction.notes|linebreaks }}
-                    </div>
+                    <div class="card-body">{{ transaction.notes|linebreaks }}</div>
                 </div>
             {% endif %}
             {% if transaction.approval_status == 'A' or transaction.approval_status == 'R' %}
                 <div class="card mb-4">
-                    <div class="card-header
-                                {% if transaction.approval_status == 'A' %}
-                                    bg-success
-                                {% elif transaction.approval_status == 'R' %}
-                                    bg-danger
-                                {% endif %}
-                                text-white">
+                    <div class="card-header {% if transaction.approval_status == 'A' %} bg-success {% elif transaction.approval_status == 'R' %} bg-danger {% endif %} text-white">
                         <i class="bi bi-check-circle me-2"></i>معلومات الاعتماد
                     </div>
                     <div class="card-body">
                         <div class="row">
                             <div class="col-md-6">
                                 <strong>الحالة:</strong>
-                                <span class="badge
-                                             {% if transaction.approval_status == 'A' %}
-                                                 bg-success
-                                             {% elif transaction.approval_status == 'R' %}
-                                                 bg-danger
-                                             {% endif %}
-                                             text-white mt-1">
+                                <span class="badge {% if transaction.approval_status == 'A' %} bg-success {% elif transaction.approval_status == 'R' %} bg-danger {% endif %} text-white mt-1">
                                     {{ transaction.get_approval_status_display }}
                                 </span>
                             </div>
@@ -140,30 +118,16 @@
                 <table class="table table-bordered table-hover">
                     <thead class="table-light">
                         <tr>
-                            <th>
-                                الصنف
-                            </th>
-                            <th>
-                                الكمية المطلوبة
-                            </th>
-                            <th>
-                                الكمية المعتمدة
-                            </th>
-                            <th>
-                                الحالة
-                            </th>
-                            <th>
-                                السعر وقت تسجيل العهدة
-                            </th>
-                            <th>
-                                أحدث سعر
-                            </th>
+                            <th>الصنف</th>
+                            <th>الكمية المطلوبة</th>
+                            <th>الكمية المعتمدة</th>
+                            <th>الحالة</th>
+                            <th>السعر وقت تسجيل العهدة</th>
+                            <th>أحدث سعر</th>
                             {% comment %} <th>
                                 سعر السند
                             </th> {% endcomment %}
-                            <th>
-                                الملاحظات
-                            </th>
+                            <th>الملاحظات</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -177,42 +141,22 @@
                                     {% endif %}
                                 </td>
                                 <td class="text-center">
-                                    <span class="badge bg-primary fs-6 p-2">
-                                        {{ item_data.detail.order_quantity }}
-                                    </span>
+                                    <span class="badge bg-primary fs-6 p-2">{{ item_data.detail.order_quantity }}</span>
                                 </td>
                                 <td class="text-center">
-                                    <span class="badge bg-success fs-6 p-2">
-                                        {{ item_data.detail.approved_quantity }}
-                                    </span>
+                                    <span class="badge bg-success fs-6 p-2">{{ item_data.detail.approved_quantity }}</span>
                                 </td>
                                 <td class="text-center">
-                                    <span class="badge
-                                                 {% if item_data.detail.status == 'N' %}
-                                                     bg-success
-                                                 {% elif item_data.detail.status == 'U' %}
-                                                     bg-warning text-dark
-                                                 {% elif item_data.detail.status == 'R' %}
-                                                     bg-info
-                                                 {% elif item_data.detail.status == 'D' %}
-                                                     bg-danger
-                                                 {% endif %}
-                                                 fs-6">
+                                    <span class="badge {% if item_data.detail.status == 'N' %} bg-success {% elif item_data.detail.status == 'U' %} bg-warning text-dark {% elif item_data.detail.status == 'R' %} bg-info {% elif item_data.detail.status == 'D' %} bg-danger {% endif %} fs-6">
                                         {{ item_data.detail.get_status_display }}
                                     </span>
                                 </td>
                                 <td class="text-center">
-                                    {% if item_data.price %}
-                                        <span class="badge bg-primary fs-6 p-2">
-                                            {{ item_data.price|floatformat:2 }}
-                                        </span>
-                                    {% endif %}
+                                    {% if item_data.price %}<span class="badge bg-primary fs-6 p-2">{{ item_data.price|floatformat:2 }}</span>{% endif %}
                                 </td>
                                 <td class="text-center">
                                     {% if item_data.latest_price and item_data.latest_price > 0 %}
-                                        <span class="text-primary fw-bold" title="آخر سعر مسجل في النظام">
-                                            {{ item_data.latest_price|floatformat:2 }} ج.م
-                                        </span>
+                                        <span class="text-primary fw-bold" title="آخر سعر مسجل في النظام">{{ item_data.latest_price|floatformat:2 }} ج.م</span>
                                     {% else %}
                                         <span class="text-muted" title="لا يوجد سعر مسجل">-</span>
                                     {% endif %}
@@ -281,23 +225,18 @@
                 <form method="post" action="{% url 'transaction_approve' transaction.id %}">
                     {% csrf_token %}
                     <div class="modal-header bg-success text-white">
-                        <h5 class="modal-title">
-                            اعتماد السند
-                        </h5>
+                        <h5 class="modal-title">اعتماد السند</h5>
                         <button type="button"
                                 class="btn-close"
                                 data-bs-dismiss="modal"
-                                aria-label="Close">
-                        </button>
+                                aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
                         <p>
                             هل أنت متأكد من اعتماد السند رقم <strong>{{ transaction.document_number }}</strong>؟
                         </p>
                         <div class="mb-3">
-                            <label class="form-label">
-                                ملاحظات الاعتماد (اختياري)
-                            </label>
+                            <label class="form-label">ملاحظات الاعتماد (اختياري)</label>
                             <textarea name="approval_notes"
                                       class="form-control"
                                       rows="3"
@@ -305,9 +244,7 @@
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                            إلغاء
-                        </button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
                         <button type="submit" class="btn btn-success">
                             <i class="bi bi-check-circle me-1"></i> اعتماد السند
                         </button>
@@ -323,23 +260,18 @@
                 <form method="post" action="{% url 'transaction_reject' transaction.id %}">
                     {% csrf_token %}
                     <div class="modal-header bg-danger text-white">
-                        <h5 class="modal-title">
-                            رفض السند
-                        </h5>
+                        <h5 class="modal-title">رفض السند</h5>
                         <button type="button"
                                 class="btn-close"
                                 data-bs-dismiss="modal"
-                                aria-label="Close">
-                        </button>
+                                aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
                         <p>
                             هل أنت متأكد من رفض السند رقم <strong>{{ transaction.document_number }}</strong>؟
                         </p>
                         <div class="mb-3">
-                            <label class="form-label required">
-                                سبب الرفض
-                            </label>
+                            <label class="form-label required">سبب الرفض</label>
                             <textarea name="approval_notes"
                                       class="form-control"
                                       rows="3"
@@ -348,9 +280,7 @@
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                            إلغاء
-                        </button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
                         <button type="submit" class="btn btn-danger">
                             <i class="bi bi-x-circle me-1"></i> رفض السند
                         </button>
@@ -366,14 +296,11 @@
                 <form method="post" action="{% url 'transaction_delete' transaction.id %}">
                     {% csrf_token %}
                     <div class="modal-header bg-danger text-white">
-                        <h5 class="modal-title">
-                            حذف السند
-                        </h5>
+                        <h5 class="modal-title">حذف السند</h5>
                         <button type="button"
                                 class="btn-close"
                                 data-bs-dismiss="modal"
-                                aria-label="Close">
-                        </button>
+                                aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
                         <p class="text-danger">
@@ -382,9 +309,7 @@
                         </p>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                            إلغاء
-                        </button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
                         <button type="submit" class="btn btn-danger">
                             <i class="bi bi-trash me-1"></i> حذف السند
                         </button>

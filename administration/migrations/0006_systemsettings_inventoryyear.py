@@ -34,7 +34,10 @@ class Migration(migrations.Migration):
                         verbose_name="ID",
                     ),
                 ),
-                ("year", models.PositiveIntegerField(unique=True, verbose_name="السنة")),
+                (
+                    "year",
+                    models.PositiveIntegerField(unique=True, verbose_name="السنة"),
+                ),
                 ("is_open", models.BooleanField(default=True, verbose_name="مفتوحة")),
                 (
                     "opened_at",
@@ -97,5 +100,7 @@ class Migration(migrations.Migration):
                 name="unique_open_inventory_year",
             ),
         ),
-        migrations.RunPython(create_initial_settings_and_year, migrations.RunPython.noop),
+        migrations.RunPython(
+            create_initial_settings_and_year, migrations.RunPython.noop
+        ),
     ]

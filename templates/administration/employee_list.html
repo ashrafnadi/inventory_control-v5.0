@@ -6,9 +6,7 @@
 {% endblock title %}
 {% block content %}
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>
-            الموظفون - {{ faculty.name }}
-        </h2>
+        <h2>الموظفون - {{ faculty.name }}</h2>
         <a href="{% url 'employee_create' %}" class="btn btn-primary">
             <i class="bi bi-person-plus"></i> إضافة موظف جديد
         </a>
@@ -20,46 +18,31 @@
                     <table class="table table-hover" dir="rtl" id="employee_list">
                         <thead class="table-light">
                             <tr>
-                                <th>
-                                    الاسم الكامل
-                                </th>
-                                <th>
-                                    القسم
-                                </th>
-                            
-                                {% if request.session.user_type == "inventory_manager" %}
-                                    <th>
-                                        الإجراءات
-                                    </th>
-                                {% endif %}
+                                <th>الاسم الكامل</th>
+                                <th>القسم</th>
+                                {% if request.session.user_type == "inventory_manager" %}<th>الإجراءات</th>{% endif %}
                             </tr>
                         </thead>
                         <tbody>
-                                {% for employee in employees %}
+                            {% for employee in employees %}
                                 <tr>
-                                    <td>
-                                        {{ employee.get_full_name }}
-                                    </td>
-                                    <td>
-                                        {{ employee.profile.department.name }}
-                                    </td>
+                                    <td>{{ employee.get_full_name }}</td>
+                                    <td>{{ employee.profile.department.name }}</td>
                                     {% if request.session.user_type == "inventory_manager" %}
                                         <td>
                                             <a href="{% url 'employee_edit' employee.id %}"
-                                            class="btn btn-sm btn-warning">
+                                               class="btn btn-sm btn-warning">
                                                 <i class="bi bi-pencil"></i> تعديل
                                             </a>
                                         </td>
                                     {% endif %}
                                 </tr>
-                                {% endfor %}
+                            {% endfor %}
                         </tbody>
                     </table>
                 {% else %}
                     <tr>
-                        <div class="text-center text-muted">
-                            لا توجد موظفين.
-                        </div>
+                        <div class="text-center text-muted">لا توجد موظفين.</div>
                     </tr>
                 {% endif %}
             </div>

@@ -6,16 +6,15 @@
             aria-label="تبديل الوضع الليلي"
             title="تبديل الوضع">
         <i id="theme-icon" class="bi bi-moon me-1"></i>
-        <!-- <span class="d-none d-xxl-inline">
+        {% comment %} <span class="d-none d-xxl-inline">
             {% if request.COOKIES.theme == 'dark' or not request.COOKIES.theme %}
                 الوضع الليلي
             {% else %}
                 الوضع النهاري
             {% endif %}
-        </span> -->
+        </span> {% endcomment %}
     </button>
 </div>
-
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const toggleBtn = document.getElementById('theme-toggle-btn');

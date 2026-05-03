@@ -7,9 +7,7 @@
 {% block content %}
     <div class="card">
         <div class="card-header">
-            <h3>
-                {{ title }}
-            </h3>
+            <h3>{{ title }}</h3>
         </div>
         <div class="card-body">
             <form method="post" dir="rtl">
@@ -18,20 +16,12 @@
                 {{ form.last_name }}
                 <div class="row">
                     <div class="col-md-6 mb-3">
-                        <label class="form-label">
-                            الاسم
-                        </label>
+                        <label class="form-label">الاسم</label>
                         {{ form.first_name|add_class:"form-control"|attr:"dir:rtl" }}
-                        {% if form.first_name.errors %}
-                            <div class="text-danger">
-                                {{ form.first_name.errors }}
-                            </div>
-                        {% endif %}
+                        {% if form.first_name.errors %}<div class="text-danger">{{ form.first_name.errors }}</div>{% endif %}
                     </div>
                     <div class="col-md-12 mb-3">
-                        <label class="form-label">
-                            القسم
-                        </label>
+                        <label class="form-label">القسم</label>
                         <!-- Search input (visual only) -->
                         <input type="text"
                                id="department-search"
@@ -41,15 +31,10 @@
                                dir="rtl" />
                         <!-- The actual select (always submitted) -->
                         {{ form.department|add_class:"form-select"|attr:"id:id_department"|attr:"size:5" }}
-                        {% if form.department.errors %}
-                            <div class="text-danger">
-                                {{ form.department.errors }}
-                            </div>
-                        {% endif %}
+                        {% if form.department.errors %}<div class="text-danger">{{ form.department.errors }}</div>{% endif %}
                         <!-- Shows currently selected department name -->
                         <div id="selected-dept-display"
-                             class="form-text text-success fw-bold mt-1">
-                        </div>
+                             class="form-text text-success fw-bold mt-1"></div>
                     </div>
                     {% if not editing %}
                         <input type="hidden" name="password" value="1" />

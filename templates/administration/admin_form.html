@@ -1,32 +1,31 @@
 {% extends "base.html" %}
 {% block title %}{{ title }}{% endblock %}
 {% block content %}
-<div class="card col-lg-8 mx-auto">
-    <div class="card-header">
-        <h4 class="mb-0">{{ title }}</h4>
+    <div class="card col-lg-8 mx-auto">
+        <div class="card-header">
+            <h4 class="mb-0">{{ title }}</h4>
+        </div>
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                {% for field in form %}
+                    <div class="mb-3">
+                        {{ field.label_tag }}
+                        {{ field }}
+                        {% if field.errors %}<div class="text-danger small mt-1">{{ field.errors.0 }}</div>{% endif %}
+                    </div>
+                {% endfor %}
+                <div class="d-flex justify-content-between mt-4">
+                    <button type="button" onclick="history.back()" class="btn btn-secondary">إلغاء</button>
+                    <button type="submit" class="btn btn-primary">حفظ</button>
+                </div>
+            </form>
+        </div>
     </div>
-    <div class="card-body">
-        <form method="post">
-            {% csrf_token %}
-            {% for field in form %}
-            <div class="mb-3">
-                {{ field.label_tag }}
-                {{ field }}
-                {% if field.errors %}<div class="text-danger small mt-1">{{ field.errors.0 }}</div>{% endif %}
-            </div>
-            {% endfor %}
-            <div class="d-flex justify-content-between mt-4">
-                <a href="javascript:history.back()" class="btn btn-secondary">إلغاء</a>
-                <button type="submit" class="btn btn-primary">حفظ</button>
-            </div>
-        </form>
-    </div>
-</div>
 {% endblock %}
-
 {% block scripts %}
-{{ block.super }}
-<script>
+    {{ block.super }}
+    <script>
 document.addEventListener('DOMContentLoaded', function () {
     const facultySelect = document.querySelector('select[name="faculty"]');
     const deptSelect = document.querySelector('select[name="department"]');
@@ -118,5 +117,5 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 });
-</script>
+    </script>
 {% endblock %}

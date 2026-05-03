@@ -1,113 +1,112 @@
 {% extends "base.html" %}
 {% load static %}
-{% block title %}سجل السندات - الإدارة{% endblock %}
-
+{% block title %}
+    سجل السندات - الإدارة
+{% endblock title %}
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h2>سجل السندات (جميع الكليات)</h2>
-</div>
-
-<div class="card">
-    <div class="card-body">
-        <!-- Filters -->
-        <form method="get" class="row g-3 mb-3">
-            <div class="col-md-4">
-                <input type="text" name="q" class="form-control" placeholder="بحث برقم المستند، الكلية، أو الموظف..."
-                    value="{{ request.GET.q|default:'' }}">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>سجل السندات (جميع الكليات)</h2>
+    </div>
+    <div class="card">
+        <div class="card-body">
+            <!-- Filters -->
+            <form method="get" class="row g-3 mb-3">
+                <div class="col-md-4">
+                    <input type="text"
+                           name="q"
+                           class="form-control"
+                           placeholder="بحث برقم المستند، الكلية، أو الموظف..."
+                           value="{{ request.GET.q|default:'' }}">
+                </div>
+                <div class="col-md-2">
+                    <select name="type" class="form-select">
+                        <option value="">كل الأنواع</option>
+                        {% for value, label in tx_types %}
+                            <option value="{{ value }}"
+                                    {% if request.GET.type == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select name="status" class="form-select">
+                        <option value="">كل الحالات</option>
+                        {% for value, label in statuses %}
+                            <option value="{{ value }}"
+                                    {% if request.GET.status == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">تصفية</button>
+                </div>
+                <div class="col-md-2">
+                    <a href="{% url 'admin_transaction_list' %}"
+                       class="btn btn-outline-secondary w-100">إعادة تعيين</a>
+                </div>
+            </form>
+            <!-- DataTable -->
+            <div class="table-responsive">
+                <table id="txTable" class="table table-striped table-hover w-100">
+                    <thead>
+                        <tr>
+                            <th>رقم المستند</th>
+                            <th>النوع</th>
+                            <th>الكلية</th>
+                            <th>الحالة</th>
+                            <th>المخزن</th>
+                            <th>أنشئ بواسطة</th>
+                            <th>التاريخ</th>
+                            <th width="7%">الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for tx in transactions %}
+                            <tr>
+                                <td class="fw-bold">{{ tx.document_number }}</td>
+                                <td>{{ tx.get_transaction_type_display }}</td>
+                                <td>{{ tx.faculty.name }}</td>
+                                <td>
+                                    <span class="badge bg-{% if tx.approval_status == 'A' %}success{% elif tx.approval_status == 'P' %}warning{% elif tx.approval_status == 'R' %}danger{% else %}secondary{% endif %}">
+                                        {{ tx.get_approval_status_display }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if tx.transaction_type == 'D' or tx.transaction_type == 'T' or tx.transaction_type == 'R' %}
+                                        {{ tx.from_sub_warehouse.name|default:"—" }}
+                                    {% else %}
+                                        {{ tx.to_sub_warehouse.name|default:"—" }}
+                                    {% endif %}
+                                </td>
+                                <td>{{ tx.created_by.get_full_name|default:tx.created_by.username }}</td>
+                                <td>{{ tx.created_at|date:"Y-m-d H:i" }}</td>
+                                <td>
+                                    <a href="{% url 'admin_transaction_detail' tx.id %}"
+                                       class="btn btn-sm btn-outline-primary me-1">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    {% if tx.transaction_type == 'D' and tx.deleted == False %}
+                                        <a href="{% url 'admin_update_transaction_prices' tx.id %}"
+                                           class="btn btn-sm btn-outline-warning"
+                                           title="تعديل سعر الصنف">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="8" class="text-center text-muted py-4">لا توجد سندات مطابقة</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
-            <div class="col-md-2">
-                <select name="type" class="form-select">
-                    <option value="">كل الأنواع</option>
-                    {% for value, label in tx_types %}
-                    <option value="{{ value }}" {% if request.GET.type == value %}selected{% endif %}>{{ label }}
-                    </option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="col-md-2">
-                <select name="status" class="form-select">
-                    <option value="">كل الحالات</option>
-                    {% for value, label in statuses %}
-                    <option value="{{ value }}" {% if request.GET.status == value %}selected{% endif %}>{{ label }}
-                    </option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="col-md-2">
-                <button type="submit" class="btn btn-primary w-100">تصفية</button>
-            </div>
-            <div class="col-md-2">
-                <a href="{% url 'admin_transaction_list' %}" class="btn btn-outline-secondary w-100">إعادة تعيين</a>
-            </div>
-        </form>
-
-        <!-- DataTable -->
-        <div class="table-responsive">
-            <table id="txTable" class="table table-striped table-hover w-100">
-                <thead>
-                    <tr>
-                        <th>رقم المستند</th>
-                        <th>النوع</th>
-                        <th>الكلية</th>
-                        <th>الحالة</th>
-                        <th>المخزن</th>
-                        <th>أنشئ بواسطة</th>
-                        <th>التاريخ</th>
-                        <th width="7%">الإجراءات</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for tx in transactions %}
-                    <tr>
-                        <td class="fw-bold">{{ tx.document_number }}</td>
-                        <td>{{ tx.get_transaction_type_display }}</td>
-                        <td>{{ tx.faculty.name }}</td>
-                        <td>
-                            <span
-                                class="badge bg-{% if tx.approval_status == 'A' %}success{% elif tx.approval_status == 'P' %}warning{% elif tx.approval_status == 'R' %}danger{% else %}secondary{% endif %}">
-                                {{ tx.get_approval_status_display }}
-                            </span>
-                        </td>
-
-                        <td>
-                            {%if tx.transaction_type == 'D' or tx.transaction_type == 'T' or tx.transaction_type == 'R' %}
-
-                            {{ tx.from_sub_warehouse.name|default:"—" }}
-                            {%else%}
-
-                            {{ tx.to_sub_warehouse.name|default:"—" }}
-                            {%endif%}
-                        </td>
-                        <td>{{ tx.created_by.get_full_name|default:tx.created_by.username }}</td>
-                        <td>{{ tx.created_at|date:"Y-m-d H:i" }}</td>
-                        <td>
-                            <a href="{% url 'admin_transaction_detail' tx.id %}"
-                                class="btn btn-sm btn-outline-primary me-1">
-                                <i class="bi bi-eye"></i>
-                            </a>
-                            {% if tx.transaction_type == 'D' and tx.deleted == False %}
-                            <a href="{% url 'admin_update_transaction_prices' tx.id %}"
-                                class="btn btn-sm btn-outline-warning" title="تعديل سعر الصنف">
-                                <i class="bi bi-pencil"></i>
-                            </a>
-                            {% endif %}
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="8" class="text-center text-muted py-4">لا توجد سندات مطابقة</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
         </div>
     </div>
-</div>
-{% endblock %}
-
+{% endblock content %}
 {% block scripts %}
-{{ block.super }}
-<script>
+    {{ block.super }}
+    <script>
     $(document).ready(function () {
         $('#txTable').DataTable({
             language: { url: "{% static 'ar.json' %}" },
@@ -121,5 +120,5 @@
             ]
         });
     });
-</script>
-{% endblock %}
+    </script>
+{% endblock scripts %}

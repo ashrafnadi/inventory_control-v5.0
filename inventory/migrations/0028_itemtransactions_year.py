@@ -43,5 +43,7 @@ class Migration(migrations.Migration):
                 name="inventory_i_year_id_75455c_idx",
             ),
         ),
-        migrations.RunPython(assign_open_year_to_transactions, migrations.RunPython.noop),
+        migrations.RunPython(
+            assign_open_year_to_transactions, migrations.RunPython.noop
+        ),
     ]

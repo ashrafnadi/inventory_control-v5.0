@@ -2,463 +2,445 @@
 {% extends "base.html" %}
 {% load static %}
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h2 class="mb-0">
-        <i class="bi bi-journal-text me-2"></i>
-        سجل السندات
-    </h2>
-</div>
-<div class="row mb-4">
-    <div class="col-md-3 mb-3">
-        <div class="card bg-primary text-white">
-            <div class="card-body">
-                <h5 class="card-title">
-                    إجمالي السندات
-                    :
-                    {{ total_transactions }}
-                </h5>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">
+            <i class="bi bi-journal-text me-2"></i>
+            سجل السندات
+        </h2>
+    </div>
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        إجمالي السندات
+                        :
+                        {{ total_transactions }}
+                    </h5>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card bg-warning text-dark">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        قيد الانتظار
+                        :
+                        {{ pending_count }}
+                    </h5>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        المعتمدة
+                        :
+                        {{ approved_count }}
+                    </h5>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card bg-danger text-white">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        المرفوضة
+                        :
+                        {{ rejected_count }}
+                    </h5>
+                </div>
             </div>
         </div>
     </div>
-    <div class="col-md-3 mb-3">
-        <div class="card bg-warning text-dark">
-            <div class="card-body">
-                <h5 class="card-title">
-                    قيد الانتظار
-                    :
-                    {{ pending_count }}
-                </h5>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3 mb-3">
-        <div class="card bg-success text-white">
-            <div class="card-body">
-                <h5 class="card-title">
-                    المعتمدة
-                    :
-                    {{ approved_count }}
-                </h5>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3 mb-3">
-        <div class="card bg-danger text-white">
-            <div class="card-body">
-                <h5 class="card-title">
-                    المرفوضة
-                    :
-                    {{ rejected_count }}
-                </h5>
-            </div>
-        </div>
-    </div>
-</div>
-<div class="card mb-4">
-    <div class="card-body">
-        <form id="filter-form" method="get" class="row g-3">
-            <div class="col-md-3">
-                <label class="form-label">
-                    بحث
-                </label>
-                <input type="text" name="search" class="form-control" placeholder="رقم المستند، ملاحظات، صنف..."
-                    value="{{ search_query }}" />
-            </div>
-            <div class="col-md-3">
-                <label class="form-label">
-                    حالة الاعتماد
-                </label>
-                <select name="approval_status" class="form-select">
-                    <option value="">
-                        جميع الحالات
-                    </option>
-                    {% for value, label in approval_status_choices %}
-                    <option value="{{ value }}" {% if current_approval_status == value %} selected {% endif %}>
-                        {{ label }}
-                    </option>
-                    {% endfor %}
-                </select>
+    <div class="card mb-4">
+        <div class="card-body">
+            <form id="filter-form" method="get" class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">بحث</label>
+                    <input type="text"
+                           name="search"
+                           class="form-control"
+                           placeholder="رقم المستند، ملاحظات، صنف..."
+                           value="{{ search_query }}" />
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">حالة الاعتماد</label>
+                    <select name="approval_status" class="form-select">
+                        <option value="">جميع الحالات</option>
+                        {% for value, label in approval_status_choices %}
+                            <option value="{{ value }}"
+                                    {% if current_approval_status == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
                 </div>
                 <div class="col-md-2">
-                    <label class="form-label">
-                        من تاريخ
-                    </label>
-                <input type="date" name="start_date" class="form-control"
-                    value="{% if start_date and start_date != 'None' and start_date %}
-                                      {{ start_date|date:'Y-m-d' }}
-                                  {% endif %}" />
-            </div>
-            <div class="col-md-2">
-                <label class="form-label">
-                    إلى تاريخ
-                </label>
-                <input type="date" name="end_date" class="form-control" value="{% if end_date and end_date != 'None' and end_date %}
-                                      {{ end_date|date:'Y-m-d' }}
-                                  {% endif %}" />
-            </div>
-            <div class="col-md-2 d-flex align-items-end">
-                <button type="submit" class="btn btn-primary w-100">
-                    <i class="bi bi-funnel me-1"></i> تطبيق
-                </button>
-            </div>
-        </form>
+                    <label class="form-label">من تاريخ</label>
+                    <input type="date"
+                           name="start_date"
+                           class="form-control"
+                           value="{% if start_date and start_date != 'None' and start_date %} {{ start_date|date:'Y-m-d' }} {% endif %}" />
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">إلى تاريخ</label>
+                    <input type="date"
+                           name="end_date"
+                           class="form-control"
+                           value="{% if end_date and end_date != 'None' and end_date %} {{ end_date|date:'Y-m-d' }} {% endif %}" />
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-funnel me-1"></i> تطبيق
+                    </button>
+                </div>
+            </form>
         </div>
-        </div>
-        <div class="card">
-            <div class="card-header bg-light d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">
-                    قائمة السندات
-                </h5>
-                <span class="text-muted fs-6">الكليّة: {{ faculty_name }}</span>
-            </div>
-            <div class="card-body">
-                {% if transactions %}
-        <table class="table table-striped table-hover table-responsive" id="transaction-list">
-            <thead class="table-dark">
-                <tr>
-                    <th width="230px">
-                        رقم المستند
-                    </th>
-                    <th width="150px">
-                        التاريخ
-                    </th>
-                    <th width="50px">
-                        النوع
-                    </th>
-                    <th width="180px">
-                        المخزن الفرعي
-                    </th>
-                    <th>
-                        أنشئ بواسطة
-                    </th>
-                    <th>
-                        حالة الاعتماد
-                    </th>
-                    <th width="200px">
-                        الإجراءات
-                    </th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for transaction in transactions %}
-                <tr {% if transaction.approval_status == 'P' %} class="table-warning" {% elif transaction.approval_status == 'A' %}
-                    class="table-success" {% elif transaction.approval_status == 'R' %} class="table-danger" {% endif %}>
-                    <td>
-                        <!-- Force LTR direction for alphanumeric document numbers -->
-                        {% comment %} <a href="{% url 'transaction_detail' transaction.id %}?return_url={{ request.get_full_path|urlencode }}"
-                            class="text-decoration-none"> {% endcomment %}
-                            <span dir="ltr" class="doc-number">
-                                {{ transaction.document_number }}
-                            </span>
-                            {% comment %} </a> {% endcomment %}
-                    </td>
-                    <td>
-                        {{ transaction.created_at|date:"Y-m-d H:i" }}
-                    </td>
-                    <td>
-                        <span class="badge bg-info text-dark">
-                            {{ transaction.get_transaction_type_display }}
-                        </span>
-                    </td>
-                    <td>
-                        {% if transaction.transaction_type == 'A' or transaction.transaction_type == 'R' or transaction.transaction_type == 'T' %}
-                        {% if transaction.to_sub_warehouse %}
-                        {{ transaction.to_sub_warehouse.name }}
-                        {% else %}
-                        <span class="text-muted">غير محدد</span>
-                        {% endif %}
-                        {% else %}
-                        {% if transaction.from_sub_warehouse %}
-                        {{ transaction.from_sub_warehouse.name }}
-                        {% else %}
-                        <span class="text-muted">غير محدد</span>
-                        {% endif %}
-                        {% endif %}
-                    </td>
-                    <td>
-                        {% if transaction.created_by %}
-                        {{ transaction.created_by.get_full_name|default:transaction.created_by.username }}
-                        {% else %}
-                        غير معروف
-                        {% endif %}
-                    </td>
-                    <td>
-                        <div class="d-flex align-items-center">
-                            {% if transaction.approval_status == 'P' %}
-                            <span class="badge bg-warning text-dark me-2">
-                                {{ transaction.get_approval_status_display }}
-                            </span>
-                            {% elif transaction.approval_status == 'A' %}
-                            <span class="badge bg-success me-2">
-                                {{ transaction.get_approval_status_display }}
-                            </span>
-                            {% elif transaction.approval_status == 'R' %}
-                            <span class="badge bg-danger me-2">
-                                {{ transaction.get_approval_status_display }}
-                            </span>
-                            {% endif %}
-                            {% if transaction.approval_status != 'P' and transaction.approval_user %}
-                            <small class="text-muted">
-                                بواسطة:
-                                {{ transaction.approval_user.get_full_name|default:transaction.approval_user.username }}
-                            </small>
-                            {% endif %}
-                            </div>
-                            </td>
-                            <td>
-                                <div class="btn-group btn-group-sm" role="group">
-                                    <a href="{% url 'transaction_detail' transaction.id %}?return_url={{ request.get_full_path|urlencode }}"
-                                class="btn btn-sm btn-info" title="عرض التفاصيل">
-                                <i class="bi bi-eye"></i>
-                            </a>
-                            <a href="{% url 'export_transaction_pdf' transaction.id %}" class="btn btn-sm btn-secondary" title="تصدير إلى PDF"
-                                target="_blank">
-                                <i class="bi bi-file-earmark-pdf"></i>
-                            </a>
-                            {% if transaction.approval_status == 'P' %}
-                            <a href="{% url 'transaction_edit' transaction.id %}?return_url={{ request.get_full_path|urlencode }}"
-                                class="btn btn-sm btn-warning" title="تعديل">
-                                <i class="bi bi-pencil"></i>
-                            </a>
-                            <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal"
-                                data-bs-target="#deleteModal-{{ transaction.id }}" title="حذف">
-                                <i class="bi bi-trash"></i>
-                            </button>
-                            <!-- Approve/Reject for managers on pending transactions -->
-                            {% if user_type == "inventory_manager" %}
-                            <button type="button" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#approveModal"
-                                data-transaction-id="{{ transaction.id }}" data-document-number="{{ transaction.document_number }}" title="اعتماد">
-                                <i class="bi bi-check-circle"></i>
-                            </button>
-                            <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#rejectModal"
-                                data-transaction-id="{{ transaction.id }}" data-document-number="{{ transaction.document_number }}" title="رفض">
-                                <i class="bi bi-x-circle"></i>
-                            </button>
-                            {% endif %}
-                            <!-- APPROVED Transactions: Reverse button (NOT for Addition or already-reversed) -->
-                            {% elif transaction.approval_status == 'A' %}
-                            <!-- Hide reverse for Addition transactions and already-reversed -->
-                            {% if transaction.transaction_type != 'A' and not transaction.is_reversed %}
-                            {% if user_type == "inventory_manager" %}
-                            
-                            
-                            <button type="button" class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#reverseModal"
-                                data-transaction-id="{{ transaction.id }}" data-document-number="{{ transaction.document_number }}"
-                                title="عكس السند">
-                                <i class="bi bi-arrow-counterclockwise"></i>
-                            </button>
-                            {% endif %}
-
-                            {% elif transaction.is_reversed %}
-                            <!-- Show badge for already-reversed transactions -->
-                            <span class="badge bg-secondary" title="تم عكس هذا السند">
-                                <i class="bi bi-check-circle"></i> تم العكس
-                            </span>
-                            {% endif %}
-                            <!-- Audit Log for managers -->
-                            {% if user_type == "inventory_manager" %}
-                            <a href="{% url 'transaction_audit_log' transaction.id %}?return_url={{ request.get_full_path|urlencode }}"
-                                class="btn btn-sm btn-primary" title="سجل التدقيق">
-                                <i class="bi bi-clock-history"></i>
-                            </a>
-                            {% endif %}
-                            <!-- REJECTED Transactions: Read-only -->
-                            {% elif transaction.approval_status == 'R' %}
-                            <span class="badge bg-secondary">مرفوض</span>
-                            <!-- Audit Log for managers -->
-                            {% if user_type == "inventory_manager" %}
-                            <a href="{% url 'transaction_audit_log' transaction.id %}?return_url={{ request.get_full_path|urlencode }}"
-                                class="btn btn-sm btn-primary" title="سجل التدقيق">
-                                <i class="bi bi-clock-history"></i>
-                            </a>
-                            {% endif %}
-                            {% endif %}
-                        </div>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-        {% else %}
-        <div class="alert alert-info">
-            لا توجد سندات لعرضها.
-        </div>
-        {% endif %}
     </div>
-</div>
-<!-- Single Modal Container for Approval -->
-<div class="modal fade" id="approveModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <form id="approveForm">
-                {% csrf_token %}
-                <input type="hidden" name="transaction_id" id="approveTransactionId" />
-                <div class="modal-header bg-success text-white">
-                    <h5 class="modal-title">
-                        اعتماد السند
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <p id="approveModalMessage">
-                        هل أنت متأكد من اعتماد هذا السند؟
-                    </p>
-                    <div class="mb-3">
-                        <label class="form-label">
-                            ملاحظات الاعتماد (اختياري)
-                        </label>
-                        <textarea name="approval_notes" class="form-control" rows="3" placeholder="اكتب ملاحظاتك هنا..."></textarea>
-                        </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                                إلغاء
-                            </button>
-                            <button type="submit" class="btn btn-success">
-                                <i class="bi bi-check-circle me-1"></i> اعتماد السند
-                            </button>
-                        </div>
-                        </form>
-                        </div>
-                        </div>
-                        </div>
-                        <!-- Single Modal Container for Rejection -->
-                        <div class="modal fade" id="rejectModal" tabindex="-1" aria-hidden="true">
-                            <div class="modal-dialog">
-                                <div class="modal-content">
-                                    <form id="rejectForm">
-                                        {% csrf_token %}
-                                        <input type="hidden" name="transaction_id" id="rejectTransactionId" />
-                                        <div class="modal-header bg-danger text-white">
-                                            <h5 class="modal-title">
-                                                رفض السند
-                                            </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <p id="rejectModalMessage">
-                        هل أنت متأكد من رفض هذا السند؟
-                    </p>
-                    <div class="mb-3">
-                        <label class="form-label required">
-                            سبب الرفض
-                        </label>
-                        <textarea name="approval_notes" class="form-control" rows="3" required placeholder="يرجى ذكر سبب الرفض..."></textarea>
-                        </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                                إلغاء
-                            </button>
-                            <button type="submit" class="btn btn-danger">
-                                <i class="bi bi-x-circle me-1"></i> رفض السند
-                            </button>
-                        </div>
-                        </form>
-                        </div>
-                        </div>
-                        </div>
-                        <!-- Single Modal Container for Reversal (APPROVED transactions) -->
-                        <div class="modal fade" id="reverseModal" tabindex="-1" aria-hidden="true">
-                            <div class="modal-dialog">
-                                <div class="modal-content">
-            <form id="reverseForm" method="post" action="{% url 'transaction_reverse' 0 %}">
-                {% csrf_token %}
-                <input type="hidden" name="transaction_id" id="reverseTransactionId" />
-                <div class="modal-header bg-warning text-dark">
-                    <h5 class="modal-title">
-                        <i class="bi bi-arrow-counterclockwise me-2"></i>
-                        عكس السند
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <div class="alert alert-warning">
-                        <i class="bi bi-exclamation-triangle me-2"></i>
-                        <strong>تنبيه:</strong> سيتم إنشاء سند عكس جديد لضبط الكميات في المخزون.
+    <div class="card">
+        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">قائمة السندات</h5>
+            <span class="text-muted fs-6">الكليّة: {{ faculty_name }}</span>
+        </div>
+        <div class="card-body">
+            {% if transactions %}
+                <table class="table table-striped table-hover table-responsive"
+                       id="transaction-list">
+                    <thead class="table-dark">
+                        <tr>
+                            <th width="230px">رقم المستند</th>
+                            <th width="150px">التاريخ</th>
+                            <th width="50px">النوع</th>
+                            <th width="180px">المخزن الفرعي</th>
+                            <th>أنشئ بواسطة</th>
+                            <th>حالة الاعتماد</th>
+                            <th width="200px">الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for transaction in transactions %}
+                            <tr class="{% if transaction.approval_status == 'P' %}table-warning{% elif transaction.approval_status == 'A' %}table-success{% elif transaction.approval_status == 'R' %}table-danger{% endif %}">
+                                <td>
+                                    <!-- Force LTR direction for alphanumeric document numbers -->
+                                    {% comment %} <a href="{% url 'transaction_detail' transaction.id %}?return_url={{ request.get_full_path|urlencode }}"
+    class="text-decoration-none"> {% endcomment %}
+                                    <span dir="ltr" class="doc-number">{{ transaction.document_number }}</span>
+                                    {% comment %} </a> {% endcomment %}
+                                </td>
+                                <td>{{ transaction.created_at|date:"Y-m-d H:i" }}</td>
+                                <td>
+                                    <span class="badge bg-info text-dark">{{ transaction.get_transaction_type_display }}</span>
+                                </td>
+                                <td>
+                                    {% if transaction.transaction_type == 'A' or transaction.transaction_type == 'R' or transaction.transaction_type == 'T' %}
+                                        {% if transaction.to_sub_warehouse %}
+                                            {{ transaction.to_sub_warehouse.name }}
+                                        {% else %}
+                                            <span class="text-muted">غير محدد</span>
+                                        {% endif %}
+                                    {% else %}
+                                        {% if transaction.from_sub_warehouse %}
+                                            {{ transaction.from_sub_warehouse.name }}
+                                        {% else %}
+                                            <span class="text-muted">غير محدد</span>
+                                        {% endif %}
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if transaction.created_by %}
+                                        {{ transaction.created_by.get_full_name|default:transaction.created_by.username }}
+                                    {% else %}
+                                        غير معروف
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        {% if transaction.approval_status == 'P' %}
+                                            <span class="badge bg-warning text-dark me-2">{{ transaction.get_approval_status_display }}</span>
+                                        {% elif transaction.approval_status == 'A' %}
+                                            <span class="badge bg-success me-2">{{ transaction.get_approval_status_display }}</span>
+                                        {% elif transaction.approval_status == 'R' %}
+                                            <span class="badge bg-danger me-2">{{ transaction.get_approval_status_display }}</span>
+                                        {% endif %}
+                                        {% if transaction.approval_status != 'P' and transaction.approval_user %}
+                                            <small class="text-muted">
+                                                بواسطة:
+                                                {{ transaction.approval_user.get_full_name|default:transaction.approval_user.username }}
+                                            </small>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        <a href="{% url 'transaction_detail' transaction.id %}?return_url={{ request.get_full_path|urlencode }}"
+                                           class="btn btn-sm btn-info"
+                                           title="عرض التفاصيل">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <a href="{% url 'export_transaction_pdf' transaction.id %}"
+                                           class="btn btn-sm btn-secondary"
+                                           title="تصدير إلى PDF"
+                                           target="_blank">
+                                            <i class="bi bi-file-earmark-pdf"></i>
+                                        </a>
+                                        {% if transaction.approval_status == 'P' %}
+                                            <a href="{% url 'transaction_edit' transaction.id %}?return_url={{ request.get_full_path|urlencode }}"
+                                               class="btn btn-sm btn-warning"
+                                               title="تعديل">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                            <button type="button"
+                                                    class="btn btn-sm btn-danger"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#deleteModal-{{ transaction.id }}"
+                                                    title="حذف">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                            <!-- Approve/Reject for managers on pending transactions -->
+                                            {% if user_type == "inventory_manager" %}
+                                                <button type="button"
+                                                        class="btn btn-sm btn-success"
+                                                        data-bs-toggle="modal"
+                                                        data-bs-target="#approveModal"
+                                                        data-transaction-id="{{ transaction.id }}"
+                                                        data-document-number="{{ transaction.document_number }}"
+                                                        title="اعتماد">
+                                                    <i class="bi bi-check-circle"></i>
+                                                </button>
+                                                <button type="button"
+                                                        class="btn btn-sm btn-danger"
+                                                        data-bs-toggle="modal"
+                                                        data-bs-target="#rejectModal"
+                                                        data-transaction-id="{{ transaction.id }}"
+                                                        data-document-number="{{ transaction.document_number }}"
+                                                        title="رفض">
+                                                    <i class="bi bi-x-circle"></i>
+                                                </button>
+                                            {% endif %}
+                                            <!-- APPROVED Transactions: Reverse button (NOT for Addition or already-reversed) -->
+                                        {% elif transaction.approval_status == 'A' %}
+                                            <!-- Hide reverse for Addition transactions and already-reversed -->
+                                            {% if transaction.transaction_type != 'A' and not transaction.is_reversed %}
+                                                {% if user_type == "inventory_manager" %}
+                                                    <button type="button"
+                                                            class="btn btn-sm btn-warning"
+                                                            data-bs-toggle="modal"
+                                                            data-bs-target="#reverseModal"
+                                                            data-transaction-id="{{ transaction.id }}"
+                                                            data-document-number="{{ transaction.document_number }}"
+                                                            title="عكس السند">
+                                                        <i class="bi bi-arrow-counterclockwise"></i>
+                                                    </button>
+                                                {% endif %}
+                                            {% elif transaction.is_reversed %}
+                                                <!-- Show badge for already-reversed transactions -->
+                                                <span class="badge bg-secondary" title="تم عكس هذا السند">
+                                                    <i class="bi bi-check-circle"></i> تم العكس
+                                                </span>
+                                            {% endif %}
+                                            <!-- Audit Log for managers -->
+                                            {% if user_type == "inventory_manager" %}
+                                                <a href="{% url 'transaction_audit_log' transaction.id %}?return_url={{ request.get_full_path|urlencode }}"
+                                                   class="btn btn-sm btn-primary"
+                                                   title="سجل التدقيق">
+                                                    <i class="bi bi-clock-history"></i>
+                                                </a>
+                                            {% endif %}
+                                            <!-- REJECTED Transactions: Read-only -->
+                                        {% elif transaction.approval_status == 'R' %}
+                                            <span class="badge bg-secondary">مرفوض</span>
+                                            <!-- Audit Log for managers -->
+                                            {% if user_type == "inventory_manager" %}
+                                                <a href="{% url 'transaction_audit_log' transaction.id %}?return_url={{ request.get_full_path|urlencode }}"
+                                                   class="btn btn-sm btn-primary"
+                                                   title="سجل التدقيق">
+                                                    <i class="bi bi-clock-history"></i>
+                                                </a>
+                                            {% endif %}
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <div class="alert alert-info">لا توجد سندات لعرضها.</div>
+            {% endif %}
+        </div>
+    </div>
+    <!-- Single Modal Container for Approval -->
+    <div class="modal fade" id="approveModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form id="approveForm">
+                    {% csrf_token %}
+                    <input type="hidden" name="transaction_id" id="approveTransactionId" />
+                    <div class="modal-header bg-success text-white">
+                        <h5 class="modal-title">اعتماد السند</h5>
+                        <button type="button"
+                                class="btn-close"
+                                data-bs-dismiss="modal"
+                                aria-label="Close"></button>
                     </div>
-                    <p id="reverseModalMessage">
-                        هل أنت متأكد من عكس السند رقم <strong id="reverseDocumentNumber"></strong>؟
-                    </p>
-                    <div class="mb-3">
-                        <label class="form-label">
-                            سبب العكس <span class="text-danger">*</span>
-                        </label>
-                        <textarea name="reverse_reason" class="form-control" rows="3" required
-                            placeholder="يرجى ذكر سبب عكس السند..."></textarea>
-                        <div class="form-text">
-                            سيتم تسجيل هذا السبب في سجل التدقيق
+                    <div class="modal-body">
+                        <p id="approveModalMessage">هل أنت متأكد من اعتماد هذا السند؟</p>
+                        <div class="mb-3">
+                            <label class="form-label">ملاحظات الاعتماد (اختياري)</label>
+                            <textarea name="approval_notes"
+                                      class="form-control"
+                                      rows="3"
+                                      placeholder="اكتب ملاحظاتك هنا..."></textarea>
                         </div>
-                    </div>
-                    <div class="alert alert-info">
-                        <strong>ملاحظة:</strong> السند الأصلي سيظل محفوظاً في السجلات، وسيتم إنشاء سند عكس جديد برقم
-                        مختلف.
-                    </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                            إلغاء
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-check-circle me-1"></i> اعتماد السند
                         </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <!-- Single Modal Container for Rejection -->
+    <div class="modal fade" id="rejectModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form id="rejectForm">
+                    {% csrf_token %}
+                    <input type="hidden" name="transaction_id" id="rejectTransactionId" />
+                    <div class="modal-header bg-danger text-white">
+                        <h5 class="modal-title">رفض السند</h5>
+                        <button type="button"
+                                class="btn-close"
+                                data-bs-dismiss="modal"
+                                aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p id="rejectModalMessage">هل أنت متأكد من رفض هذا السند؟</p>
+                        <div class="mb-3">
+                            <label class="form-label required">سبب الرفض</label>
+                            <textarea name="approval_notes"
+                                      class="form-control"
+                                      rows="3"
+                                      required
+                                      placeholder="يرجى ذكر سبب الرفض..."></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                        <button type="submit" class="btn btn-danger">
+                            <i class="bi bi-x-circle me-1"></i> رفض السند
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <!-- Single Modal Container for Reversal (APPROVED transactions) -->
+    <div class="modal fade" id="reverseModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form id="reverseForm"
+                      method="post"
+                      action="{% url 'transaction_reverse' 0 %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="transaction_id" id="reverseTransactionId" />
+                    <div class="modal-header bg-warning text-dark">
+                        <h5 class="modal-title">
+                            <i class="bi bi-arrow-counterclockwise me-2"></i>
+                            عكس السند
+                        </h5>
+                        <button type="button"
+                                class="btn-close"
+                                data-bs-dismiss="modal"
+                                aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="alert alert-warning">
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            <strong>تنبيه:</strong> سيتم إنشاء سند عكس جديد لضبط الكميات في المخزون.
+                        </div>
+                        <p id="reverseModalMessage">
+                            هل أنت متأكد من عكس السند رقم <strong id="reverseDocumentNumber"></strong>؟
+                        </p>
+                        <div class="mb-3">
+                            <label class="form-label">
+                                سبب العكس <span class="text-danger">*</span>
+                            </label>
+                            <textarea name="reverse_reason"
+                                      class="form-control"
+                                      rows="3"
+                                      required
+                                      placeholder="يرجى ذكر سبب عكس السند..."></textarea>
+                            <div class="form-text">سيتم تسجيل هذا السبب في سجل التدقيق</div>
+                        </div>
+                        <div class="alert alert-info">
+                            <strong>ملاحظة:</strong> السند الأصلي سيظل محفوظاً في السجلات، وسيتم إنشاء سند عكس جديد برقم
+                            مختلف.
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
                         <button type="submit" class="btn btn-warning">
                             <i class="bi bi-arrow-counterclockwise me-1"></i>
                             إنشاء سند العكس
                         </button>
                     </div>
-                    </form>
+                </form>
+            </div>
+        </div>
+    </div>
+    <!-- Delete Modals (inside loop - PENDING transactions only) -->
+    {% for transaction in transactions %}
+        {% if transaction.approval_status == 'P' %}
+            <div class="modal fade"
+                 id="deleteModal-{{ transaction.id }}"
+                 tabindex="-1"
+                 aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <form method="post" action="{% url 'transaction_delete' transaction.id %}">
+                            {% csrf_token %}
+                            <input type="hidden"
+                                   name="return_url"
+                                   value="{{ request.get_full_path|urlencode }}" />
+                            <div class="modal-header bg-danger text-white">
+                                <h5 class="modal-title">حذف السند</h5>
+                                <button type="button"
+                                        class="btn-close"
+                                        data-bs-dismiss="modal"
+                                        aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="alert alert-warning">
+                                    <i class="bi bi-info-circle me-2"></i>
+                                    <strong>ملاحظة:</strong> يمكن حذف السندات المعلقة فقط. السندات المعتمدة يجب عكسها بدلاً من
+                                    حذفها.
+                                </div>
+                                <p class="text-danger">
+                                    <strong>تحذير:</strong> هذه العملية لا يمكن التراجع عنها. هل أنت متأكد من حذف السند رقم
+                                    <strong>
+                                        <span dir="ltr" class="doc-number">{{ transaction.document_number }}</span>
+                                    </strong>؟
+                                </p>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                                <button type="submit" class="btn btn-danger">
+                                    <i class="bi bi-trash me-1"></i> حذف السند نهائياً
+                                </button>
+                            </div>
+                        </form>
                     </div>
-                    </div>
-                    </div>
-                    <!-- Delete Modals (inside loop - PENDING transactions only) -->
-                    {% for transaction in transactions %}
-                    {% if transaction.approval_status == 'P' %}
-<div class="modal fade" id="deleteModal-{{ transaction.id }}" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <form method="post" action="{% url 'transaction_delete' transaction.id %}">
-                {% csrf_token %}
-                <input type="hidden" name="return_url" value="{{ request.get_full_path|urlencode }}" />
-                <div class="modal-header bg-danger text-white">
-                    <h5 class="modal-title">
-                        حذف السند
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
-                    </button>
                 </div>
-                <div class="modal-body">
-                    <div class="alert alert-warning">
-                        <i class="bi bi-info-circle me-2"></i>
-                        <strong>ملاحظة:</strong> يمكن حذف السندات المعلقة فقط. السندات المعتمدة يجب عكسها بدلاً من
-                        حذفها.
-                    </div>
-                    <p class="text-danger">
-                        <strong>تحذير:</strong> هذه العملية لا يمكن التراجع عنها. هل أنت متأكد من حذف السند رقم
-                        <strong>
-                            <span dir="ltr" class="doc-number">
-                                {{ transaction.document_number }}
-                            </span>
-                        </strong>؟
-                    </p>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                            إلغاء
-                        </button>
-                        <button type="submit" class="btn btn-danger">
-                            <i class="bi bi-trash me-1"></i> حذف السند نهائياً
-                        </button>
-                    </div>
-                    </form>
-                    </div>
-                    </div>
-                    </div>
-                    {% endif %}
-                    {% endfor %}
+            </div>
+        {% endif %}
+    {% endfor %}
 {% endblock content %}
 {% block scripts %}
-<script type="text/javascript">
+    <script type="text/javascript">
         document.addEventListener('DOMContentLoaded', function () {
             // ============================================
             // 1. FILTER PERSISTENCE
@@ -796,5 +778,5 @@
 
         console.log('Transaction list filters persistence initialized');
     });
-</script>
+    </script>
 {% endblock scripts %}

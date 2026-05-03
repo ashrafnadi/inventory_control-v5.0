@@ -1,7 +1,6 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
-
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -11,7 +10,7 @@
         <link rel="icon" href="{% static 'img/bu_logo.png' %}" />
         <!--  CRITICAL FIX: Single HTMX config meta tag -->
         <meta name="htmx-config"
-            content='{"headers": {"X-CSRFToken": "{{ csrf_token }}"}, "cache": "false", "defaultSwapStyle": "innerHTML"}' />
+              content='{"headers": {"X-CSRFToken": "{{ csrf_token }}"}, "cache": "false", "defaultSwapStyle": "innerHTML"}' />
         <title>
             {% block title %}
             {% endblock title %}
@@ -20,7 +19,6 @@
         {% block styles %}
         {% endblock styles %}
     </head>
-
     <body>
         {% include "partials/top_bar.html" %}
         {% include "partials/side_bar.html" %}
@@ -29,33 +27,36 @@
         <div class="main-container">
             <!-- Display Django messages as Bootstrap alerts -->
             {% if messages %}
-            {% for message in messages %}
-            <div class="alert {{ message.tags }} alert-dismissible fade show" role="alert">
-                {{ message }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
-                </button>
-                </div>
+                {% for message in messages %}
+                    <div class="alert {{ message.tags }} alert-dismissible fade show"
+                         role="alert">
+                        {{ message }}
+                        <button type="button"
+                                class="btn-close"
+                                data-bs-dismiss="alert"
+                                aria-label="Close"></button>
+                    </div>
                 {% endfor %}
             {% endif %}
             {% block content %}
             {% endblock content %}
         </div>
         {% if user.is_authenticated %}
-        <div class="idle-modal" id="idle-modal" aria-hidden="true">
-            <div class="idle-modal-content">
-                <i class="bi bi-clock-fill idle-modal-icon"></i>
-                <h2>تنبيه انتهاء الجلسة</h2>
-                <p>
-                    ستنتهي جلستك خلال
-                    <strong id="idle-countdown"></strong>
-                    ثانية بسبب عدم النشاط.
-                </p>
-                <button class="btn btn-primary" id="idle-continue" type="button">
-                    <i class="bi bi-arrow-repeat me-1"></i>
-                    متابعة الجلسة
-                </button>
+            <div class="idle-modal" id="idle-modal" aria-hidden="true">
+                <div class="idle-modal-content">
+                    <i class="bi bi-clock-fill idle-modal-icon"></i>
+                    <h2>تنبيه انتهاء الجلسة</h2>
+                    <p>
+                        ستنتهي جلستك خلال
+                        <strong id="idle-countdown"></strong>
+                        ثانية بسبب عدم النشاط.
+                    </p>
+                    <button class="btn btn-primary" id="idle-continue" type="button">
+                        <i class="bi bi-arrow-repeat me-1"></i>
+                        متابعة الجلسة
+                    </button>
+                </div>
             </div>
-        </div>
         {% endif %}
         <!-- Footer -->
         {% include "partials/_footer.html" %}
@@ -64,10 +65,7 @@
         <!-- Scripts - Load libraries FIRST -->
         {% include "partials/_scripts.html" %}
         {% if user.is_authenticated %}
-            <script id="app-session-init"
-                    data-idle-timeout-ms="{{ idle_timeout_ms }}"
-                    data-warning-ms="{{ session_warning_ms }}"
-                    data-logout-url="{% url 'logout' %}">
+            <script id="app-session-init" data-idle-timeout-ms="{{ idle_timeout_ms }}" data-warning-ms="{{ session_warning_ms }}" data-logout-url="{% url 'logout' %}">
                 window.APP_SESSION = {
                     idleTimeoutMs: parseInt(document.currentScript.dataset.idleTimeoutMs, 10) || 0,
                     warningMs: parseInt(document.currentScript.dataset.warningMs, 10) || 0,
@@ -148,7 +146,7 @@
                 htmx.config.refreshOnHistoryMiss = true;
             }
 </script>
-        <script>
+<script>
             (function () {
                 const toggle = document.getElementById('sidebar-toggle');
                 const sidebar = document.getElementById('sidebar');
@@ -219,10 +217,9 @@
                     resetIdleTimer();
                 }
             })();
-        </script>
-        <!--  CRITICAL FIX: Remove all other script blocks - this is the ONLY one needed -->
-        {% block scripts %}
-        {% endblock scripts %}
-        </body>
-
+</script>
+<!--  CRITICAL FIX: Remove all other script blocks - this is the ONLY one needed -->
+{% block scripts %}
+{% endblock scripts %}
+</body>
 </html>

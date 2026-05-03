@@ -1,24 +1,16 @@
 {% if users.exists %}
     <select name="{{ field_name }}" class="form-select" id="id_{{ field_name }}">
-        <option value="">
-            ---------
-        </option>
+        <option value="">---------</option>
         {% for user in users %}
             <option value="{{ user.id }}"
-                    {% if request.GET.selected_user|default:'' == user.id|stringformat:"i" %}
-                        selected
-                    {% endif %}>
+                    {% if request.GET.selected_user|default:'' == user.id|stringformat:"i" %}selected{% endif %}>
                 {{ user.get_full_name|default:user.username }}
-                {% if user.profile.job_title %}
-                    - {{ user.profile.job_title }}
-                {% endif %}
+                {% if user.profile.job_title %}- {{ user.profile.job_title }}{% endif %}
             </option>
         {% endfor %}
     </select>
 {% else %}
     <select class="form-select" disabled>
-        <option>
-            {{ empty_text|default:"لا توجد بيانات" }}
-        </option>
+        <option>{{ empty_text|default:"لا توجد بيانات" }}</option>
     </select>
 {% endif %}

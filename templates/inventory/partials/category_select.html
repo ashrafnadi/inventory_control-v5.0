@@ -10,22 +10,12 @@
             hx-target="#items-container"
             hx-trigger="change"
             hx-include="#warehouse_id">
-        <option value="">
-            اختر الفئة
-        </option>
-        {% for category in categories %}
-            <option value="{{ category.id }}">
-                {{ category.name }}
-            </option>
-        {% endfor %}
+        <option value="">اختر الفئة</option>
+        {% for category in categories %}<option value="{{ category.id }}">{{ category.name }}</option>{% endfor %}
     </select>
 {% else %}
-    <label class="form-label">
-        الفئة
-    </label>
+    <label class="form-label">الفئة</label>
     <select class="form-select" disabled>
-        <option>
-            لا توجد فئات في هذا المخزن
-        </option>
+        <option>لا توجد فئات في هذا المخزن</option>
     </select>
 {% endif %}

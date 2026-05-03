@@ -1,11 +1,11 @@
 <!-- administration/administration_item_search.html -->
 {% extends "base.html" %}
 {% load static %}
-
-{% block title %}بحث عام عن الأصناف - جميع الكليات{% endblock title %}
-
+{% block title %}
+    بحث عام عن الأصناف - جميع الكليات
+{% endblock title %}
 {% block content %}
-<style>
+    <style>
     .search-container {
         background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
         color: white;
@@ -58,253 +58,236 @@
     .search-results.active {
         display: block;
     }
-</style>
-
-<div class="container-fluid">
-    <!-- Page Header -->
-    <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800">
-            <i class="bi bi-search me-2"></i>بحث عام عن الأصناف
-        </h1>
-        <span class="badge bg-primary fs-6">
-            <i class="bi bi-shield-check me-1"></i>مسؤول الإدارة
-        </span>
-    </div>
-
-    <!-- Search Container -->
-    <div class="search-container">
-        <form method="get" id="search-form">
-            <div class="row g-3 align-items-end">
-                <div class="col-md-6">
-                    <label class="form-label text-white-50">
-                        <i class="bi bi-search me-1"></i>ابحث عن صنف
-                    </label>
-                    <input 
-                        type="text" 
-                        name="q" 
-                        class="form-control search-input" 
-                        placeholder="اكتب اسم الصنف أو الكود..." 
-                        value="{{ search_query }}"
-                        id="search-input"
-                        autocomplete="off"
-                    >
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label text-white-50">
-                        <i class="bi bi-building me-1"></i>تصفية بالكلية
-                    </label>
-                    <select name="faculty_id" class="form-select">
-                        <option value="">جميع الكليات</option>
-                        {% for faculty in faculties %}
-                            <option value="{{ faculty.id }}" {% if selected_faculty_id == faculty.id|stringformat:"s" %}selected{% endif %}>
-                                {{ faculty.name }}
-                            </option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label text-white-50">
-                        <i class="bi bi-folder me-1"></i>تصفية بالفئة
-                    </label>
-                    <select name="category_id" class="form-select">
-                        <option value="">جميع الفئات</option>
-                        {% for category in categories %}
-                            <option value="{{ category.id }}" {% if selected_category_id == category.id|stringformat:"s" %}selected{% endif %}>
-                                {{ category.name }}
-                            </option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="col-12 text-center mt-4">
-                    <button type="submit" class="btn btn-light btn-lg search-btn">
-                        <i class="bi bi-search me-2"></i>بحث
-                    </button>
-                </div>
-            </div>
-        </form>
-    </div>
-
-    <!-- Loading Spinner -->
-    <div class="loading-spinner" id="loading-spinner">
-        <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
-            <span class="visually-hidden">جاري التحميل...</span>
+    .spinner-large {
+        width: 3rem;
+        height: 3rem;
+    }
+    </style>
+    <div class="container-fluid">
+        <!-- Page Header -->
+        <div class="d-sm-flex align-items-center justify-content-between mb-4">
+            <h1 class="h3 mb-0 text-gray-800">
+                <i class="bi bi-search me-2"></i>بحث عام عن الأصناف
+            </h1>
+            <span class="badge bg-primary fs-6">
+                <i class="bi bi-shield-check me-1"></i>مسؤول الإدارة
+            </span>
         </div>
-        <p class="mt-3 text-muted">جاري البحث في جميع الكليات...</p>
-    </div>
-
-    <!-- Search Results -->
-    <div class="search-results {% if items_with_faculty_qty %}active{% endif %}" id="search-results">
-        {% if items_with_faculty_qty %}
-            <div class="alert alert-info d-flex align-items-center">
-                <i class="bi bi-info-circle me-2 fs-5"></i>
-                <div>
-                    <strong>نتائج البحث:</strong> تم العثور على {{ total_items }} صنف
-                    {% if search_query %} عن "<strong>{{ search_query }}</strong>"{% endif %}
-                </div>
-            </div>
-
-            <!-- Items List -->
-            <div class="row">
-                {% for item_data in items_with_faculty_qty %}
-                <div class="col-12 mb-4">
-                    <div class="card result-card">
-                        <div class="card-header bg-light d-flex justify-content-between align-items-center">
-                            <div>
-                                <h5 class="mb-0">
-                                    <i class="bi bi-box-seam me-2 text-primary"></i>
-                                    {{ item_data.item.name }}
-                                </h5>
-                                {% if item_data.item.code %}
-                                    <small class="text-muted" dir="ltr">Code: {{ item_data.item.code }}</small>
-                                {% endif %}
-                            </div>
-                            <div class="text-end">
-                                <span class="badge bg-primary fs-6">
-                                    <i class="bi bi-collection me-1"></i>
-                                    {{ item_data.total_quantity }} وحدة
-                                </span>
-                                <br>
-                                <small class="text-muted mt-1 d-block">
-                                    في {{ item_data.faculty_count }} كلية
-                                </small>
-                            </div>
-                        </div>
-                        <div class="card-body">
-                            <div class="row mb-3">
-                                <div class="col-md-4">
-                                    <strong><i class="bi bi-folder me-1"></i>الفئة:</strong>
-                                    {{ item_data.item.category.name|default:"—" }}
-                                </div>
-                                <div class="col-md-4">
-                                    <strong><i class="bi bi-building me-1"></i>المخزن:</strong>
-                                    {{ item_data.item.sub_warehouse.name|default:"—" }}
-                                </div>
-                                <div class="col-md-4">
-                                    <strong><i class="bi bi-box me-1"></i>الوحدة:</strong>
-                                    {{ item_data.item.get_unit_display }}
-                                </div>
-                            </div>
-                            
-                            <hr>
-                            
-                            <h6 class="mb-3">
-                                <i class="bi bi-pie-chart me-2"></i>التوزيع حسب الكلية:
-                            </h6>
-                            <div class="table-responsive">
-                                <table class="table table-sm table-hover">
-                                    <thead class="table-light">
-                                        <tr>
-                                            <th width="40%">الكلية</th>
-                                            <th width="30%">المخزن الفرعي</th>
-                                            <th width="30%" class="text-center">الكمية</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {% for faculty_qty in item_data.faculty_qty_data %}
-                                        <tr>
-                                            <td>
-                                                <i class="bi bi-building me-2 text-primary"></i>
-                                                {{ faculty_qty.faculty_name }}
-                                            </td>
-                                            <td>
-                                                <small class="text-muted">{{ faculty_qty.sub_warehouse }}</small>
-                                            </td>
-                                            <td class="text-center">
-                                                {% if faculty_qty.quantity > 10 %}
-                                                    <span class="faculty-qty-badge qty-high">
-                                                        {{ faculty_qty.quantity }}
-                                                    </span>
-                                                {% elif faculty_qty.quantity > 0 %}
-                                                    <span class="faculty-qty-badge qty-low">
-                                                        {{ faculty_qty.quantity }}
-                                                    </span>
-                                                {% else %}
-                                                    <span class="faculty-qty-badge qty-zero">
-                                                        0
-                                                    </span>
-                                                {% endif %}
-                                            </td>
-                                        </tr>
-                                        {% empty %}
-                                        <tr>
-                                            <td colspan="3" class="text-center text-muted">
-                                                لا توجد بيانات مخزون لهذا الصنف
-                                            </td>
-                                        </tr>
-                                        {% endfor %}
-                                    </tbody>
-                                    <tfoot class="table-light fw-bold">
-                                        <tr>
-                                            <td colspan="2" class="text-end">الإجمالي:</td>
-                                            <td class="text-center">
-                                                <span class="badge bg-success fs-6">{{ item_data.total_quantity }}</span>
-                                            </td>
-                                        </tr>
-                                    </tfoot>
-                                </table>
-                            </div>
-                        </div>
+        <!-- Search Container -->
+        <div class="search-container">
+            <form method="get" id="search-form">
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-6">
+                        <label class="form-label text-white-50">
+                            <i class="bi bi-search me-1"></i>ابحث عن صنف
+                        </label>
+                        <input type="text"
+                               name="q"
+                               class="form-control search-input"
+                               placeholder="اكتب اسم الصنف أو الكود..."
+                               value="{{ search_query }}"
+                               id="search-input"
+                               autocomplete="off">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label text-white-50">
+                            <i class="bi bi-building me-1"></i>تصفية بالكلية
+                        </label>
+                        <select name="faculty_id" class="form-select">
+                            <option value="">جميع الكليات</option>
+                            {% for faculty in faculties %}
+                                <option value="{{ faculty.id }}"
+                                        {% if selected_faculty_id == faculty.id|stringformat:"s" %}selected{% endif %}>
+                                    {{ faculty.name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label text-white-50">
+                            <i class="bi bi-folder me-1"></i>تصفية بالفئة
+                        </label>
+                        <select name="category_id" class="form-select">
+                            <option value="">جميع الفئات</option>
+                            {% for category in categories %}
+                                <option value="{{ category.id }}"
+                                        {% if selected_category_id == category.id|stringformat:"s" %}selected{% endif %}>
+                                    {{ category.name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-12 text-center mt-4">
+                        <button type="submit" class="btn btn-light btn-lg search-btn">
+                            <i class="bi bi-search me-2"></i>بحث
+                        </button>
                     </div>
                 </div>
-                {% endfor %}
+            </form>
+        </div>
+        <!-- Loading Spinner -->
+        <div class="loading-spinner" id="loading-spinner">
+            <div class="spinner-border text-primary spinner-large" role="status">
+                <span class="visually-hidden">جاري التحميل...</span>
             </div>
-
-            <!-- Pagination -->
-            {% if page_obj.has_other_pages %}
-            <nav aria-label="Page navigation" class="mt-4">
-                <ul class="pagination justify-content-center">
-                    {% if page_obj.has_previous %}
-                        <li class="page-item">
-                            <a class="page-link" href="?q={{ search_query }}&page={{ page_obj.previous_page_number }}&faculty_id={{ selected_faculty_id }}&category_id={{ selected_category_id }}">
-                                <i class="bi bi-chevron-left"></i> السابق
-                            </a>
-                        </li>
-                    {% else %}
-                        <li class="page-item disabled">
-                            <span class="page-link">السابق</span>
-                        </li>
-                    {% endif %}
-
-                    <li class="page-item active">
-                        <span class="page-link">
-                            صفحة {{ page_obj.number }} من {{ page_obj.paginator.num_pages }}
-                        </span>
-                    </li>
-
-                    {% if page_obj.has_next %}
-                        <li class="page-item">
-                            <a class="page-link" href="?q={{ search_query }}&page={{ page_obj.next_page_number }}&faculty_id={{ selected_faculty_id }}&category_id={{ selected_category_id }}">
-                                التالي <i class="bi bi-chevron-right"></i>
-                            </a>
-                        </li>
-                    {% else %}
-                        <li class="page-item disabled">
-                            <span class="page-link">التالي</span>
-                        </li>
-                    {% endif %}
-                </ul>
-            </nav>
+            <p class="mt-3 text-muted">جاري البحث في جميع الكليات...</p>
+        </div>
+        <!-- Search Results -->
+        <div class="search-results {% if items_with_faculty_qty %}active{% endif %}"
+             id="search-results">
+            {% if items_with_faculty_qty %}
+                <div class="alert alert-info d-flex align-items-center">
+                    <i class="bi bi-info-circle me-2 fs-5"></i>
+                    <div>
+                        <strong>نتائج البحث:</strong> تم العثور على {{ total_items }} صنف
+                        {% if search_query %}عن "<strong>{{ search_query }}</strong>"{% endif %}
+                    </div>
+                </div>
+                <!-- Items List -->
+                <div class="row">
+                    {% for item_data in items_with_faculty_qty %}
+                        <div class="col-12 mb-4">
+                            <div class="card result-card">
+                                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h5 class="mb-0">
+                                            <i class="bi bi-box-seam me-2 text-primary"></i>
+                                            {{ item_data.item.name }}
+                                        </h5>
+                                        {% if item_data.item.code %}<small class="text-muted" dir="ltr">Code: {{ item_data.item.code }}</small>{% endif %}
+                                    </div>
+                                    <div class="text-end">
+                                        <span class="badge bg-primary fs-6">
+                                            <i class="bi bi-collection me-1"></i>
+                                            {{ item_data.total_quantity }} وحدة
+                                        </span>
+                                        <br>
+                                        <small class="text-muted mt-1 d-block">في {{ item_data.faculty_count }} كلية</small>
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row mb-3">
+                                        <div class="col-md-4">
+                                            <strong><i class="bi bi-folder me-1"></i>الفئة:</strong>
+                                            {{ item_data.item.category.name|default:"—" }}
+                                        </div>
+                                        <div class="col-md-4">
+                                            <strong><i class="bi bi-building me-1"></i>المخزن:</strong>
+                                            {{ item_data.item.sub_warehouse.name|default:"—" }}
+                                        </div>
+                                        <div class="col-md-4">
+                                            <strong><i class="bi bi-box me-1"></i>الوحدة:</strong>
+                                            {{ item_data.item.get_unit_display }}
+                                        </div>
+                                    </div>
+                                    <hr>
+                                    <h6 class="mb-3">
+                                        <i class="bi bi-pie-chart me-2"></i>التوزيع حسب الكلية:
+                                    </h6>
+                                    <div class="table-responsive">
+                                        <table class="table table-sm table-hover">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th width="40%">الكلية</th>
+                                                    <th width="30%">المخزن الفرعي</th>
+                                                    <th width="30%" class="text-center">الكمية</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for faculty_qty in item_data.faculty_qty_data %}
+                                                    <tr>
+                                                        <td>
+                                                            <i class="bi bi-building me-2 text-primary"></i>
+                                                            {{ faculty_qty.faculty_name }}
+                                                        </td>
+                                                        <td>
+                                                            <small class="text-muted">{{ faculty_qty.sub_warehouse }}</small>
+                                                        </td>
+                                                        <td class="text-center">
+                                                            {% if faculty_qty.quantity > 10 %}
+                                                                <span class="faculty-qty-badge qty-high">{{ faculty_qty.quantity }}</span>
+                                                            {% elif faculty_qty.quantity > 0 %}
+                                                                <span class="faculty-qty-badge qty-low">{{ faculty_qty.quantity }}</span>
+                                                            {% else %}
+                                                                <span class="faculty-qty-badge qty-zero">0</span>
+                                                            {% endif %}
+                                                        </td>
+                                                    </tr>
+                                                {% empty %}
+                                                    <tr>
+                                                        <td colspan="3" class="text-center text-muted">لا توجد بيانات مخزون لهذا الصنف</td>
+                                                    </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                            <tfoot class="table-light fw-bold">
+                                                <tr>
+                                                    <td colspan="2" class="text-end">الإجمالي:</td>
+                                                    <td class="text-center">
+                                                        <span class="badge bg-success fs-6">{{ item_data.total_quantity }}</span>
+                                                    </td>
+                                                </tr>
+                                            </tfoot>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+                <!-- Pagination -->
+                {% if page_obj.has_other_pages %}
+                    <nav aria-label="Page navigation" class="mt-4">
+                        <ul class="pagination justify-content-center">
+                            {% if page_obj.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link"
+                                       href="?q={{ search_query }}&page={{ page_obj.previous_page_number }}&faculty_id={{ selected_faculty_id }}&category_id={{ selected_category_id }}">
+                                        <i class="bi bi-chevron-left"></i> السابق
+                                    </a>
+                                </li>
+                            {% else %}
+                                <li class="page-item disabled">
+                                    <span class="page-link">السابق</span>
+                                </li>
+                            {% endif %}
+                            <li class="page-item active">
+                                <span class="page-link">صفحة {{ page_obj.number }} من {{ page_obj.paginator.num_pages }}</span>
+                            </li>
+                            {% if page_obj.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link"
+                                       href="?q={{ search_query }}&page={{ page_obj.next_page_number }}&faculty_id={{ selected_faculty_id }}&category_id={{ selected_category_id }}">
+                                        التالي <i class="bi bi-chevron-right"></i>
+                                    </a>
+                                </li>
+                            {% else %}
+                                <li class="page-item disabled">
+                                    <span class="page-link">التالي</span>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                {% endif %}
+            {% elif search_query %}
+                <div class="alert alert-warning text-center py-5">
+                    <i class="bi bi-exclamation-triangle fs-1 mb-3 d-block text-warning"></i>
+                    <h4>لا توجد نتائج</h4>
+                    <p class="mb-0 text-muted">
+                        لم يتم العثور على أصناف تطابق بحثك "<strong>{{ search_query }}</strong>"
+                    </p>
+                </div>
+            {% else %}
+                <div class="alert alert-info text-center py-5">
+                    <i class="bi bi-search fs-1 mb-3 d-block text-primary"></i>
+                    <h4>ابحث عن أي صنف</h4>
+                    <p class="mb-0 text-muted">أدخل اسم الصنف أو الكود للبحث عبر جميع الكليات وعرض الكميات المخزنة</p>
+                </div>
             {% endif %}
-
-        {% elif search_query %}
-            <div class="alert alert-warning text-center py-5">
-                <i class="bi bi-exclamation-triangle fs-1 mb-3 d-block text-warning"></i>
-                <h4>لا توجد نتائج</h4>
-                <p class="mb-0 text-muted">لم يتم العثور على أصناف تطابق بحثك "<strong>{{ search_query }}</strong>"</p>
-            </div>
-        {% else %}
-            <div class="alert alert-info text-center py-5">
-                <i class="bi bi-search fs-1 mb-3 d-block text-primary"></i>
-                <h4>ابحث عن أي صنف</h4>
-                <p class="mb-0 text-muted">أدخل اسم الصنف أو الكود للبحث عبر جميع الكليات وعرض الكميات المخزنة</p>
-            </div>
-        {% endif %}
+        </div>
     </div>
-</div>
 {% endblock content %}
-
 {% block scripts %}
-<script>
+    <script>
 document.addEventListener('DOMContentLoaded', function() {
     const searchInput = document.getElementById('search-input');
     const searchForm = document.getElementById('search-form');
@@ -344,5 +327,5 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 });
-</script>
+    </script>
 {% endblock scripts %}

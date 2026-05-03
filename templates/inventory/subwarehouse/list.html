@@ -2,9 +2,7 @@
 {% load static %}
 {% block content %}
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1>
-            المخازن الفرعية
-        </h1>
+        <h1>المخازن الفرعية</h1>
         {% if request.session.user_type == "inventory_admin" %}
             <a href="{% url 'subwarehouse_create' %}" class="btn btn-primary">إضافة مخزن فرعي</a>
         {% endif %}
@@ -13,34 +11,18 @@
         <table class="table table-striped" id="subwarehouse_list">
             <thead>
                 <tr>
-                    <th>
-                        اسم المخزن الفرعي
-                    </th>
-                    <th>
-                        المخزن الرئيسي
-                    </th>
-                    <th>
-                        النطاق
-                    </th>
-                    {% if request.session.user_type == "inventory_admin" %}
-                        <th>
-                            الإجراءات
-                        </th>
-                    {% endif %}
+                    <th>اسم المخزن الفرعي</th>
+                    <th>المخزن الرئيسي</th>
+                    <th>النطاق</th>
+                    {% if request.session.user_type == "inventory_admin" %}<th>الإجراءات</th>{% endif %}
                 </tr>
             </thead>
             <tbody>
                 {% for sw in sub_warehouses %}
                     <tr>
-                        <td>
-                            {{ sw.name }}
-                        </td>
-                        <td>
-                            {{ sw.warehouse.name }}
-                        </td>
-                        <td>
-                            مشترك بين الكليات
-                        </td>
+                        <td>{{ sw.name }}</td>
+                        <td>{{ sw.warehouse.name }}</td>
+                        <td>مشترك بين الكليات</td>
                         {% if request.session.user_type == "inventory_admin" %}
                             <td>
                                 <a href="{% url 'subwarehouse_update' sw.pk %}"
@@ -54,9 +36,7 @@
             </tbody>
         </table>
     {% else %}
-        <div class="alert alert-info">
-            لا توجد مخازن فرعية.
-        </div>
+        <div class="alert alert-info">لا توجد مخازن فرعية.</div>
     {% endif %}
 {% endblock content %}
 {% block scripts %}

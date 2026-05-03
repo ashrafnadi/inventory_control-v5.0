@@ -1,127 +1,164 @@
 {% extends "base.html" %}
 {% load static %}
 {% block title %}إدارة المستخدمين{% endblock %}
-
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h2><i class="bi bi-people me-1"></i> إدارة المستخدمين</h2>
-    <a href="{% url 'admin_user_create' %}" class="btn btn-success"><i class="bi bi-person-plus"></i> إضافة مستخدم</a>
-</div>
-<!-- Excel Import Section -->
-<div class="card mb-4">
-    <div class="card-header bg-info text-black d-flex justify-content-between align-items-center">
-        <h5 class="mb-0"><i class="bi bi-file-earmark-excel"></i> استيراد مستخدمين من إكسل</h5>
-        <button class="btn btn-sm btn-light" type="button" data-bs-toggle="collapse" data-bs-target="#importCollapse">
-            <i class="bi bi-chevron-down"></i>
-        </button>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>
+            <i class="bi bi-people me-1"></i> إدارة المستخدمين
+        </h2>
+        <a href="{% url 'admin_user_create' %}" class="btn btn-success"><i class="bi bi-person-plus"></i> إضافة مستخدم</a>
     </div>
-    <div class="collapse" id="importCollapse">
-        <div class="card-body">
-            <form method="post" enctype="multipart/form-data" action="{% url 'admin_user_import_excel' %}"
-                class="row g-3">
-                {% csrf_token %}
-
-                <div class="col-md-6">
-                    <label class="form-label">ملف الإكسل (.xlsx)</label>
-                    <input type="file" name="excel_file" class="form-control" accept=".xlsx" required>
-                    <div>يجب أن يحتوي على الأعمدة: username, first_name, faculty_id,
-                        department_id, password, is_active, is_staff, is_superuser, is_inventory_manager,
-                        is_inventory_employee, is_administration_manager, is_faculty_manager, is_user</div>
-                </div>
-
-                <div class="col-md-6">
-                    <label class="form-label">خيارات المعالجة</label>
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" name="dry_run" id="dry_run">
-                        <label class="form-check-label" for="dry_run">معاينة فقط (لا تحفظ التغييرات)</label>
+    <!-- Excel Import Section -->
+    <div class="card mb-4">
+        <div class="card-header bg-info text-black d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">
+                <i class="bi bi-file-earmark-excel"></i> استيراد مستخدمين من إكسل
+            </h5>
+            <button class="btn btn-sm btn-light"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#importCollapse">
+                <i class="bi bi-chevron-down"></i>
+            </button>
+        </div>
+        <div class="collapse" id="importCollapse">
+            <div class="card-body">
+                <form method="post"
+                      enctype="multipart/form-data"
+                      action="{% url 'admin_user_import_excel' %}"
+                      class="row g-3">
+                    {% csrf_token %}
+                    <div class="col-md-6">
+                        <label class="form-label">ملف الإكسل (.xlsx)</label>
+                        <input type="file"
+                               name="excel_file"
+                               class="form-control"
+                               accept=".xlsx"
+                               required>
+                        <div>
+                            يجب أن يحتوي على الأعمدة: username, first_name, faculty_id,
+                            department_id, password, is_active, is_staff, is_superuser, is_inventory_manager,
+                            is_inventory_employee, is_administration_manager, is_faculty_manager, is_user
+                        </div>
                     </div>
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" name="update_existing" id="update_existing"
-                            checked>
-                        <label class="form-check-label" for="update_existing">تحديث المستخدمين الموجودين</label>
+                    <div class="col-md-6">
+                        <label class="form-label">خيارات المعالجة</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="dry_run" id="dry_run">
+                            <label class="form-check-label" for="dry_run">معاينة فقط (لا تحفظ التغييرات)</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input"
+                                   type="checkbox"
+                                   name="update_existing"
+                                   id="update_existing"
+                                   checked>
+                            <label class="form-check-label" for="update_existing">تحديث المستخدمين الموجودين</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input"
+                                   type="checkbox"
+                                   name="skip_existing"
+                                   id="skip_existing">
+                            <label class="form-check-label" for="skip_existing">تخطي المستخدمين الموجودين</label>
+                        </div>
                     </div>
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" name="skip_existing" id="skip_existing">
-                        <label class="form-check-label" for="skip_existing">تخطي المستخدمين الموجودين</label>
+                    <div class="col-12">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-upload"></i> استيراد المستخدمين
+                        </button>
+                        <a href="{% static 'templates/user_import_template.xlsx' %}"
+                           class="btn btn-outline-secondary"
+                           download>
+                            <i class="bi bi-download"></i> تحميل قالب الإكسل
+                        </a>
                     </div>
-                </div>
-
-                <div class="col-12">
-                    <button type="submit" class="btn btn-primary">
-                        <i class="bi bi-upload"></i> استيراد المستخدمين
-                    </button>
-                    <a href="{% static 'templates/user_import_template.xlsx' %}" class="btn btn-outline-secondary"
-                        download>
-                        <i class="bi bi-download"></i> تحميل قالب الإكسل
-                    </a>
-                </div>
-            </form>
+                </form>
+            </div>
         </div>
     </div>
-</div>
-
-<div class="card">
-    <div class="card-body">
-        <table id="dtUsers" class="table table-striped table-hover w-100">
-            <thead>
-                <tr>
-                    <th>#</th>
-                    <th>اسم المستخدم</th>
-                    <th>الاسم الكامل</th>
-                    <th>الكلية</th>
-                    <th>القسم</th>
-                    <th>الحالة</th>
-                    <th>الأدوار</th>
-                    <th>الإجراءات</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for u in users %}
-                <tr>
-                    <td>{{ u.id }}</td>
-                    <td>{{ u.username }}</td>
-                    <td>{{ u.first_name }} {{ u.last_name }}</td>
-                    <td>{{ u.profile.faculty.name|default:"—" }}</td>
-                    <td>{{ u.profile.department.name|default:"—" }}</td>
-                    <td>{% if u.is_active %}<span class="badge bg-success m-1 p-2">نشط</span>{% else %}<span
-                            class="badge bg-danger m-1 p-2">غير نشط</span>{% endif %}</td>
-                    <td>
-                        {% if u.profile.is_inventory_manager %}<span class="badge bg-primary m-1 p-2">مدير
-                            مخازن</span>{% endif %}
-                        {% if u.profile.is_faculty_manager %}<span class="badge bg-info m-1 p-2">مدير
-                            كلية</span>{% endif %}
-                        {% if u.profile.is_administration_manager %}<span class="badge bg-warning m-1 p-2">مدير
-                            إدارة</span>{% endif %}
-                        {% if u.profile.is_inventory_employee %}<span class="badge bg-success m-1 p-2">موظف
-                            مخازن</span>{% endif %}
-                        {% if u.profile.is_user %}<span class="badge bg-secondary m-1 p-2">موظف
-                            كلية</span>{% endif %}
-                        {% if u.is_superuser %}<span class="badge bg-warning m-1 text-black p-2">مدير
-                            النظام</span>{% endif %}
-                    </td>
-                    <td>
-                        <div class="btn-group btn-group-sm">
-                            <a href="{% url 'admin_user_edit' u.id %}" class="btn btn-outline-primary" title="تعديل">
-                                <i class="bi bi-pencil"></i>
-                            </a>
-                            {% if u != request.user %}
-                            <a href="{% url 'admin_user_delete' u.id %}" class="btn btn-outline-danger" title="حذف"
-                                onclick="return confirm('هل أنت متأكد؟')">
-                                <i class="bi bi-trash"></i>
-                            </a>
-                            {% endif %}
-                        </div>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+    <div class="card">
+        <div class="card-body">
+            <table id="dtUsers" class="table table-striped table-hover w-100">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>اسم المستخدم</th>
+                        <th>الاسم الكامل</th>
+                        <th>الكلية</th>
+                        <th>القسم</th>
+                        <th>الحالة</th>
+                        <th>الأدوار</th>
+                        <th>الإجراءات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for u in users %}
+                        <tr>
+                            <td>{{ u.id }}</td>
+                            <td>{{ u.username }}</td>
+                            <td>{{ u.first_name }} {{ u.last_name }}</td>
+                            <td>{{ u.profile.faculty.name|default:"—" }}</td>
+                            <td>{{ u.profile.department.name|default:"—" }}</td>
+                            <td>
+                                {% if u.is_active %}
+                                    <span class="badge bg-success m-1 p-2">نشط</span>
+                                {% else %}
+                                    <span class="badge bg-danger m-1 p-2">غير نشط</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if u.profile.is_inventory_manager %}
+                                    <span class="badge bg-primary m-1 p-2">مدير
+                                    مخازن</span>
+                                {% endif %}
+                                {% if u.profile.is_faculty_manager %}
+                                    <span class="badge bg-info m-1 p-2">مدير
+                                    كلية</span>
+                                {% endif %}
+                                {% if u.profile.is_administration_manager %}
+                                    <span class="badge bg-warning m-1 p-2">مدير
+                                    إدارة</span>
+                                {% endif %}
+                                {% if u.profile.is_inventory_employee %}
+                                    <span class="badge bg-success m-1 p-2">موظف
+                                    مخازن</span>
+                                {% endif %}
+                                {% if u.profile.is_user %}
+                                    <span class="badge bg-secondary m-1 p-2">موظف
+                                    كلية</span>
+                                {% endif %}
+                                {% if u.is_superuser %}
+                                    <span class="badge bg-warning m-1 text-black p-2">مدير
+                                    النظام</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{% url 'admin_user_edit' u.id %}"
+                                       class="btn btn-outline-primary"
+                                       title="تعديل">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    {% if u != request.user %}
+                                        <a href="{% url 'admin_user_delete' u.id %}"
+                                           class="btn btn-outline-danger"
+                                           title="حذف"
+                                           onclick="return confirm('هل أنت متأكد؟')">
+                                            <i class="bi bi-trash"></i>
+                                        </a>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
-</div>
 {% endblock %}
-
 {% block scripts %}
-<script>
+    <script>
     $(document).ready(function () {
         $('#dtUsers').DataTable({
             processing: true,
@@ -146,5 +183,5 @@
             autoWidth: true,
         });
     });
-</script>
+    </script>
 {% endblock %}

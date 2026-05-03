@@ -3,7 +3,7 @@
 {% load static %}
 {% load widget_tweaks %}
 {% block content %}
-<style>
+    <style>
     /* Search dropdown styling */
     .search-dropdown {
         display: none;
@@ -60,250 +60,254 @@
         text-align: right;
         direction: rtl;
     }
-</style>
-
-<form method="post" data-editing="{{ editing|default:'false'|lower }}"
-    data-has-errors="{{ has_post_errors|default:'false'|lower }}">
-    {% csrf_token %}
-
-
-    <input type="hidden" name="faculty" id="id_faculty" value="{{ request.user.profile.faculty_id }}">
-
-    <div id="url-config" data-item-search-url="{% url 'item_search' %}"
-        data-get-item-name-url="{% url 'get_item_name' %}" data-selected-inventory-user="{{ request.user.id }}"
-        data-selected-to-user="{{ form.to_user.value|default:'' }}" class="hide">
-    </div>
-    <input type="hidden" name="approval_status"
-        value="{{ form.approval_status.value|default:form.approval_status.initial }}" />
-    <input type="hidden" name="created_by" value="{{ request.user.id }}" />
-
-    <div class="card mb-4 overflow-visible">
-        <div class="card-header bg-primary text-white">
-            <h5 class="mb-0">نموذج 2: طلب وإذن صرف</h5>
-        </div>
-        <div class="card-body overflow-visible">
-            <div class="row">
-                <!-- 1. document_number -->
-                <div class="col-md-3 mb-3">
-                    <label>رقم المستند</label>
-                    <input type="text" class="form-control"
-                        value="{{ form.instance.document_number|default:'سيتم الإنشاء تلقائياً' }}" readonly />
-                </div>
-                <!-- 2. document_type -->
-                <div class="col-md-3 mb-3">
-                    {{ form.document_type.label_tag }}
-                    {{ form.document_type|add_class:"form-select" }}
-                    {% if form.document_type.errors %}
-                    <div class="text-danger mt-1">{{ form.document_type.errors }}</div>
-                    {% endif %}
-                </div>
-                <!-- 3. castody_type -->
-                <div class="col-md-3 mb-3">
-                    {{ form.castody_type.label_tag }}
-                    {{ form.castody_type|add_class:"form-select" }}
-                    {% if form.castody_type.errors %}
-                    <div class="text-danger mt-1">{{ form.castody_type.errors }}</div>
-                    {% endif %}
-                </div>
-                <!-- 4. from_sub_warehouse -->
-                <div class="col-md-3 mb-3">
-                    <div class="mb-1">{{ form.from_sub_warehouse.label_tag }}</div>
-                    <select name="from_sub_warehouse" id="id_from_sub_warehouse" class="form-select">
-                        <option value="">---------</option>
-                        {% for value, label in form.from_sub_warehouse.field.choices %}
-                        {% if value %}
-                        <option value="{{ value }}"
-                            {% if form.from_sub_warehouse.value == value|default_if_none:"" %}selected{% endif %}>
-                            {{ label }}
-                        </option>
-                        {% endif %}
-                        {% endfor %}
-                    </select>
-                    {% if form.from_sub_warehouse.errors %}
-                    <div class="text-danger mt-1">{{ form.from_sub_warehouse.errors }}</div>
-                    {% endif %}
-                </div>
-                <!-- 5. inventory_user (HIDDEN + AUTO-SET) -->
-                <div class="col-md-3 mb-3">
-                    <label class="form-label">موظف المخزن</label>
-                    <input type="text" class="form-control"
-                        value="{{ request.user.get_full_name|default:request.user.username }}" readonly />
-                </div>
-                <!-- 6. to_department -->
-                <div class="col-md-3 mb-3">
-                    <div class="mb-1">{{ form.to_department.label_tag }}</div>
-                    <div class="htmx-indicator hide" id="department-indicator">
-                        <div class="spinner-border spinner-border-sm text-primary" role="status">
-                            <span class="visually-hidden">جاري التحميل...</span>
-                        </div>
+    </style>
+    <form method="post"
+          data-editing="{{ editing|default:'false'|lower }}"
+          data-has-errors="{{ has_post_errors|default:'false'|lower }}">
+        {% csrf_token %}
+        <input type="hidden"
+               name="faculty"
+               id="id_faculty"
+               value="{{ request.user.profile.faculty_id }}">
+        <div id="url-config"
+             data-item-search-url="{% url 'item_search' %}"
+             data-get-item-name-url="{% url 'get_item_name' %}"
+             data-selected-inventory-user="{{ request.user.id }}"
+             data-selected-to-user="{{ form.to_user.value|default:'' }}"
+             class="hide"></div>
+        <input type="hidden"
+               name="approval_status"
+               value="{{ form.approval_status.value|default:form.approval_status.initial }}" />
+        <input type="hidden" name="created_by" value="{{ request.user.id }}" />
+        <div class="card mb-4 overflow-visible">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">نموذج 2: طلب وإذن صرف</h5>
+            </div>
+            <div class="card-body overflow-visible">
+                <div class="row">
+                    <!-- 1. document_number -->
+                    <div class="col-md-3 mb-3">
+                        <label>رقم المستند</label>
+                        <input type="text"
+                               class="form-control"
+                               value="{{ form.instance.document_number|default:'سيتم الإنشاء تلقائياً' }}"
+                               readonly />
                     </div>
-                    <select name="to_department" id="id_to_department" class="form-select"
-                        hx-get="{% url 'department_users_select' %}" hx-trigger="change" hx-target="#to-user-container"
-                        hx-include="[name='to_department']" hx-indicator="#department-indicator" hx-swap="innerHTML"
-                        hx-select="select">
-                        <option value="">---------</option>
-                        {% for value, label in form.to_department.field.choices %}
-                        {% if value %}
-                        <option value="{{ value }}"
-                            {% if form.to_department.value == value|default_if_none:"" %}selected{% endif %}>
-                            {{ label }}
-                        </option>
-                        {% endif %}
-                        {% endfor %}
-                    </select>
-                    {% if form.to_department.errors %}
-                    <div class="text-danger mt-1">{{ form.to_department.errors }}</div>
-                    {% endif %}
-                </div>
-                <!-- 7. to_user -->
-                <div class="col-md-3 mb-3">
-                    <div class="mb-1">{{ form.to_user.label_tag }}</div>
-                    <div class="htmx-indicator hide" id="to-user-indicator">
-                        <div class="spinner-border spinner-border-sm text-primary" role="status">
-                            <span class="visually-hidden">جاري التحميل...</span>
-                        </div>
+                    <!-- 2. document_type -->
+                    <div class="col-md-3 mb-3">
+                        {{ form.document_type.label_tag }}
+                        {{ form.document_type|add_class:"form-select" }}
+                        {% if form.document_type.errors %}<div class="text-danger mt-1">{{ form.document_type.errors }}</div>{% endif %}
                     </div>
-                    <div id="to-user-container">
-                        {% if form.to_user.field.queryset.exists %}
-                        {{ form.to_user|add_class:"form-select" }}
-                        {% else %}
-                        <select class="form-select" disabled>
-                            <option>اختر القسم أولاً</option>
+                    <!-- 3. castody_type -->
+                    <div class="col-md-3 mb-3">
+                        {{ form.castody_type.label_tag }}
+                        {{ form.castody_type|add_class:"form-select" }}
+                        {% if form.castody_type.errors %}<div class="text-danger mt-1">{{ form.castody_type.errors }}</div>{% endif %}
+                    </div>
+                    <!-- 4. from_sub_warehouse -->
+                    <div class="col-md-3 mb-3">
+                        <div class="mb-1">{{ form.from_sub_warehouse.label_tag }}</div>
+                        <select name="from_sub_warehouse"
+                                id="id_from_sub_warehouse"
+                                class="form-select">
+                            <option value="">---------</option>
+                            {% for value, label in form.from_sub_warehouse.field.choices %}
+                                {% if value %}
+                                    <option value="{{ value }}"
+                                            {% if form.from_sub_warehouse.value == value|default_if_none:"" %}selected{% endif %}>
+                                        {{ label }}
+                                    </option>
+                                {% endif %}
+                            {% endfor %}
                         </select>
+                        {% if form.from_sub_warehouse.errors %}
+                            <div class="text-danger mt-1">{{ form.from_sub_warehouse.errors }}</div>
                         {% endif %}
                     </div>
-                    {% if form.to_user.errors %}
-                    <div class="text-danger mt-1">{{ form.to_user.errors }}</div>
-                    {% endif %}
+                    <!-- 5. inventory_user (HIDDEN + AUTO-SET) -->
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">موظف المخزن</label>
+                        <input type="text"
+                               class="form-control"
+                               value="{{ request.user.get_full_name|default:request.user.username }}"
+                               readonly />
+                    </div>
+                    <!-- 6. to_department -->
+                    <div class="col-md-3 mb-3">
+                        <div class="mb-1">{{ form.to_department.label_tag }}</div>
+                        <div class="htmx-indicator hide" id="department-indicator">
+                            <div class="spinner-border spinner-border-sm text-primary" role="status">
+                                <span class="visually-hidden">جاري التحميل...</span>
+                            </div>
+                        </div>
+                        <select name="to_department"
+                                id="id_to_department"
+                                class="form-select"
+                                hx-get="{% url 'department_users_select' %}"
+                                hx-trigger="change"
+                                hx-target="#to-user-container"
+                                hx-include="[name='to_department']"
+                                hx-indicator="#department-indicator"
+                                hx-swap="innerHTML"
+                                hx-select="select">
+                            <option value="">---------</option>
+                            {% for value, label in form.to_department.field.choices %}
+                                {% if value %}
+                                    <option value="{{ value }}"
+                                            {% if form.to_department.value == value|default_if_none:"" %}selected{% endif %}>
+                                        {{ label }}
+                                    </option>
+                                {% endif %}
+                            {% endfor %}
+                        </select>
+                        {% if form.to_department.errors %}<div class="text-danger mt-1">{{ form.to_department.errors }}</div>{% endif %}
+                    </div>
+                    <!-- 7. to_user -->
+                    <div class="col-md-3 mb-3">
+                        <div class="mb-1">{{ form.to_user.label_tag }}</div>
+                        <div class="htmx-indicator hide" id="to-user-indicator">
+                            <div class="spinner-border spinner-border-sm text-primary" role="status">
+                                <span class="visually-hidden">جاري التحميل...</span>
+                            </div>
+                        </div>
+                        <div id="to-user-container">
+                            {% if form.to_user.field.queryset.exists %}
+                                {{ form.to_user|add_class:"form-select" }}
+                            {% else %}
+                                <select class="form-select" disabled>
+                                    <option>اختر القسم أولاً</option>
+                                </select>
+                            {% endif %}
+                        </div>
+                        {% if form.to_user.errors %}<div class="text-danger mt-1">{{ form.to_user.errors }}</div>{% endif %}
+                    </div>
+                    <!-- 8. to_sub_warehouse -->
+                    <div class="col-md-3 mb-3" id="to-sub-warehouse-container">
+                        {{ form.to_sub_warehouse.label_tag }}
+                        {{ form.to_sub_warehouse|add_class:"form-select" }}
+                        {% if form.to_sub_warehouse.errors %}<div class="text-danger mt-1">{{ form.to_sub_warehouse.errors }}</div>{% endif %}
+                    </div>
+                    <!-- 9. Other fields -->
+                    {% for field in form %}
+                        {% if field.name not in "document_number document_type from_sub_warehouse inventory_user to_department to_user to_sub_warehouse castody_type notes transaction_type created_by approval_status faculty" %}
+                            <div class="col-md-3 mb-3">
+                                {{ field.label_tag }}
+                                {% if field.field.widget.input_type == 'select' %}
+                                    {{ field|add_class:"form-select" }}
+                                {% else %}
+                                    {{ field|add_class:"form-control" }}
+                                {% endif %}
+                                {% if field.errors %}<div class="text-danger mt-1">{{ field.errors }}</div>{% endif %}
+                            </div>
+                        {% endif %}
+                    {% endfor %}
                 </div>
-                <!-- 8. to_sub_warehouse -->
-                <div class="col-md-3 mb-3" id="to-sub-warehouse-container">
-                    {{ form.to_sub_warehouse.label_tag }}
-                    {{ form.to_sub_warehouse|add_class:"form-select" }}
-                    {% if form.to_sub_warehouse.errors %}
-                    <div class="text-danger mt-1">{{ form.to_sub_warehouse.errors }}</div>
-                    {% endif %}
+                <!-- 10. Notes -->
+                <div class="row">
+                    <div class="col-12 mb-3">
+                        {{ form.notes.label_tag }}
+                        {{ form.notes|add_class:"form-control" }}
+                        {% if form.notes.errors %}<div class="text-danger mt-1">{{ form.notes.errors }}</div>{% endif %}
+                    </div>
                 </div>
-                <!-- 9. Other fields -->
-                {% for field in form %}
-                {% if field.name not in "document_number document_type from_sub_warehouse inventory_user to_department to_user to_sub_warehouse castody_type notes transaction_type created_by approval_status faculty" %}
-                <div class="col-md-3 mb-3">
-                    {{ field.label_tag }}
-                    {% if field.field.widget.input_type == 'select' %}
-                    {{ field|add_class:"form-select" }}
-                    {% else %}
-                    {{ field|add_class:"form-control" }}
-                    {% endif %}
-                    {% if field.errors %}
-                    <div class="text-danger mt-1">{{ field.errors }}</div>
-                    {% endif %}
-                </div>
-                {% endif %}
-                {% endfor %}
             </div>
-            <!-- 10. Notes -->
-            <div class="row">
-                <div class="col-12 mb-3">
-                    {{ form.notes.label_tag }}
-                    {{ form.notes|add_class:"form-control" }}
-                    {% if form.notes.errors %}
-                    <div class="text-danger mt-1">{{ form.notes.errors }}</div>
-                    {% endif %}
+        </div>
+        <!-- 11. Formset -->
+        <div class="card mb-4 overflow-visible">
+            {{ details_formset.management_form }}
+            <div id="formset-config"
+                 data-prefix="{{ details_formset.prefix }}"
+                 class="hide"></div>
+            <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">تفاصيل الأصناف</h5>
+                <button type="button" id="add-row" class="btn btn-light btn-sm">إضافة صنف +</button>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive overflow-visible">
+                    <table class="table table-bordered form-table" id="details-table">
+                        <thead class="table-light">
+                            <tr>
+                                <th width="450px">الصنف</th>
+                                <th width="110px">الكمية المطلوبة</th>
+                                <th width="110px">الكمية المنصرفة</th>
+                                <th width="140px">سعر العهدة</th>
+                                <th width="90px">الحالة</th>
+                                <th>ملاحظات</th>
+                                <th class="operations"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for form in details_formset %}
+                                <tr class="form-row">
+                                    {{ form.id }}
+                                    <td>
+                                        <input type="hidden"
+                                               name="{{ details_formset.prefix }}-{{ forloop.counter0 }}-item"
+                                               id="id_{{ details_formset.prefix }}-{{ forloop.counter0 }}-item"
+                                               class="item-hidden-id"
+                                               value="{{ form.item.value|default:'' }}" />
+                                        <input type="hidden"
+                                               name="{{ details_formset.prefix }}-{{ forloop.counter0 }}-stock"
+                                               class="item-stock"
+                                               value="{{ form.initial.stock|default:'' }}" />
+                                        <input type="text"
+                                               class="form-control form-control-sm item-search"
+                                               placeholder="ابحث عن الصنف..."
+                                               autocomplete="off"
+                                               value="" />
+                                    </td>
+                                    <td>
+                                        {{ form.order_quantity|add_class:"form-control form-control-sm" }}
+                                        {% if form.order_quantity.errors %}<div class="text-danger small">{{ form.order_quantity.errors }}</div>{% endif %}
+                                    </td>
+                                    <td>
+                                        {{ form.approved_quantity|add_class:"form-control form-control-sm" }}
+                                        {% if form.approved_quantity.errors %}
+                                            <div class="text-danger small">{{ form.approved_quantity.errors }}</div>
+                                        {% endif %}
+                                    </td>
+                                    <!-- PRICE COLUMN WITH PRE-FILL + EDIT -->
+                                    <td>
+                                        {{ form.price|add_class:"form-control form-control-sm price-input" }}
+                                        {% if form.price.errors %}<div class="text-danger small">{{ form.price.errors }}</div>{% endif %}
+                                        {% if form.warnings.price %}
+                                            <div class="text-warning small mt-1">
+                                                <i class="bi bi-exclamation-triangle"></i> {{ form.warnings.price }}
+                                            </div>
+                                        {% endif %}
+                                        {% if form.fields.price.help_text %}
+                                            <small class="text-muted d-block mt-1">{{ form.fields.price.help_text }}</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ form.status|add_class:"form-select form-select-sm" }}</td>
+                                    <td>
+                                        {{ form.notes|add_class:"form-control form-control-sm border-0 bg-transparent shadow-none" }}
+                                        {% if form.notes.errors %}<div class="text-danger small">{{ form.notes.errors }}</div>{% endif %}
+                                    </td>
+                                    <td class="text-center align-middle">
+                                        <div class="hide-delete">{{ form.DELETE }}</div>
+                                        <button type="button"
+                                                class="btn btn-sm btn-link text-danger delete-row"
+                                                title="حذف الصنف">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
-    </div>
-
-    <!-- 11. Formset -->
-    <div class="card mb-4 overflow-visible">
-        {{ details_formset.management_form }}
-        <div id="formset-config" data-prefix="{{ details_formset.prefix }}" class="hide"></div>
-        <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">تفاصيل الأصناف</h5>
-            <button type="button" id="add-row" class="btn btn-light btn-sm">إضافة صنف +</button>
+        <div class="d-flex justify-content-between">
+            <a href="{% url 'transaction_list' %}" class="btn btn-secondary">إلغاء</a>
+            <button type="submit" class="btn btn-primary">حفظ</button>
         </div>
-        <div class="card-body">
-            <div class="table-responsive overflow-visible">
-                <table class="table table-bordered form-table" id="details-table">
-                    <thead class="table-light">
-                        <tr>
-                            <th width="450px">الصنف</th>
-                            <th width="110px">الكمية المطلوبة</th>
-                            <th width="110px">الكمية المنصرفة</th>
-                            <th width="140px">سعر العهدة</th>
-                            <th width="90px">الحالة</th>
-                            <th>ملاحظات</th>
-                            <th class="operations"></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for form in details_formset %}
-                        <tr class="form-row">
-                            {{ form.id }}
-                            <td>
-                                <input type="hidden" name="{{ details_formset.prefix }}-{{ forloop.counter0 }}-item"
-                                    id="id_{{ details_formset.prefix }}-{{ forloop.counter0 }}-item"
-                                    class="item-hidden-id" value="{{ form.item.value|default:'' }}" />
-                                <input type="hidden" name="{{ details_formset.prefix }}-{{ forloop.counter0 }}-stock"
-                                    class="item-stock" value="{{ form.initial.stock|default:'' }}" />
-                                <input type="text" class="form-control form-control-sm item-search"
-                                    placeholder="ابحث عن الصنف..." autocomplete="off" value="" />
-                            </td>
-                            <td>{{ form.order_quantity|add_class:"form-control form-control-sm" }}
-                                {% if form.order_quantity.errors %}
-                                <div class="text-danger small">{{ form.order_quantity.errors }}</div>
-                                {% endif %}
-                            </td>
-                            <td>{{ form.approved_quantity|add_class:"form-control form-control-sm" }}
-                                {% if form.approved_quantity.errors %}
-                                <div class="text-danger small">{{ form.approved_quantity.errors }}</div>
-                                {% endif %}
-                            </td>
-                            <!-- PRICE COLUMN WITH PRE-FILL + EDIT -->
-                            <td>
-                                {{ form.price|add_class:"form-control form-control-sm price-input" }}
-                                {% if form.price.errors %}
-                                <div class="text-danger small">{{ form.price.errors }}</div>
-                                {% endif %}
-                                {% if form.warnings.price %}
-                                <div class="text-warning small mt-1">
-                                    <i class="bi bi-exclamation-triangle"></i> {{ form.warnings.price }}
-                                </div>
-                                {% endif %}
-                                {% if form.fields.price.help_text %}
-                                <small class="text-muted d-block mt-1">{{ form.fields.price.help_text }}</small>
-                                {% endif %}
-                            </td>
-                            <td>{{ form.status|add_class:"form-select form-select-sm" }}</td>
-                            <td>{{ form.notes|add_class:"form-control form-control-sm border-0 bg-transparent shadow-none" }}
-                                {% if form.notes.errors %}
-                                <div class="text-danger small">{{ form.notes.errors }}</div>
-                                {% endif %}
-                            </td>
-                            <td class="text-center align-middle">
-                                <div class="hide-delete">{{ form.DELETE }}</div>
-                                <button type="button" class="btn btn-sm btn-link text-danger delete-row"
-                                    title="حذف الصنف">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <div class="d-flex justify-content-between">
-        <a href="{% url 'transaction_list' %}" class="btn btn-secondary">إلغاء</a>
-        <button type="submit" class="btn btn-primary">حفظ</button>
-    </div>
-</form>
+    </form>
 {% endblock content %}
-
 {% block scripts %}
-<script>
+    <script>
     document.addEventListener('DOMContentLoaded', function () {
         // CONFIGURATION
         const urlConfig = document.getElementById('url-config');
@@ -946,5 +950,5 @@
 
         console.log(`Ready | prefix: ${prefix} | editing: ${isEditing} | hasPostErrors: ${hasPostErrors} | forms: ${totalFormsInput.value}`);
     });
-</script>
+    </script>
 {% endblock scripts %}

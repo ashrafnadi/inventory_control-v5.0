@@ -11,7 +11,9 @@ def settings_processor(request):
     try:
         system_settings = SystemSettings.get()
         idle_timeout_ms = system_settings.idle_timeout_minutes * 60 * 1000
-        session_warning_ms = max(system_settings.session_warning_minutes * 60 * 1000, 30000)
+        session_warning_ms = max(
+            system_settings.session_warning_minutes * 60 * 1000, 30000
+        )
     except Exception:
         system_settings = None
         idle_timeout_ms = settings.SESSION_COOKIE_AGE * 1000
@@ -29,7 +31,9 @@ def settings_processor(request):
         user_display_name = user.get_full_name() or user.username
         department = getattr(getattr(user, "profile", None), "department", None)
         faculty = getattr(getattr(user, "profile", None), "faculty", None)
-        department_name = department.name if department else (faculty.name if faculty else "")
+        department_name = (
+            department.name if department else (faculty.name if faculty else "")
+        )
 
     db_engine = settings.DATABASES["default"]["ENGINE"]
     is_postgres = "postgresql" in db_engine.lower()

@@ -17,12 +17,8 @@
             <div class="card text-center shadow-sm">
                 <div class="card-body">
                     <i class="bi bi-building text-primary icon"></i>
-                    <h6 class="mt-2">
-                        الجهة
-                    </h6>
-                    <p class="fw-bold">
-                        {{ user_faculty.name }}
-                    </p>
+                    <h6 class="mt-2">الجهة</h6>
+                    <p class="fw-bold">{{ user_faculty.name }}</p>
                 </div>
             </div>
         </div>
@@ -30,12 +26,8 @@
             <div class="card text-center shadow-sm">
                 <div class="card-body">
                     <i class="bi bi-house-door-fill text-primary icon"></i>
-                    <h6 class="mt-2">
-                        إجمالي المخازن
-                    </h6>
-                    <p class="display-6 text-primary fw-bold mb-0">
-                        {{ warehouses_count }}
-                    </p>
+                    <h6 class="mt-2">إجمالي المخازن</h6>
+                    <p class="display-6 text-primary fw-bold mb-0">{{ warehouses_count }}</p>
                 </div>
             </div>
         </div>
@@ -43,12 +35,8 @@
             <div class="card text-center shadow-sm">
                 <div class="card-body">
                     <i class="bi bi-grid-3x3-gap text-success icon"></i>
-                    <h6 class="mt-2">
-                        إجمالي الأصناف
-                    </h6>
-                    <p class="display-6 text-success fw-bold mb-0">
-                        {{ items_count }}
-                    </p>
+                    <h6 class="mt-2">إجمالي الأصناف</h6>
+                    <p class="display-6 text-success fw-bold mb-0">{{ items_count }}</p>
                 </div>
             </div>
         </div>
@@ -66,12 +54,8 @@
                     <div class="card shadow-sm text-center h-100">
                         <div class="card-body d-flex flex-column justify-content-center">
                             <i class="bi bi-tags-fill text-success icon"></i>
-                            <h6 class="mt-2 mb-1">
-                                الفئات
-                            </h6>
-                            <p class="display-6 text-success fw-bold mb-0">
-                                {{ wh_data.categories_count }}
-                            </p>
+                            <h6 class="mt-2 mb-1">الفئات</h6>
+                            <p class="display-6 text-success fw-bold mb-0">{{ wh_data.categories_count }}</p>
                         </div>
                     </div>
                 </div>
@@ -79,12 +63,8 @@
                     <div class="card shadow-sm text-center h-100">
                         <div class="card-body d-flex flex-column justify-content-center">
                             <i class="bi bi-boxes text-warning icon"></i>
-                            <h6 class="mt-2 mb-1">
-                                الأصناف
-                            </h6>
-                            <p class="display-6 text-warning fw-bold mb-0">
-                                {{ wh_data.items_count }}
-                            </p>
+                            <h6 class="mt-2 mb-1">الأصناف</h6>
+                            <p class="display-6 text-warning fw-bold mb-0">{{ wh_data.items_count }}</p>
                         </div>
                     </div>
                 </div>
@@ -93,9 +73,7 @@
             <div class="row g-4">
                 <div class="col-md-6">
                     <div class="card shadow-sm h-100">
-                        <div class="card-header bg-primary text-white text-center">
-                            الأصناف حسب الفئة
-                        </div>
+                        <div class="card-header bg-primary text-white text-center">الأصناف حسب الفئة</div>
                         <div class="card-body">
                             <div class="chart-container">
                                 <canvas id="chartCat_{{ wh_data.warehouse.id }}"></canvas>
@@ -105,9 +83,7 @@
                 </div>
                 <div class="col-md-6">
                     <div class="card shadow-sm h-100">
-                        <div class="card-header bg-warning text-dark text-center">
-                            حالة المخزون
-                        </div>
+                        <div class="card-header bg-warning text-dark text-center">حالة المخزون</div>
                         <div class="card-body">
                             <div class="chart-container">
                                 <canvas id="chartStock_{{ wh_data.warehouse.id }}"></canvas>
@@ -118,13 +94,9 @@
             </div>
         </div>
     {% empty %}
-        <p class="text-muted">
-            لا توجد مخازن مرتبطة بجهتك.
-        </p>
+        <p class="text-muted">لا توجد مخازن مرتبطة بجهتك.</p>
     {% endfor %}
-    <div class="mt-5">
-        {% include "administration/partials/low_stock_items.html" %}
-    </div>
+    <div class="mt-5">{% include "administration/partials/low_stock_items.html" %}</div>
 {% endblock content %}
 {% block scripts %}
     <script type="text/javascript">
@@ -155,6 +127,12 @@
         })
     </script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    {% for wh_data in per_warehouse_data %}
+        {% with cat_id="cat_data_"|add:wh_data.warehouse.id|stringformat:"s" stock_id="stock_data_"|add:wh_data.warehouse.id|stringformat:"s" %}
+            {{ wh_data.chart_category_json|json_script:cat_id }}
+            {{ wh_data.chart_stock_json|json_script:stock_id }}
+        {% endwith %}
+    {% endfor %}
     <script>
     const barOptions = {
         responsive: true,
@@ -171,17 +149,23 @@
     };
 
     {% for wh_data in per_warehouse_data %}
-        new Chart(document.getElementById('chartCat_{{ wh_data.warehouse.id }}').getContext('2d'), {
-            type: 'bar',
-            data: JSON.parse('{{ wh_data.chart_category_json|escapejs }}'),
-            options: barOptions
-        });
+        (function() {
+            const wh_id = '{{ wh_data.warehouse.id }}';
+            const catData = JSON.parse(document.getElementById('cat_data_' + wh_id).textContent);
+            const stockData = JSON.parse(document.getElementById('stock_data_' + wh_id).textContent);
+            
+            new Chart(document.getElementById('chartCat_' + wh_id).getContext('2d'), {
+                type: 'bar',
+                data: JSON.parse(catData),
+                options: barOptions
+            });
 
-        new Chart(document.getElementById('chartStock_{{ wh_data.warehouse.id }}').getContext('2d'), {
-            type: 'doughnut',
-            data: JSON.parse('{{ wh_data.chart_stock_json|escapejs }}'),
-            options: doughnutOptions
-        });
+            new Chart(document.getElementById('chartStock_' + wh_id).getContext('2d'), {
+                type: 'doughnut',
+                data: JSON.parse(stockData),
+                options: doughnutOptions
+            });
+        })();
     {% endfor %}
     </script>
 {% endblock scripts %}

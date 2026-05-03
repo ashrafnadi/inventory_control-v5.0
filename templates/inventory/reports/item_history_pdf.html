@@ -255,31 +255,36 @@
                 font-size: 8px;
                 color: #666;
             }
+            .bidi-embed { unicode-bidi: embed; }
+            .old-balance { font-size: 8px; color: #666; }
+            .text-left { text-align: left; }
+            .bg-success-light { background: #d4edda; }
+            .bg-warning-light { background: #fff3cd; }
+            .mt-10 { margin-top: 10px; }
+            .mt-20 { margin-top: 20px; }
+            .text-strike { text-decoration: line-through; color: #6c757d; }
+            .summary-title-custom { margin-bottom: 12px; text-align: center; color: #333; }
+            .text-muted-custom { color: #6c757d; }
+            .opacity-70 { opacity: 0.7; }
+            .text-danger-custom { color: #dc3545; }
+            .text-success-custom { color: #28a745; }
+            .mismatch-text { color: #dc3545; font-weight: bold; margin-top: 8px; font-size: 10px; }
+            .empty-state-box { text-align: center; padding: 30px; border: 1px solid #ddd; margin: 20px 0; }
+            .text-gray-custom { color: #666; }
+            .footer-note { margin-top: 5px; font-size: 7px; color: #999; }
         </style>
     </head>
     <body>
         <!-- Header -->
         <div class="header">
-            <div class="company-info">
-                {{ request.user.profile.faculty.name }} — سجل حركة الصنف
-            </div>
-            <h1>
-                سجل حركة الصنف: {{ item.name }}
-            </h1>
+            <div class="company-info">{{ request.user.profile.faculty.name }} — سجل حركة الصنف</div>
+            <h1>سجل حركة الصنف: {{ item.name }}</h1>
         </div>
         <div class="report-info">
-            <div>
-                تاريخ التقرير: {{ current_date|date:"Y-m-d H:i" }}
-            </div>
-            <div>
-                المستخدم: {{ request.user.get_full_name }}
-            </div>
-            <div>
-                الكود: {{ item.code|default:"-" }}
-            </div>
-            <div>
-                إجمالي الحركات: {{ all_transactions_count }}
-            </div>
+            <div>تاريخ التقرير: {{ current_date|date:"Y-m-d H:i" }}</div>
+            <div>المستخدم: {{ request.user.get_full_name }}</div>
+            <div>الكود: {{ item.code|default:"-" }}</div>
+            <div>إجمالي الحركات: {{ all_transactions_count }}</div>
         </div>
         <!-- Mismatch warning -->
         {% if not balance_matches %}
@@ -324,60 +329,30 @@
             <table>
                 <thead>
                     <tr>
-                        <th width="7%">
-                            التاريخ
-                        </th>
-                        <th width="10%">
-                            رقم المستند
-                        </th>
-                        <th width="8%">
-                            النوع
-                        </th>
-                        <th width="7%">
-                            الكمية
-                        </th>
-                        <th width="7%">
-                            الحالة
-                        </th>
-                        <th width="14%">
-                            المصدر / الوجهة
-                        </th>
-                        <th width="8%">
-                            موظف المخزن
-                        </th>
-                        <th width="8%">
-                            القسم
-                        </th>
-                        <th width="13%">
-                            الملاحظات
-                        </th>
-                        <th width="8%" class="balance-column">
-                            الرصيد
-                        </th>
+                        <th width="7%">التاريخ</th>
+                        <th width="10%">رقم المستند</th>
+                        <th width="8%">النوع</th>
+                        <th width="7%">الكمية</th>
+                        <th width="7%">الحالة</th>
+                        <th width="14%">المصدر / الوجهة</th>
+                        <th width="8%">موظف المخزن</th>
+                        <th width="8%">القسم</th>
+                        <th width="13%">الملاحظات</th>
+                        <th width="8%" class="balance-column">الرصيد</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr class="section-title">
-                        <td colspan="10">
-                            الحركات المعتمدة الفعّالة (تؤثر على الرصيد)
-                        </td>
+                        <td colspan="10">الحركات المعتمدة الفعّالة (تؤثر على الرصيد)</td>
                     </tr>
                     {% for t in transactions_with_balance %}
                         {% if t.affects_balance %}
                             <tr>
-                                <td>
-                                    {{ t.transaction.created_at|date:"Y-m-d" }}
-                                </td>
-                                <td dir="ltr" style="unicode-bidi:embed;">
-                                    {{ t.transaction.document_number }}
-                                </td>
-                                <td>
-                                    {{ t.transaction.get_transaction_type_display|truncatechars:8 }}
-                                </td>
+                                <td>{{ t.transaction.created_at|date:"Y-m-d" }}</td>
+                                <td dir="ltr" class="bidi-embed">{{ t.transaction.document_number }}</td>
+                                <td>{{ t.transaction.get_transaction_type_display|truncatechars:8 }}</td>
                                 <td class="{% if t.signed_qty > 0 %}qty-in{% else %}qty-out{% endif %}">
-                                    {% if t.signed_qty > 0 %}
-                                        +
-                                    {% endif %}
+                                    {% if t.signed_qty > 0 %}+{% endif %}
                                     {{ t.signed_qty }}
                                 </td>
                                 <td>
@@ -385,30 +360,20 @@
                                 </td>
                                 <td>
                                     {% if t.transaction.castody_type == 'W' %}
-                                        {% if t.transaction.from_sub_warehouse %}
-                                            م: {{ t.transaction.from_sub_warehouse.name }}
-                                        {% endif %}
-                                        {% if t.transaction.from_sub_warehouse and t.transaction.to_sub_warehouse %}
-                                            <br />
-                                        {% endif %}
-                                        {% if t.transaction.to_sub_warehouse %}
-                                            إ: {{ t.transaction.to_sub_warehouse.name }}
-                                        {% endif %}
+                                        {% if t.transaction.from_sub_warehouse %}م: {{ t.transaction.from_sub_warehouse.name }}{% endif %}
+                                        {% if t.transaction.from_sub_warehouse and t.transaction.to_sub_warehouse %}<br />{% endif %}
+                                        {% if t.transaction.to_sub_warehouse %}إ: {{ t.transaction.to_sub_warehouse.name }}{% endif %}
                                     {% else %}
                                         {% if t.transaction.from_user %}
                                             م: {{ t.transaction.from_user.get_full_name|default:t.transaction.from_user.username }}
                                         {% endif %}
-                                        {% if t.transaction.from_user and t.transaction.to_user %}
-                                            <br />
-                                        {% endif %}
+                                        {% if t.transaction.from_user and t.transaction.to_user %}<br />{% endif %}
                                         {% if t.transaction.to_user %}
                                             إ: {{ t.transaction.to_user.get_full_name|default:t.transaction.to_user.username }}
                                         {% endif %}
                                     {% endif %}
                                 </td>
-                                <td>
-                                    {{ t.transaction.inventory_user.get_full_name|default:"-" }}
-                                </td>
+                                <td>{{ t.transaction.inventory_user.get_full_name|default:"-" }}</td>
                                 <td>
                                     {% if t.transaction.from_department %}
                                         {{ t.transaction.from_department.name }}
@@ -418,13 +383,11 @@
                                         -
                                     {% endif %}
                                 </td>
-                                <td>
-                                    {{ t.transaction.notes|truncatechars:25|default:"-" }}
-                                </td>
+                                <td>{{ t.transaction.notes|truncatechars:25|default:"-" }}</td>
                                 <td class="balance-column">
                                     <strong>{{ t.balance_after }}</strong>
                                     <br />
-                                    <span style="font-size:8px;color:#666;">({{ t.balance_before }})</span>
+                                    <span class="old-balance">({{ t.balance_before }})</span>
                                 </td>
                             </tr>
                         {% endif %}
@@ -432,35 +395,23 @@
                 </tbody>
                 <tfoot>
                     <tr class="total-row">
-                        <td colspan="3" style="text-align:left;">
-                            إجمالي الوارد المعتمد:
-                        </td>
-                        <td class="qty-in">
-                            +{{ total_in }}
-                        </td>
+                        <td colspan="3" class="text-left">إجمالي الوارد المعتمد:</td>
+                        <td class="qty-in">+{{ total_in }}</td>
                         <td colspan="6">
                             <small>إضافات + إرجاعات + نقل وارد</small>
                         </td>
                     </tr>
                     <tr class="total-row">
-                        <td colspan="3" style="text-align:left;">
-                            إجمالي الصادر المعتمد:
-                        </td>
-                        <td class="qty-out">
-                            -{{ total_out }}
-                        </td>
+                        <td colspan="3" class="text-left">إجمالي الصادر المعتمد:</td>
+                        <td class="qty-out">-{{ total_out }}</td>
                         <td colspan="6">
                             <small>صرف + نقل خارج</small>
                         </td>
                     </tr>
-                    <tr class="total-row" style="background:#d4edda;">
-                        <td colspan="3" style="text-align:left;">
-                            الصافي:
-                        </td>
+                    <tr class="total-row bg-success-light">
+                        <td colspan="3" class="text-left">الصافي:</td>
                         <td class="{% if net_qty >= 0 %}qty-in{% else %}qty-out{% endif %}">
-                            {% if net_qty >= 0 %}
-                                +
-                            {% endif %}
+                            {% if net_qty >= 0 %}+{% endif %}
                             {{ net_qty }}
                         </td>
                         <td colspan="6">
@@ -471,33 +422,17 @@
             </table>
             <!-- SECTION 2 — CANCELLED ORIGINALS (is_reversed=True, audit trail only) -->
             {% if total_cancelled_count > 0 %}
-                <table style="margin-top:10px;">
+                <table class="mt-10">
                     <thead>
                         <tr>
-                            <th width="9%">
-                                التاريخ
-                            </th>
-                            <th width="13%">
-                                رقم المستند
-                            </th>
-                            <th width="10%">
-                                النوع
-                            </th>
-                            <th width="8%">
-                                الكمية الأصلية
-                            </th>
-                            <th width="8%">
-                                الحالة
-                            </th>
-                            <th width="15%">
-                                المصدر / الوجهة
-                            </th>
-                            <th width="10%">
-                                موظف المخزن
-                            </th>
-                            <th width="27%">
-                                الملاحظات
-                            </th>
+                            <th width="9%">التاريخ</th>
+                            <th width="13%">رقم المستند</th>
+                            <th width="10%">النوع</th>
+                            <th width="8%">الكمية الأصلية</th>
+                            <th width="8%">الحالة</th>
+                            <th width="15%">المصدر / الوجهة</th>
+                            <th width="10%">موظف المخزن</th>
+                            <th width="27%">الملاحظات</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -511,18 +446,10 @@
                         {% for t in transactions_with_balance %}
                             {% if t.is_cancelled %}
                                 <tr class="cancelled-row">
-                                    <td>
-                                        {{ t.transaction.created_at|date:"Y-m-d" }}
-                                    </td>
-                                    <td dir="ltr" style="unicode-bidi:embed;">
-                                        {{ t.transaction.document_number }}
-                                    </td>
-                                    <td>
-                                        {{ t.transaction.get_transaction_type_display|truncatechars:8 }}
-                                    </td>
-                                    <td style="text-decoration:line-through; color:#6c757d;">
-                                        {{ t.qty }}
-                                    </td>
+                                    <td>{{ t.transaction.created_at|date:"Y-m-d" }}</td>
+                                    <td dir="ltr" class="bidi-embed">{{ t.transaction.document_number }}</td>
+                                    <td>{{ t.transaction.get_transaction_type_display|truncatechars:8 }}</td>
+                                    <td class="text-strike">{{ t.qty }}</td>
                                     <td>
                                         <span class="badge badge-cancelled">ملغى</span>
                                     </td>
@@ -531,16 +458,10 @@
                                             م: {{ t.transaction.from_sub_warehouse.name }}
                                             <br />
                                         {% endif %}
-                                        {% if t.transaction.to_sub_warehouse %}
-                                            إ: {{ t.transaction.to_sub_warehouse.name }}
-                                        {% endif %}
+                                        {% if t.transaction.to_sub_warehouse %}إ: {{ t.transaction.to_sub_warehouse.name }}{% endif %}
                                     </td>
-                                    <td>
-                                        {{ t.transaction.inventory_user.get_full_name|default:"-" }}
-                                    </td>
-                                    <td>
-                                        {{ t.transaction.notes|truncatechars:40|default:"-" }}
-                                    </td>
+                                    <td>{{ t.transaction.inventory_user.get_full_name|default:"-" }}</td>
+                                    <td>{{ t.transaction.notes|truncatechars:40|default:"-" }}</td>
                                 </tr>
                             {% endif %}
                         {% endfor %}
@@ -549,40 +470,20 @@
             {% endif %}
             <!-- SUMMARY — page break before -->
             <div class="summary-section">
-                <h3 style="margin-bottom:12px; text-align:center; color:#333;">
-                    ملخص الكميات الكلي
-                </h3>
+                <h3 class="summary-title-custom">ملخص الكميات الكلي</h3>
                 <table class="summary-table">
                     <thead>
                         <tr>
-                            <th>
-                                الوارد المعتمد
-                            </th>
-                            <th>
-                                الصادر المعتمد
-                            </th>
-                            <th>
-                                الصافي المعتمد
-                            </th>
-                            {% if total_cancelled_count > 0 %}
-                                <th>
-                                    سندات ملغاة
-                                </th>
-                            {% endif %}
+                            <th>الوارد المعتمد</th>
+                            <th>الصادر المعتمد</th>
+                            <th>الصافي المعتمد</th>
+                            {% if total_cancelled_count > 0 %}<th>سندات ملغاة</th>{% endif %}
                             {% if has_pending %}
-                                <th>
-                                    وارد معلق
-                                </th>
-                                <th>
-                                    صادر معلق
-                                </th>
-                                <th>
-                                    إجمالي معلق
-                                </th>
+                                <th>وارد معلق</th>
+                                <th>صادر معلق</th>
+                                <th>إجمالي معلق</th>
                             {% endif %}
-                            <th class="cell-final">
-                                الرصيد النهائي
-                            </th>
+                            <th class="cell-final">الرصيد النهائي</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -599,32 +500,30 @@
                             </td>
                             <td class="{% if net_qty >= 0 %}qty-in{% else %}qty-out{% endif %}">
                                 <strong>
-                                    {% if net_qty >= 0 %}
-                                        +
-                                    {% endif %}
+                                    {% if net_qty >= 0 %}+{% endif %}
                                 {{ net_qty }}</strong>
                                 <br />
                                 <small>{{ item.get_unit_display }}</small>
                             </td>
                             {% if total_cancelled_count > 0 %}
-                                <td style="color:#6c757d;">
+                                <td class="text-muted-custom">
                                     <strong>{{ total_cancelled_count }} سند</strong>
                                     <br />
                                     <small>{{ total_cancelled_qty }} {{ item.get_unit_display }}</small>
                                 </td>
                             {% endif %}
                             {% if has_pending %}
-                                <td class="qty-in" style="opacity:0.7;">
+                                <td class="qty-in opacity-70">
                                     <strong>+{{ pending_in }}</strong>
                                     <br />
                                     <small>{{ item.get_unit_display }}</small>
                                 </td>
-                                <td class="qty-out" style="opacity:0.7;">
+                                <td class="qty-out opacity-70">
                                     <strong>-{{ pending_out }}</strong>
                                     <br />
                                     <small>{{ item.get_unit_display }}</small>
                                 </td>
-                                <td style="opacity:0.7;">
+                                <td class="opacity-70">
                                     <strong>{{ total_pending_qty }}</strong>
                                     <br />
                                     <small>{{ item.get_unit_display }} — لم يعتمد بعد</small>
@@ -639,46 +538,23 @@
                     </tbody>
                 </table>
                 {% if not balance_matches %}
-                    <p style="color:#dc3545;
-                              font-weight:bold;
-                              margin-top:8px;
-                              font-size:10px">
-                        ⚠ الكمية المخزنة في النظام: {{ current_quantity }} — يوجد فارق، يُرجى مراجعة البيانات.
-                    </p>
+                    <p class="mismatch-text">⚠ الكمية المخزنة في النظام: {{ current_quantity }} — يوجد فارق، يُرجى مراجعة البيانات.</p>
                 {% endif %}
             </div>
             <!-- SECTION 3 — PENDING TRANSACTIONS (separate table after summary) -->
             {% if has_pending %}
-                <table style="margin-top:20px;">
+                <table class="mt-20">
                     <thead>
                         <tr>
-                            <th width="9%">
-                                التاريخ
-                            </th>
-                            <th width="13%">
-                                رقم المستند
-                            </th>
-                            <th width="10%">
-                                النوع
-                            </th>
-                            <th width="8%">
-                                الكمية
-                            </th>
-                            <th width="8%">
-                                الاتجاه
-                            </th>
-                            <th width="15%">
-                                المصدر / الوجهة
-                            </th>
-                            <th width="10%">
-                                موظف المخزن
-                            </th>
-                            <th width="10%">
-                                القسم
-                            </th>
-                            <th width="17%">
-                                الملاحظات
-                            </th>
+                            <th width="9%">التاريخ</th>
+                            <th width="13%">رقم المستند</th>
+                            <th width="10%">النوع</th>
+                            <th width="8%">الكمية</th>
+                            <th width="8%">الاتجاه</th>
+                            <th width="15%">المصدر / الوجهة</th>
+                            <th width="10%">موظف المخزن</th>
+                            <th width="10%">القسم</th>
+                            <th width="17%">الملاحظات</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -691,62 +567,39 @@
                         {% for t in transactions_with_balance %}
                             {% if t.is_pending %}
                                 <tr class="pending-row">
-                                    <td>
-                                        {{ t.transaction.created_at|date:"Y-m-d" }}
-                                    </td>
-                                    <td dir="ltr" style="unicode-bidi:embed;">
-                                        {{ t.transaction.document_number }}
-                                    </td>
-                                    <td>
-                                        {{ t.transaction.get_transaction_type_display|truncatechars:8 }}
-                                    </td>
-                                    <td class="{% if t.signed_qty > 0 %}
-                                                   qty-in
-                                               {% else %}
-                                                   qty-out
-                                               {% endif %}"
-                                        style="opacity:0.7">
+                                    <td>{{ t.transaction.created_at|date:"Y-m-d" }}</td>
+                                    <td dir="ltr" class="bidi-embed">{{ t.transaction.document_number }}</td>
+                                    <td>{{ t.transaction.get_transaction_type_display|truncatechars:8 }}</td>
+                                    <td class="{% if t.signed_qty > 0 %} qty-in {% else %} qty-out {% endif %} opacity-70">
                                         (
-                                        {% if t.signed_qty > 0 %}
-                                            +
-                                        {% endif %}
+                                        {% if t.signed_qty > 0 %}+{% endif %}
                                         {{ t.signed_qty }})
                                     </td>
                                     <td>
                                         {% if t.direction == "in" %}
-                                            <span style="color:#28a745;">▼ وارد</span>
+                                            <span class="text-success-custom">▼ وارد</span>
                                         {% elif t.direction == "out" %}
-                                            <span style="color:#dc3545;">▲ صادر</span>
+                                            <span class="text-danger-custom">▲ صادر</span>
                                         {% else %}
                                             -
                                         {% endif %}
                                     </td>
                                     <td>
                                         {% if t.transaction.castody_type == 'W' %}
-                                            {% if t.transaction.from_sub_warehouse %}
-                                                م: {{ t.transaction.from_sub_warehouse.name }}
-                                            {% endif %}
-                                            {% if t.transaction.from_sub_warehouse and t.transaction.to_sub_warehouse %}
-                                                <br />
-                                            {% endif %}
-                                            {% if t.transaction.to_sub_warehouse %}
-                                                إ: {{ t.transaction.to_sub_warehouse.name }}
-                                            {% endif %}
+                                            {% if t.transaction.from_sub_warehouse %}م: {{ t.transaction.from_sub_warehouse.name }}{% endif %}
+                                            {% if t.transaction.from_sub_warehouse and t.transaction.to_sub_warehouse %}<br />{% endif %}
+                                            {% if t.transaction.to_sub_warehouse %}إ: {{ t.transaction.to_sub_warehouse.name }}{% endif %}
                                         {% else %}
                                             {% if t.transaction.from_user %}
                                                 م: {{ t.transaction.from_user.get_full_name|default:t.transaction.from_user.username }}
                                             {% endif %}
-                                            {% if t.transaction.from_user and t.transaction.to_user %}
-                                                <br />
-                                            {% endif %}
+                                            {% if t.transaction.from_user and t.transaction.to_user %}<br />{% endif %}
                                             {% if t.transaction.to_user %}
                                                 إ: {{ t.transaction.to_user.get_full_name|default:t.transaction.to_user.username }}
                                             {% endif %}
                                         {% endif %}
                                     </td>
-                                    <td>
-                                        {{ t.transaction.inventory_user.get_full_name|default:"-" }}
-                                    </td>
+                                    <td>{{ t.transaction.inventory_user.get_full_name|default:"-" }}</td>
                                     <td>
                                         {% if t.transaction.from_department %}
                                             {{ t.transaction.from_department.name }}
@@ -756,21 +609,15 @@
                                             -
                                         {% endif %}
                                     </td>
-                                    <td>
-                                        {{ t.transaction.notes|truncatechars:25|default:"-" }}
-                                    </td>
+                                    <td>{{ t.transaction.notes|truncatechars:25|default:"-" }}</td>
                                 </tr>
                             {% endif %}
                         {% endfor %}
                     </tbody>
                     <tfoot>
-                        <tr class="total-row" style="background:#fff3cd;">
-                            <td colspan="3" style="text-align:left;">
-                                إجمالي الحركات المعلقة:
-                            </td>
-                            <td>
-                                {{ total_pending_qty }}
-                            </td>
+                        <tr class="total-row bg-warning-light">
+                            <td colspan="3" class="text-left">إجمالي الحركات المعلقة:</td>
+                            <td>{{ total_pending_qty }}</td>
                             <td colspan="5">
                                 <small>لم تعتمد بعد — لا تؤثر على الرصيد الحالي</small>
                             </td>
@@ -779,27 +626,16 @@
                 </table>
             {% endif %}
         {% else %}
-            <div style="text-align:center;
-                        padding:30px;
-                        border:1px solid #ddd;
-                        margin:20px 0">
-                <h3 style="color:#666;">
-                    لا يوجد سجل معاملات لهذا الصنف
-                </h3>
-                <p style="color:#666;">
-                    لم يتم تسجيل أي حركات لهذا الصنف حتى الآن.
-                </p>
+            <div class="empty-state-box">
+                <h3 class="text-gray-custom">لا يوجد سجل معاملات لهذا الصنف</h3>
+                <p class="text-gray-custom">لم يتم تسجيل أي حركات لهذا الصنف حتى الآن.</p>
             </div>
         {% endif %}
         <!-- Footer -->
         <div class="footer">
-            <div>
-                تم إنشاء التقرير في: {{ current_date|date:"Y-m-d H:i" }}
-            </div>
-            <div>
-                المستخدم: {{ request.user.get_full_name }}
-            </div>
-            <div style="margin-top:5px; font-size:7px; color:#999;">
+            <div>تم إنشاء التقرير في: {{ current_date|date:"Y-m-d H:i" }}</div>
+            <div>المستخدم: {{ request.user.get_full_name }}</div>
+            <div class="footer-note">
                 ملاحظة: الرصيد يُحسب فقط من الحركات المعتمدة الفعّالة (is_reversed=False).
                 السندات الملغاة والمعلقة لا تؤثر على الرصيد.
             </div>

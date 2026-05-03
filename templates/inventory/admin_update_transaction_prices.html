@@ -1,71 +1,69 @@
 {% extends "base.html" %}
 {% load widget_tweaks %}
 {% block title %}{{ page_title }}{% endblock %}
-
 {% block content %}
-<div class="card border-info">
-    <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
-        <h4 class="mb-0">تحديث أسعار العهدة فقط</h4>
-        <span class="badge bg-dark">سند: {{ transaction.document_number }}</span>
-    </div>
-    <div class="card-body">
-        <div class="alert alert-light border mb-4">
-            <strong>📌 ملاحظة:</strong> هذا النموذج يحدّث <strong>سعر العهدة فقط</strong>. 
-            لن يتم تعديل الكميات، الأصناف، أو إنشاء أي سجل تدقيق.
+    <div class="card border-info">
+        <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+            <h4 class="mb-0">تحديث أسعار العهدة فقط</h4>
+            <span class="badge bg-dark">سند: {{ transaction.document_number }}</span>
         </div>
-
-        <form method="post" id="price-update-form">
-            {% csrf_token %}
-            <div class="table-responsive">
-                <table class="table table-striped table-hover align-middle">
-                    <thead class="table-light">
-                        <tr>
-                            <th width="40%">اسم الصنف</th>
-                            <th width="20%">السعر الحالي</th>
-                            <th width="20%">السعر الجديد</th>
-                            <th width="20%">إجراء</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for d in details %}
-                        <tr>
-                            <td class="fw-bold">{{ d.item.name }}</td>
-                            <td>
-                                {% if d.price %}
-                                    <span class="text-success fw-bold">{{ d.price|floatformat:2 }} ج.م</span>
-                                {% else %}
-                                    <span class="text-muted">غير محدد</span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                <input type="number" step="0.01" min="0" 
-                                       name="price_{{ d.id }}" 
-                                       class="form-control form-control-sm"
-                                       value="{{ d.price|floatformat:2|default:'' }}"
-                                       placeholder="أدخل السعر الجديد">
-                            </td>
-                            <td class="text-center">
-                                <span class="badge bg-secondary">قابل للتعديل</span>
-                            </td>
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="4" class="text-center text-muted py-4">لا توجد أصناف في هذا السند</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+        <div class="card-body">
+            <div class="alert alert-light border mb-4">
+                <strong>📌 ملاحظة:</strong> هذا النموذج يحدّث <strong>سعر العهدة فقط</strong>.
+                لن يتم تعديل الكميات، الأصناف، أو إنشاء أي سجل تدقيق.
             </div>
-
-            <div class="d-flex justify-content-between mt-4">
-                <a href="{% url 'admin_transaction_detail' transaction.id %}" class="btn btn-outline-secondary">
-                    <i class="bi bi-arrow-left"></i> إلغاء
-                </a>
-                <button type="submit" class="btn btn-info text-dark fw-bold">
-                    حفظ التعديلات على الأسعار فقط
-                </button>
-            </div>
-        </form>
+            <form method="post" id="price-update-form">
+                {% csrf_token %}
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th width="40%">اسم الصنف</th>
+                                <th width="20%">السعر الحالي</th>
+                                <th width="20%">السعر الجديد</th>
+                                <th width="20%">إجراء</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for d in details %}
+                                <tr>
+                                    <td class="fw-bold">{{ d.item.name }}</td>
+                                    <td>
+                                        {% if d.price %}
+                                            <span class="text-success fw-bold">{{ d.price|floatformat:2 }} ج.م</span>
+                                        {% else %}
+                                            <span class="text-muted">غير محدد</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <input type="number"
+                                               step="0.01"
+                                               min="0"
+                                               name="price_{{ d.id }}"
+                                               class="form-control form-control-sm"
+                                               value="{{ d.price|floatformat:2|default:'' }}"
+                                               placeholder="أدخل السعر الجديد">
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-secondary">قابل للتعديل</span>
+                                    </td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center text-muted py-4">لا توجد أصناف في هذا السند</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="d-flex justify-content-between mt-4">
+                    <a href="{% url 'admin_transaction_detail' transaction.id %}"
+                       class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left"></i> إلغاء
+                    </a>
+                    <button type="submit" class="btn btn-info text-dark fw-bold">حفظ التعديلات على الأسعار فقط</button>
+                </div>
+            </form>
+        </div>
     </div>
-</div>
 {% endblock %}

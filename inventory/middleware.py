@@ -105,10 +105,7 @@ class SessionTimeoutMiddleware:
         last_activity = request.session.get("last_activity")
         now = time.time()
 
-        if (
-            last_activity
-            and (now - last_activity) > get_idle_timeout_seconds()
-        ):
+        if last_activity and (now - last_activity) > get_idle_timeout_seconds():
             # Session expired → logout and redirect
             logout(request)
             return redirect("login")

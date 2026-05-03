@@ -1,30 +1,20 @@
 <!-- templates/inventory/partials/department_users_select.html -->
 {% if users %}
-    <label for="id_employee" class="form-label">
-        اختر الموظف
-    </label>
+    <label for="id_employee" class="form-label">اختر الموظف</label>
     <select id="id_employee"
             class="form-select"
             hx-get="{% url 'employee_custody' %}"
             hx-params="department_id, employee_id"
             hx-target="#employee-custody-container"
             hx-push-url="true">
-        <option value="">
-            اختر موظف...
-        </option>
+        <option value="">اختر موظف...</option>
         {% for user in users %}
-            <option value="{{ user.id }}">
-                {{ user.get_full_name|default:user.username }}
-            </option>
+            <option value="{{ user.id }}">{{ user.get_full_name|default:user.username }}</option>
         {% endfor %}
     </select>
 {% else %}
-    <label class="form-label">
-        اختر الموظف
-    </label>
+    <label class="form-label">اختر الموظف</label>
     <select class="form-select" disabled>
-        <option>
-            لا يوجد موظفين في هذا القسم
-        </option>
+        <option>لا يوجد موظفين في هذا القسم</option>
     </select>
 {% endif %}

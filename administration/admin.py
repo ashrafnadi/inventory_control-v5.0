@@ -89,7 +89,10 @@ admin.site.register(Department)
 @admin.register(SystemSettings)
 class SystemSettingsAdmin(admin.ModelAdmin):
     fieldsets = (
-        ("إعدادات الجلسة", {"fields": ("idle_timeout_minutes", "session_warning_minutes")}),
+        (
+            "إعدادات الجلسة",
+            {"fields": ("idle_timeout_minutes", "session_warning_minutes")},
+        ),
     )
 
     def has_add_permission(self, request):
@@ -101,6 +104,7 @@ class InventoryYearAdmin(admin.ModelAdmin):
     list_display = ("year", "is_open", "opened_at", "closed_at")
     list_filter = ("is_open",)
     readonly_fields = ("opened_at", "closed_at")
+
 
 admin.site.site_header = "لوحة إدارة نظام المخازن - جامعة بنها"
 admin.site.site_title = "نظام المخازن - جامعة بنها"

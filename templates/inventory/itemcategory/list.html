@@ -3,10 +3,9 @@
 {% load i18n %}
 {% load static %}
 {% block content %}
+    <style>.truncate-200 { overflow: hidden; text-overflow: ellipsis; max-width: 200px; }</style>
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <h4>
-            قائمة البنود
-        </h4>
+        <h4>قائمة البنود</h4>
         {% if request.session.user_type == "inventory_admin" %}
             <a href="{% url 'itemcategory_create' %}" class="btn btn-primary">
                 <i class="bi bi-plus"></i> إضافة بند
@@ -19,38 +18,18 @@
                    id="itemcategory_table">
                 <thead>
                     <tr>
-                        <th width="100">
-                            كود البند
-                        </th>
-                        <th>
-                            اسم البند
-                        </th>
-                        <th>
-                            المخزن الفرعي
-                        </th>
-                        {% if request.session.user_type == "inventory_admin" %}
-                            <th width="160">
-                                الإجراءات
-                            </th>
-                        {% endif %}
+                        <th width="100">كود البند</th>
+                        <th>اسم البند</th>
+                        <th>المخزن الفرعي</th>
+                        {% if request.session.user_type == "inventory_admin" %}<th width="160">الإجراءات</th>{% endif %}
                     </tr>
                 </thead>
                 <tbody>
                     {% for c in categories %}
                         <tr>
-                            <td>
-                                {{ c.id }}
-                            </td>
-                            <td>
-                                {{ c.name }}
-                            </td>
-                            <td style="white-space: nowrap;
-                                       overflow: hidden;
-                                       text-overflow: ellipsis;
-                                       max-width: 200px"
-                                title="">
-                                {{ c.sub_warehouse.name|default:"-" }}
-                            </td>
+                            <td>{{ c.id }}</td>
+                            <td>{{ c.name }}</td>
+                            <td class="text-nowrap truncate-200" title="">{{ c.sub_warehouse.name|default:"-" }}</td>
                             {% if request.session.user_type == "inventory_admin" %}
                                 <td>
                                     <a href="{% url 'itemcategory_update' c.pk %}"
@@ -69,9 +48,7 @@
             </table>
         </div>
     {% else %}
-        <div class="alert alert-info">
-            لا توجد بنود مضافة حتى الآن.
-        </div>
+        <div class="alert alert-info">لا توجد بنود مضافة حتى الآن.</div>
     {% endif %}
 {% endblock content %}
 {% block scripts %}

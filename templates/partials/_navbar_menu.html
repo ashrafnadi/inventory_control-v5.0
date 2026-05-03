@@ -1,54 +1,39 @@
 {% load static %}
 <div class="collapse navbar-collapse" id="navbarNav">
     {% if request.user.is_superuser %}
-    <ul class="navbar-nav mx-auto">
-        <li class="nav-item mx-2">
-            <a class="nav-link
-                      {% if page_title == 'I' %}
-                          active
-                      {% endif %}" href="{% url 'home' %}"><i class="bi bi-people me-1"></i>المستخدمين</a>
-        </li>
-
-        <li class="nav-item mx-2">
-            <a class="nav-link
-                      {% if page_title == 'I' %}
-                          active
-                      {% endif %}" href="{% url 'admin_faculty_list' %}"><i class="bi bi-bank me-1"></i> الكليات</a>
-        </li>
-        <li class="nav-item mx-2">
-            <a class="nav-link
-                      {% if page_title == 'I' %}
-                          active
-                      {% endif %}" href="{% url 'admin_department_list' %}  "><i class="bi bi-archive me-1"></i>
-                الاقسام</a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" href="{% url 'admin_transaction_list' %}  " <i class="bi bi-journal-text"></i>
-                السندات
-            </a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" href="{% url 'admin_faculty_stock_view' %}">
-                المخزون
-            </a>
-        </li>
-        <li class="nav-item mx-2">
-            <a class="nav-link" href="{% url 'admin_edit_custody_prices' %}">
-                أسعار العهد
-            </a>
-        </li>
-        <li class="nav-item mx-2">
-            <a class="nav-link
-                      {% if page_title == 'I' %}
-                          active    
-                      {% endif %}" href="{% url 'view_logs' %}  "><i class="bi bi-substack"></i> سجلات النظام</a>
-        </li>
-        <li class="nav-item mx-2">
-            <a class="nav-link
-                      {% if page_title == 'O' %}
-                          active
-                      {% endif %}" href="{% url 'admin:index' %}"><i class="bi bi-gear me-1"></i> إدارة النظام</a>
-        </li>
-    </ul>
-    {% endif %}
+        <ul class="navbar-nav mx-auto">
+            <li class="nav-item mx-2">
+                <a class="nav-link {% if page_title == 'I' %}active{% endif %}"
+                   href="{% url 'home' %}"><i class="bi bi-people me-1"></i>المستخدمين</a>
+            </li>
+            <li class="nav-item mx-2">
+                <a class="nav-link {% if page_title == 'I' %}active{% endif %}"
+                   href="{% url 'admin_faculty_list' %}"><i class="bi bi-bank me-1"></i> الكليات</a>
+            </li>
+            <li class="nav-item mx-2">
+            <a class="nav-link {% if page_title == 'I' %}active{% endif %}"
+               href="{% url 'admin_department_list' %}  "><i class="bi bi-archive me-1"></i>
+        الاقسام</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="{% url 'admin_transaction_list' %}">
+            <i class="bi bi-journal-text"></i> السندات
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="{% url 'admin_faculty_stock_view' %}">المخزون</a>
+    </li>
+    <li class="nav-item mx-2">
+        <a class="nav-link" href="{% url 'admin_edit_custody_prices' %}">أسعار العهد</a>
+    </li>
+    <li class="nav-item mx-2">
+        <a class="nav-link {% if page_title == 'I' %}active{% endif %}"
+           href="{% url 'view_logs' %}  "><i class="bi bi-substack"></i> سجلات النظام</a>
+    </li>
+    <li class="nav-item mx-2">
+        <a class="nav-link {% if page_title == 'O' %}active{% endif %}"
+           href="{% url 'admin:index' %}"><i class="bi bi-gear me-1"></i> إدارة النظام</a>
+    </li>
+</ul>
+{% endif %}
 </div>

@@ -6,9 +6,7 @@
 {% endblock title %}
 {% block content %}
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>
-            الأقسام - {{ faculty.name }}
-        </h2>
+        <h2>الأقسام - {{ faculty.name }}</h2>
         <a href="{% url 'department_create' %}" class="btn btn-primary">
             <i class="bi bi-plus-circle"></i> إضافة قسم جديد
         </a>
@@ -19,34 +17,18 @@
                 <table class="table table-hover" dir="rtl" id="department_list">
                     <thead class="table-light">
                         <tr>
-                            <th width="100">
-                                كود الإدارة
-                            </th>
-                            <th>
-                                اسم القسم
-                            </th>
-                            <th>
-                                الجهة
-                            </th>
-                            {% if request.session.user_type == "inventory_manager" %}
-                                <th width="200">
-                                    الإجراءات
-                                </th>
-                            {% endif %}
+                            <th width="100">كود الإدارة</th>
+                            <th>اسم القسم</th>
+                            <th>الجهة</th>
+                            {% if request.session.user_type == "inventory_manager" %}<th width="200">الإجراءات</th>{% endif %}
                         </tr>
                     </thead>
                     <tbody>
                         {% for department in departments %}
                             <tr>
-                                <td>
-                                    {{ department.id }}
-                                </td>
-                                <td>
-                                    {{ department.name }}
-                                </td>
-                                <td>
-                                    {{ faculty.name }}
-                                </td>
+                                <td>{{ department.id }}</td>
+                                <td>{{ department.name }}</td>
+                                <td>{{ faculty.name }}</td>
                                 {% if request.session.user_type == "inventory_manager" %}
                                     <td>
                                         <a href="{% url 'department_edit' department.id %}"
@@ -62,9 +44,7 @@
                             </tr>
                         {% empty %}
                             <tr>
-                                <td colspan="4" class="text-center text-muted">
-                                    لا توجد أقسام.
-                                </td>
+                                <td colspan="4" class="text-center text-muted">لا توجد أقسام.</td>
                             </tr>
                         {% endfor %}
                     </tbody>

@@ -3,10 +3,7 @@
 <div class="collapse navbar-collapse" id="navbarNav">
     <ul class="navbar-nav mx-auto">
         <li class="nav-item mx-1">
-            <a class="nav-link
-                      {% if page_title == 'I' %}
-                          active
-                      {% endif %}"
+            <a class="nav-link {% if page_title == 'I' %}active{% endif %}"
                href="{% url 'home' %}">
                 <i class="bi bi-house-door me-1"></i>الرئيسية
             </a>
@@ -14,10 +11,7 @@
         {% include "partials/_definitions.html" %}
         {% include "partials/_documents.html" %}
         <li class="nav-item mx-1">
-            <a class="nav-link
-                      {% if page_title == 'O' %}
-                          active
-                      {% endif %}"
+            <a class="nav-link {% if page_title == 'O' %}active{% endif %}"
                href="{% url 'transaction_list' %}">
                 <i class="bi bi-file-earmark-text me-1"></i> الأذون
             </a>
