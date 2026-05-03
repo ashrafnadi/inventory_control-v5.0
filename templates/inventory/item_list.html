@@ -34,7 +34,7 @@
                                 <th>الكمية المعلقة</th>
                                 <th>الكمية المتوقعة</th>
                                 <th width="100">حد الكمية</th>
-                                <th width="310">الإجراءات</th>
+                                <th width="250">الإجراءات</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -86,10 +86,9 @@
                                         {% if user.profile.is_inventory_manager %}
                                             <a href="{% url 'item_delete' item.id %}" class="btn btn-sm btn-danger">حذف</a>
                                         {% endif %}
-                                        <a href="{% url 'item_history' item.id %}" class="btn btn-sm btn-info">حركة الصنف</a>
+                                        <a href="{% url 'item_history' item.id %}" class="btn btn-sm btn-info">الحركة</a>
                                         <a href="{% url 'get_item_price_history' item.id %}"
-                                           class="btn btn-sm btn-secondary">تاريخ
-                                        السعر</a>
+                                           class="btn btn-sm btn-secondary">السعر</a>
                                     </td>
                                 </tr>
                             {% empty %}

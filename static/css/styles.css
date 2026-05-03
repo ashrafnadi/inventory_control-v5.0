@@ -272,6 +272,18 @@ body {
 	color: var(--slack-color);
 }
 
+.sidebar-item [data-theme="dark"] {
+	color: #e9ecef;
+}
+
+.sidebar-item:hover,
+.sidebar-item.active [data-theme="dark"] {
+	background: rgba(43, 38, 197, 0.352);
+	color: #e9ecef !important;
+}
+
+
+
 .sidebar-overlay {
 	display: none;
 	position: fixed;
