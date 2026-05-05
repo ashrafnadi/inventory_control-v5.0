@@ -1,0 +1,86 @@
+{% load static %}
+<div class="table-responsive">
+    <table class="table table-striped table-hover align-middle"
+           id="faculty-items-table">
+        <thead class="table-dark">
+            <tr>
+                <th>اسم الصنف</th>
+                <th width="15%">الفئة</th>
+                <th width="10%">المخزن الفرعي</th>
+                <th class="text-center">الكمية الحالية</th>
+                <th class="text-center">إضافة قيد الانتظار</th>
+                <th class="text-center">صرف قيد الانتظار</th>
+                <th class="text-center">نقل قيد الانتظار</th>
+                <th class="text-center">إرجاع قيد الانتظار</th>
+                <th class="text-center" width="10%">الإجراءات</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for d in items_data %}
+                <tr>
+                    <td class="fw-bold">{{ d.item.name }}</td>
+                    <td>{{ d.item.category.name|default:"—" }}</td>
+                    <td>{{ d.sub_warehouse.name|default:"—" }}</td>
+                    <td class="text-center">
+                        {% if d.current_qty > 0 %}
+                            <span class="badge bg-success">{{ d.current_qty }}</span>
+                        {% else %}
+                            <span class="badge bg-danger">0</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-center">
+                        {% if d.pending_add > 0 %}
+                            <span class="badge bg-info text-dark">+{{ d.pending_add }}</span>
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
+                    <td class="text-center">
+                        {% if d.pending_disb > 0 %}
+                            <span class="badge bg-warning text-dark">-{{ d.pending_disb }}</span>
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
+                    <td class="text-center">
+                        {% if d.pending_trans > 0 %}
+                            <span class="badge bg-secondary">{{ d.pending_trans }}</span>
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
+                    <td class="text-center">
+                        {% if d.pending_ret > 0 %}
+                            <span class="badge bg-primary">{{ d.pending_ret }}</span>
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
+                    <td class="text-center">
+                        <a href="{% url 'admin_item_transaction_history' d.item.id %}?faculty_id={{ faculty.id }}"
+                           class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-clock-history"></i> سجل الحركات
+                        </a>
+                    </td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="9" class="text-center text-muted py-4">لا توجد أصناف مطابقة</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+<!-- Optional: Initialize DataTables if you use them -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    if (typeof $ !== 'undefined' && $.fn.DataTable) {
+        $('#faculty-items-table').DataTable({
+            language: { url: "{% static 'ar.json' %}" },
+            responsive: true,
+            pageLength: 25,
+            order: [[0, 'asc']]
+        });
+    }
+});
+</script>

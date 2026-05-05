@@ -310,4 +310,19 @@ urlpatterns = [
         views.admin_edit_transaction_header,
         name="admin_edit_transaction",
     ),
+    path(
+        "admin/faculty-items/",
+        views.admin_faculty_items_view,
+        name="admin_faculty_items",
+    ),
+    path(
+        "admin/faculty-items/load/",
+        views.htmx_load_faculty_items,
+        name="htmx_load_faculty_items",
+    ),
+    path(
+        "admin/item-history/<int:item_id>/",
+        views.admin_item_transaction_history,
+        name="admin_item_transaction_history",
+    ),
 ]

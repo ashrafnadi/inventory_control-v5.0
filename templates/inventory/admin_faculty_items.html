@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}
+    أصناف الكليات
+{% endblock title %}
+{% block content %}
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>📦 أصناف الكليات</h2>
+        <a href="{% url 'admin_faculty_items' %}"
+           class="btn btn-outline-secondary">إعادة تعيين</a>
+    </div>
+    <div class="card mb-4">
+        <div class="card-body">
+            <form hx-get="{% url 'htmx_load_faculty_items' %}"
+                  hx-target="#items-table-container"
+                  hx-trigger="change from:#id_faculty_select, load"
+                  hx-indicator="#loading-spinner"
+                  hx-include="#id_faculty_select">
+                <div class="row">
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">اختر الكلية</label>
+                        <select name="faculty_id" id="id_faculty_select" class="form-select">
+                            <option value="">-- اختر الكلية --</option>
+                            {% for f in faculties %}
+                                <option value="{{ f.id }}"
+                                        {% if selected_faculty_id == f.id|stringformat:"d" %}selected{% endif %}>
+                                    {{ f.name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-8 d-flex align-items-end">
+                        <div id="loading-spinner" class="htmx-indicator">
+                            <div class="spinner-border text-primary" role="status"></div>
+                            <span class="ms-2">جاري التحميل...</span>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div id="items-table-container">
+        {% if selected_faculty_id %}<!-- HTMX will inject the table here -->{% endif %}
+    </div>
+{% endblock content %}

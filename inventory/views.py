@@ -3569,39 +3569,42 @@ def employee_custody_details(request):
 
 def get_employee_custody_data(employee, date_from=None, date_to=None, limit=None):
     """
-    Show EVERY custody transaction detail row individually (no aggregation).
-    Each ItemTransactionDetails record is shown separately with its own quantity/price.
-    Ordered by: Custody Type → Item Name → Transaction Date
+    Show employee custody at TRANSACTION LEVEL (not aggregated per item).
+    - Each original disbursement/transfer keeps its own price, document, and date.
+    - Returns deduct from the exact linked original_detail if available.
+    - Unlinked returns use FIFO deduction on matching items (ignores return transaction castody_type).
+    - Only rows with qty > 0 are displayed.
     """
     faculty_id = getattr(getattr(employee, "profile", None), "faculty_id", None)
     if not faculty_id:
         return {
-            "warehouse": {"items": [], "total_quantity": 0, "total_value": 0},
-            "personal": {"items": [], "total_quantity": 0, "total_value": 0},
-            "branch": {"items": [], "total_quantity": 0, "total_value": 0},
+            k: {"items": [], "total_quantity": 0, "total_value": Decimal("0")}
+            for k in ["warehouse", "personal", "branch"]
         }
 
+    # Base filters: approved, not deleted, not reversed, faculty-isolated
     base_filters = Q(
         transaction__approval_status=ItemTransactions.APPROVAL_STATUS.APPROVED,
         transaction__deleted=False,
         transaction__is_reversed=False,
         transaction__faculty_id=faculty_id,
     )
-
     if date_from:
         base_filters &= Q(transaction__created_at__gte=date_from)
     if date_to:
         base_filters &= Q(transaction__created_at__lte=date_to)
 
-    # ✅ Fetch EVERY custody-affecting transaction detail individually
-    # No grouping, no aggregation - each row is separate
+    # Fetch all custody-affecting details in chronological order
     custody_details = (
         ItemTransactionDetails.objects.filter(
             Q(
                 transaction__to_user=employee,
-                transaction__transaction_type__in=["D", "T"],
+                transaction__transaction_type__in=["D", "T"],  # Incoming
             )
-            | Q(transaction__from_user=employee, transaction__transaction_type="R")
+            | Q(
+                transaction__from_user=employee,
+                transaction__transaction_type="R",  # Return
+            )
             | Q(
                 transaction__from_user=employee,
                 transaction__transaction_type="T",
@@ -3611,81 +3614,134 @@ def get_employee_custody_data(employee, date_from=None, date_to=None, limit=None
             base_filters,
         )
         .select_related("item", "transaction", "transaction__from_sub_warehouse")
-        .order_by(
-            "transaction__castody_type", "item__name", "transaction__created_at"
-        )  # ✅ Order: Type → Item → Date
+        .order_by("transaction__created_at", "id")
     )
 
-    # Apply limit if specified
     if limit:
         custody_details = custody_details[:limit]
 
-    # Build result structure with EVERY detail row (no aggregation)
-    custody_data = {
-        k: {"items": [], "total_quantity": 0, "total_value": Decimal("0")}
-        for k in ["warehouse", "personal", "branch"]
-    }
-
+    # ─────────────────────────────────────────────────────────────────────────
+    # TRACKING MAP: { original_detail_id: {item, qty, price, doc, date, ...} }
+    # ─────────────────────────────────────────────────────────────────────────
+    transaction_map = {}
     castody_map = {
         ItemTransactions.CASTODY_TYPES.Warehouse: "warehouse",
         ItemTransactions.CASTODY_TYPES.Personal: "personal",
         ItemTransactions.CASTODY_TYPES.Branch: "branch",
     }
 
+    # PASS 1: Populate map with all INCOMING transactions
     for detail in custody_details:
-        # Only include positive quantities (items currently in custody)
-        if (
-            detail.transaction.transaction_type in ["D", "T"]
-            and detail.transaction.to_user == employee
-        ):
-            qty = detail.approved_quantity  # Incoming: positive
-        elif (
-            detail.transaction.transaction_type == "R"
-            and detail.transaction.from_user == employee
-        ):
-            qty = -detail.approved_quantity  # Return: negative (removes from custody)
-        elif (
-            detail.transaction.transaction_type == "T"
-            and detail.transaction.from_user == employee
-            and detail.transaction.to_user is not None
-            and detail.transaction.castody_type
-            == ItemTransactions.CASTODY_TYPES.Personal
-        ):
-            qty = -detail.approved_quantity  # Personal transfer out: negative
-        else:
-            continue  # Skip if not relevant to employee's current custody
+        tx_type = detail.transaction.transaction_type
+        # Use ID comparison for reliability
+        if tx_type in ["D", "T"] and detail.transaction.to_user_id == employee.id:
+            transaction_map[detail.id] = {
+                "item": detail.item,
+                "qty": detail.approved_quantity,
+                "price": detail.price or 0,
+                "doc": detail.transaction.document_number or "—",
+                "date": detail.transaction.created_at,
+                "sub_warehouse": (
+                    detail.transaction.from_sub_warehouse.name
+                    if detail.transaction.from_sub_warehouse
+                    else "—"
+                ),
+                "castody_type": detail.transaction.castody_type,
+                "detail_id": detail.id,
+            }
 
-        # Only show items with positive net quantity in custody
-        if qty <= 0:
+    # PASS 2: Deduct OUTGOING/RETURNS from the map
+    for detail in custody_details:
+        tx_type = detail.transaction.transaction_type
+        castody_type = detail.transaction.castody_type
+        deduct_qty = detail.approved_quantity
+
+        if deduct_qty <= 0:
             continue
 
-        item = detail.item
-        price = detail.price or 0
-        price_dec = Decimal(str(price))
-        total_val = Decimal(str(qty)) * price_dec
+        # 1. RETURN transactions
+        if tx_type == "R" and detail.transaction.from_user_id == employee.id:
+            # A) Linked deduction (exact original detail)
+            if (
+                hasattr(detail, "original_detail_id")
+                and detail.original_detail_id
+                and detail.original_detail_id in transaction_map
+            ):
+                orig = transaction_map[detail.original_detail_id]
+                deduct = min(deduct_qty, orig["qty"])
+                orig["qty"] -= deduct
+                # Preserve original price for audit consistency
+                if detail.original_detail:
+                    orig["price"] = detail.original_detail.price or orig["price"]
+                deduct_qty -= deduct
 
-        custody_key = castody_map.get(detail.transaction.castody_type, "personal")
+            # B) Fallback: FIFO deduction for unlinked returns
+            # ✅ FIX: Removed castody_type check because return form forces "Warehouse"
+            #         while items might be "Personal" or "Branch".
+            if deduct_qty > 0:
+                for data in transaction_map.values():
+                    if data["item"].id == detail.item_id and data["qty"] > 0:
+                        deduct = min(deduct_qty, data["qty"])
+                        data["qty"] -= deduct
+                        deduct_qty -= deduct
+                        if deduct_qty <= 0:
+                            break
+
+        # 2. PERSONAL TRANSFER OUT transactions
+        elif (
+            tx_type == "T"
+            and detail.transaction.from_user_id == employee.id
+            and detail.transaction.to_user_id is not None
+            and castody_type == ItemTransactions.CASTODY_TYPES.Personal
+        ):
+            # FIFO deduction (strict castody_type match for transfers)
+            if deduct_qty > 0:
+                for data in transaction_map.values():
+                    if (
+                        data["item"].id == detail.item_id
+                        and data["castody_type"] == castody_type
+                        and data["qty"] > 0
+                    ):
+                        deduct = min(deduct_qty, data["qty"])
+                        data["qty"] -= deduct
+                        deduct_qty -= deduct
+                        if deduct_qty <= 0:
+                            break
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # BUILD FINAL STRUCTURE (FILTER QTY <= 0)
+    # ─────────────────────────────────────────────────────────────────────────
+    custody_data = {
+        k: {"items": [], "total_quantity": 0, "total_value": Decimal("0")}
+        for k in ["warehouse", "personal", "branch"]
+    }
+
+    for data in transaction_map.values():
+        if data["qty"] <= 0:
+            continue  # Fully returned or negative, skip
+
+        custody_key = castody_map.get(data["castody_type"], "personal")
+        price_dec = Decimal(str(data["price"]))
+        total_val = Decimal(str(data["qty"])) * price_dec
 
         custody_data[custody_key]["items"].append(
             {
-                "item": item,
-                "quantity": qty,  # ✅ Individual transaction quantity (not aggregated)
-                "latest_price": price,  # ✅ Price from THIS transaction
+                "item": data["item"],
+                "quantity": data["qty"],
+                "latest_price": data["price"],
                 "total_value": total_val,
-                "last_doc": detail.transaction.document_number
-                or "—",  # ✅ Source document
-                "last_date": detail.transaction.created_at,  # ✅ Transaction date
-                "sub_warehouse": detail.transaction.from_sub_warehouse.name
-                if detail.transaction.from_sub_warehouse
-                else "—",  # ✅ Source warehouse
-                "detail_id": detail.id,  # ✅ For potential editing
+                "last_doc": data["doc"],
+                "last_date": data["date"],
+                "sub_warehouse": data["sub_warehouse"],
+                "detail_id": data["detail_id"],
             }
         )
-        custody_data[custody_key]["total_quantity"] += qty
+        custody_data[custody_key]["total_quantity"] += data["qty"]
         custody_data[custody_key]["total_value"] += total_val
 
-    # Serialize for template/JSON
+    # Sort items chronologically within each custody type
     for key in custody_data:
+        custody_data[key]["items"].sort(key=lambda x: x["last_date"] or datetime.min)
         custody_data[key]["total_value"] = float(custody_data[key]["total_value"])
         custody_data[key]["total_quantity"] = int(custody_data[key]["total_quantity"])
 
@@ -5946,7 +6002,7 @@ def admin_faculty_stock_view(request):
 def admin_edit_custody_prices(request):
     """
     Admin-only view to select faculty → department → employee,
-    then edit custody prices for EACH transaction detail row (no deduplication).
+    then edit custody prices for EACH transaction detail row with return deduction.
     """
     faculties = Faculty.objects.all().order_by("name")
     selected_faculty_id = request.GET.get("faculty_id")
@@ -5955,7 +6011,7 @@ def admin_edit_custody_prices(request):
 
     departments = Department.objects.none()
     employees = User.objects.none()
-    custody_records = []  # Now holds EVERY detail row, not deduplicated
+    custody_records = []
     selected_employee = None
 
     if selected_faculty_id and selected_faculty_id.isdigit():
@@ -5980,50 +6036,140 @@ def admin_edit_custody_prices(request):
             profile__department_id=selected_dept_id,
             profile__faculty_id=selected_faculty_id,
         )
-        # Fetch approved, non-deleted, non-reversed custody transactions
+
+        # Fetch ALL custody-affecting details (incoming + returns)
         details_qs = (
             ItemTransactionDetails.objects.filter(
-                transaction__to_user=selected_employee,
-                transaction__transaction_type__in=[
-                    ItemTransactions.TRANSACTION_TYPES.Disbursement,
-                    ItemTransactions.TRANSACTION_TYPES.Transfer,
-                ],
+                Q(
+                    transaction__to_user=selected_employee,
+                    transaction__transaction_type__in=["D", "T"],
+                )
+                | Q(
+                    transaction__from_user=selected_employee,
+                    transaction__transaction_type="R",
+                )
+                | Q(
+                    transaction__from_user=selected_employee,
+                    transaction__transaction_type="T",
+                    transaction__to_user__isnull=False,
+                    transaction__castody_type=ItemTransactions.CASTODY_TYPES.Personal,
+                ),
                 transaction__approval_status=ItemTransactions.APPROVAL_STATUS.APPROVED,
                 transaction__deleted=False,
                 transaction__is_reversed=False,
                 transaction__faculty_id=selected_faculty_id,
             )
             .select_related("item", "transaction", "transaction__from_sub_warehouse")
-            .order_by("transaction__castody_type", "item__name")
+            .order_by("transaction__created_at", "id")
         )
 
-        # NO DEDUPLICATION: Append every detail row individually
-        for d in details_qs:
-            custody_records.append(
-                {
-                    "detail_id": d.id,
-                    "item_name": d.item.name,
-                    "unit": d.item.get_unit_display(),
-                    "quantity": d.approved_quantity,
-                    "price": d.price,
-                    "castody_type": d.transaction.get_castody_type_display(),
-                    "doc_number": d.transaction.document_number,
-                    "date": d.transaction.created_at,
-                    "sub_warehouse": d.transaction.from_sub_warehouse.name
-                    if d.transaction.from_sub_warehouse
-                    else "—",
+        # ─────────────────────────────────────────────────────────────────────
+        # BUILD TRANSACTION MAP: { original_detail_id: {qty, price, item, ...} }
+        # ─────────────────────────────────────────────────────────────────────
+        transaction_map = {}
+        castody_map = {
+            ItemTransactions.CASTODY_TYPES.Warehouse: "warehouse",
+            ItemTransactions.CASTODY_TYPES.Personal: "personal",
+            ItemTransactions.CASTODY_TYPES.Branch: "branch",
+        }
+
+        # PASS 1: Populate map with INCOMING transactions
+        for detail in details_qs:
+            tx_type = detail.transaction.transaction_type
+            if (
+                tx_type in ["D", "T"]
+                and detail.transaction.to_user_id == selected_employee.id
+            ):
+                transaction_map[detail.id] = {
+                    "item": detail.item,
+                    "qty": detail.approved_quantity,
+                    "price": detail.price or 0,
+                    "doc": detail.transaction.document_number or "—",
+                    "date": detail.transaction.created_at,
+                    "sub_warehouse": (
+                        detail.transaction.from_sub_warehouse.name
+                        if detail.transaction.from_sub_warehouse
+                        else "—"
+                    ),
+                    "castody_type": detail.transaction.castody_type,
+                    "castody_type_display": detail.transaction.get_castody_type_display(),
+                    "unit": detail.item.get_unit_display(),
+                    "detail_id": detail.id,  # ✅ Ensure this is always an integer
                 }
-            )
+
+        # PASS 2: Deduct RETURNS from the map
+        for detail in details_qs:
+            tx_type = detail.transaction.transaction_type
+            deduct_qty = detail.approved_quantity
+
+            if deduct_qty <= 0:
+                continue
+
+            if (
+                tx_type == "R"
+                and detail.transaction.from_user_id == selected_employee.id
+            ):
+                # A) Linked deduction
+                if (
+                    hasattr(detail, "original_detail_id")
+                    and detail.original_detail_id
+                    and detail.original_detail_id in transaction_map
+                ):
+                    orig = transaction_map[detail.original_detail_id]
+                    deduct = min(deduct_qty, orig["qty"])
+                    orig["qty"] -= deduct
+                    deduct_qty -= deduct
+
+                # B) FIFO fallback
+                if deduct_qty > 0:
+                    for data in transaction_map.values():
+                        if data["item"].id == detail.item_id and data["qty"] > 0:
+                            deduct = min(deduct_qty, data["qty"])
+                            data["qty"] -= deduct
+                            deduct_qty -= deduct
+                            if deduct_qty <= 0:
+                                break
+
+        # BUILD FINAL LIST: Only rows with remaining qty > 0
+        for data in transaction_map.values():
+            if data["qty"] <= 0:
+                continue
+
+            # ✅ Ensure detail_id is valid integer before adding to list
+            if data["detail_id"] and isinstance(data["detail_id"], int):
+                custody_records.append(
+                    {
+                        "detail_id": data["detail_id"],
+                        "item_name": data["item"].name,
+                        "unit": data["unit"],
+                        "quantity": data["qty"],
+                        "price": data["price"],
+                        "castody_type": data["castody_type_display"],
+                        "doc_number": data["doc"],
+                        "date": data["date"],
+                        "sub_warehouse": data["sub_warehouse"],
+                    }
+                )
+
+        # Sort by custody type then item name
+        custody_records.sort(key=lambda x: (x["castody_type"], x["item_name"]))
 
     # Handle POST for price updates
     if request.method == "POST" and selected_employee:
         updated_count = 0
         ignored_errors = []
+
         with db_transaction.atomic():
             for rec in custody_records:
-                raw_price = request.POST.get(f"price_{rec['detail_id']}", "").strip()
-                if not raw_price:
+                # ✅ Validate detail_id before using in query
+                detail_id = rec.get("detail_id")
+                if not detail_id or not isinstance(detail_id, int):
                     continue
+
+                raw_price = request.POST.get(f"price_{detail_id}", "").strip()
+                if not raw_price:
+                    continue  # Skip empty inputs (user didn't change this price)
+
                 try:
                     new_price = Decimal(raw_price)
                     if new_price < 0:
@@ -6037,9 +6183,15 @@ def admin_edit_custody_prices(request):
                     )
                     continue
 
-                detail = ItemTransactionDetails.objects.select_for_update().get(
-                    id=rec["detail_id"]
-                )
+                # ✅ Safe query with validated ID
+                try:
+                    detail = ItemTransactionDetails.objects.select_for_update().get(
+                        id=detail_id
+                    )
+                except ItemTransactionDetails.DoesNotExist:
+                    ignored_errors.append(f"الصنف غير موجود: {rec['item_name']}")
+                    continue
+
                 if detail.price != new_price:
                     detail.price = new_price
                     detail.save(update_fields=["price"])
@@ -6192,4 +6344,135 @@ def admin_edit_transaction_header(request, transaction_id):
             "details": details,  # ✅ Passed for read-only display
             "page_title": f"تعديل رأس السند #{transaction.document_number}",
         },
+    )
+
+
+@login_required
+@user_passes_test(lambda u: u.is_superuser)
+def admin_faculty_items_view(request):
+    """Main admin view: Select faculty to view items & pending quantities."""
+    faculties = Faculty.objects.all().order_by("name")
+    selected_faculty_id = request.GET.get("faculty_id")
+    selected_faculty = None
+    if selected_faculty_id and selected_faculty_id.isdigit():
+        selected_faculty = get_object_or_404(Faculty, id=selected_faculty_id)
+
+    return render(
+        request,
+        "inventory/admin_faculty_items.html",
+        {
+            "faculties": faculties,
+            "selected_faculty": selected_faculty,
+            "selected_faculty_id": selected_faculty_id,
+        },
+    )
+
+
+@login_required
+@user_passes_test(lambda u: u.is_superuser)
+def htmx_load_faculty_items(request):
+    """HTMX endpoint: Load optimized items table with pending quantities."""
+    faculty_id = request.GET.get("faculty_id")
+    if not (faculty_id and faculty_id.isdigit()):
+        return HttpResponse(
+            "<p class='text-muted text-center py-4'>اختر كلية لعرض الأصناف</p>"
+        )
+
+    faculty = get_object_or_404(Faculty, id=faculty_id)
+
+    # 1. Get all stock records for this faculty
+    stocks = (
+        FacultyItemStock.objects.filter(faculty=faculty)
+        .select_related("item", "item__category", "sub_warehouse")
+        .order_by("item__name")
+    )
+
+    if not stocks.exists():
+        return HttpResponse(
+            "<p class='text-muted text-center py-4'>لا توجد أصناف مسجلة لهذه الكلية.</p>"
+        )
+
+    item_ids = [s.item_id for s in stocks]
+
+    # 2. Fetch ALL pending details for these items in one query
+    pending_details = (
+        ItemTransactionDetails.objects.filter(
+            item_id__in=item_ids,
+            transaction__faculty=faculty,
+            transaction__approval_status=ItemTransactions.APPROVAL_STATUS.PENDING,
+            transaction__deleted=False,
+            transaction__is_reversed=False,
+        )
+        .values("item_id", "transaction__transaction_type")
+        .annotate(total=Sum("approved_quantity"))
+    )
+
+    # 3. Build lookup map: {item_id: {"A": 10, "D": 5, "T": 2, "R": 3}}
+    pending_map = {}
+    for pd in pending_details:
+        item_id = pd["item_id"]
+        tx_type = pd["transaction__transaction_type"]
+        pending_map.setdefault(item_id, {})[tx_type] = pd["total"]
+
+    # 4. Prepare final list for template
+    items_data = []
+    for stock in stocks:
+        p = pending_map.get(stock.item_id, {})
+        items_data.append(
+            {
+                "item": stock.item,
+                "current_qty": stock.cached_quantity,
+                "pending_add": p.get(ItemTransactions.TRANSACTION_TYPES.Addition, 0)
+                or 0,
+                "pending_disb": p.get(
+                    ItemTransactions.TRANSACTION_TYPES.Disbursement, 0
+                )
+                or 0,
+                "pending_trans": p.get(ItemTransactions.TRANSACTION_TYPES.Transfer, 0)
+                or 0,
+                "pending_ret": p.get(ItemTransactions.TRANSACTION_TYPES.Return, 0) or 0,
+                "sub_warehouse": stock.sub_warehouse,
+            }
+        )
+
+    return render(
+        request,
+        "inventory/partials/faculty_items_table.html",
+        {"items_data": items_data, "faculty": faculty},
+    )
+
+
+@login_required
+@user_passes_test(lambda u: u.is_superuser)
+def admin_item_transaction_history(request, item_id):
+    """View transaction history for a specific item in a faculty."""
+    item = get_object_or_404(Item, id=item_id)
+    faculty_id = request.GET.get("faculty_id")
+    faculty = None
+    if faculty_id and faculty_id.isdigit():
+        faculty = get_object_or_404(Faculty, id=faculty_id)
+
+    qs = (
+        ItemTransactionDetails.objects.filter(item=item)
+        .select_related(
+            "transaction",
+            "transaction__created_by",
+            "transaction__approval_user",
+            "transaction__from_sub_warehouse",
+            "transaction__to_sub_warehouse",
+        )
+        .order_by("-transaction__created_at")
+    )
+
+    if faculty:
+        qs = qs.filter(transaction__faculty=faculty)
+
+    # paginator = Paginator(qs, 50)
+    # page_number = request.GET.get("page")
+    # details_page = paginator.get_page(page_number)
+
+    return render(
+        request,
+        "inventory/admin_item_history.html",
+        {"item": item, "faculty": faculty, "details": qs},
     )
