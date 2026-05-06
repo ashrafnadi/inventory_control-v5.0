@@ -4,7 +4,7 @@
 {% block content %}
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h4>قائمة المخازن</h4>
-        {% if request.session.user_type == "inventory_admin" %}
+        {% if request.user.is_superuser %}
             <a href="{% url 'warehouse_create' %}" class="btn btn-primary">
                 <i class="bi bi-plus"></i> إضافة مخزن
             </a>
@@ -18,7 +18,7 @@
                     <tr>
                         <th width="120px">:كود المخزن</th>
                         <th>اسم المخزن</th>
-                        {% if request.session.user_type == "inventory_admin" %}<th width="170px">الإجراءات</th>{% endif %}
+                        {% if request.user.is_superuser %}<th width="170px">الإجراءات</th>{% endif %}
                     </tr>
                 </thead>
                 <tbody>
@@ -26,7 +26,7 @@
                         <tr>
                             <td>{{ w.id }}</td>
                             <td>{{ w.name }}</td>
-                            {% if request.session.user_type == "inventory_admin" %}
+                            {% if request.user.is_superuser %}
                                 <td>
                                     <a href="{% url 'warehouse_update' w.pk %}"
                                        class="btn btn-sm btn-warning">

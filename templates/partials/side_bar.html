@@ -36,93 +36,109 @@
                 <i class="bi bi-bank"></i>
                 <span>الكليات</span>
             </a>
-        <a class="sidebar-item" href="{% url 'admin_department_list' %}"><i class="bi bi-archive me-1"></i>
-    الاقسام</a>
-    <a class="sidebar-item" href="{% url 'admin_transaction_list' %}">
-        <i class="bi bi-journal-text"></i>
-        <span>السندات</span>
-    </a>
-    <a class="sidebar-item" href="{% url 'admin_faculty_stock_view' %}">
-        <i class="bi bi-box-seam"></i>
-        <span>المخزون</span>
-    </a>
-    <a class="sidebar-item" href="{% url 'admin_faculty_items' %}">
-        <i class="bi bi-cash"></i>
-        <span>أصناف كلية</span>
-    </a>
-    <a class="sidebar-item" href="{% url 'admin_edit_custody_prices' %}">
-        <i class="bi bi-cash"></i>
-        <span>أسعار العهد</span>
-    </a>
-    <a class="sidebar-item" href="{% url 'view_logs' %}">
-        <i class="bi bi-clipboard-data"></i>
-        <span>سجلات النظام</span>
-    </a>
-    <a class="sidebar-item" href="{% url 'system_settings' %}">
-        <i class="bi bi-gear-fill"></i>
-        <span>إعدادات النظام</span>
-    </a>
-    <a class="sidebar-item" href="{% url 'admin:index' %}"><i class="bi bi-gear me-1"></i> إدارة النظام</a>
-</section>
-{% else %}
-<section class="sidebar-section">
-    <div class="sidebar-section-title">التشغيل</div>
-    <a class="sidebar-item" href="{% url 'home' %}">
-        <i class="bi bi-speedometer2"></i>
-        <span>الرئيسية</span>
-    </a>
-    <a class="sidebar-item" href="{% url 'transaction_list' %}">
-        <i class="bi bi-file-earmark-text-fill"></i>
-        <span>السندات</span>
-    </a>
-    <a class="sidebar-item" href="{% url 'pending_transactions' %}">
-        <i class="bi bi-hourglass-split"></i>
-        <span>سندات قيد الانتظار</span>
-    </a>
-    <a class="sidebar-item" href="{% url 'password_change' %}">
-        <i class="bi bi-person me-2"></i>
-        تغيير كلمة المرور
-    </a>
-</section>
-<section class="sidebar-section">
-    <div class="sidebar-section-title">التعريفات</div>
-    <a class="sidebar-item" href="{% url 'item_list' %}">
-        <i class="bi bi-tags-fill"></i>
-        <span>الأصناف</span>
-    </a>
-    <a class="sidebar-item" href="{% url 'warehouse_list' %}">
-        <i class="bi bi-building-fill"></i>
-        <span>المخازن الرئيسية</span>
-    </a>
-    <a class="sidebar-item" href="{% url 'subwarehouse_list' %}">
-        <i class="bi bi-box-fill"></i>
-        <span>المخازن الفرعية</span>
-    </a>
-    <a class="sidebar-item" href="{% url 'supplier_list' %}">
-        <i class="bi bi-truck"></i>
-        <span>الموردون</span>
-    </a>
-</section>
-<section class="sidebar-section">
-    <div class="sidebar-section-title">
-        <i class="bi bi-box-arrow-up me-1"></i> النماذج
-    </div>
-<a class="sidebar-item" href="{% url 'transaction_create_addition' %}"><i class="bi bi-plus-circle me-1"></i>
-نموذج 1: إذن إضافة</a>
-<a class="sidebar-item" href="{% url 'transaction_create' %}"><i class="bi bi-box-arrow-up me-1"></i> نموذج 2:
-طلب وإذن صرف</a>
-<a class="sidebar-item" href="{% url 'employee_list' %}"><i class="bi bi-archive me-1"></i> نموذج 3: دفتر عهدة
-مخزن</a>
-<a class="sidebar-item" href="{% url 'employee_custody' %}"><i class="bi bi-journal-x me-1"></i> نموذج 4: دفتر
-شطب</a>
-<a class="sidebar-item" href="{% url 'employee_custody' %}"><i class="bi bi-journal me-1"></i> نموذج 5: يومية
-مخزن</a>
-<a class="sidebar-item" href="{% url 'employee_custody' %}"><i class="bi bi-clipboard-check me-1"></i> نموذج 6:
-محضر جرد أصناف</a>
-<a class="sidebar-item" href="{% url 'employee_custody' %}"><i class="bi bi-graph-up-arrow me-1"></i> نموذج 7:
-كشف الزيادة والعجز</a>
-<a class="sidebar-item" href="{% url 'transaction_create_return' %}"><i class="bi bi-arrow-return-left me-1"></i> نموذج 8: طلب ارتجاع أصناف</a>
-<a class="sidebar-item" href="{% url 'transaction_create_transfer' %}"><i class="bi bi-arrow-left-right me-1"></i> نقل عهدة</a>
+            <a class="sidebar-item" href="{% url 'admin_department_list' %}">
+                <i class="bi bi-archive me-1"></i>
+                <span>الاقسام</span>
+            </a>
+               <a class="sidebar-item" href="{% url 'warehouse_list' %}">
+                <i class="bi bi-building-fill"></i>
+                <span>المخازن الرئيسية</span>
+            </a>
+            <a class="sidebar-item" href="{% url 'subwarehouse_list' %}">
+                <i class="bi bi-box-fill"></i>
+                <span>المخازن الفرعية</span>
+            </a>
+            <a class="sidebar-item" href="{% url 'itemcategory_list' %}">
+                <i class="bi bi-tags me-1"></i> فئات البنود
+            </a>
+            <a class="sidebar-item" href="{% url 'admin_transaction_list' %}">
+                <i class="bi bi-journal-text"></i>
+                <span>السندات</span>
+            </a>
+            <a class="sidebar-item" href="{% url 'admin_faculty_stock_view' %}">
+                <i class="bi bi-box-seam"></i>
+                <span>المخزون</span>
+            </a>
+            <a class="sidebar-item" href="{% url 'admin_faculty_items' %}">
+                <i class="bi bi-cash"></i>
+                <span>أصناف كلية</span>
+            </a>
+            <a class="sidebar-item" href="{% url 'admin_edit_custody_prices' %}">
+                <i class="bi bi-cash"></i>
+                <span>أسعار العهد</span>
+            </a>
+            <a class="sidebar-item" href="{% url 'view_logs' %}">
+                <i class="bi bi-clipboard-data"></i>
+                <span>سجلات النظام</span>
+            </a>
+            <a class="sidebar-item" href="{% url 'system_settings' %}">
+                <i class="bi bi-gear-fill"></i>
+                <span>إعدادات النظام</span>
+            </a>
+            <a class="sidebar-item" href="{% url 'admin:index' %}"><i class="bi bi-gear me-1"></i> إدارة النظام</a>
+        </section>
+    {% else %}
+        <section class="sidebar-section">
+            <div class="sidebar-section-title">التشغيل</div>
+            <a class="sidebar-item" href="{% url 'home' %}">
+                <i class="bi bi-speedometer2"></i>
+                <span>الرئيسية</span>
+            </a>
+            <a class="sidebar-item" href="{% url 'transaction_list' %}">
+                <i class="bi bi-file-earmark-text-fill"></i>
+                <span>السندات</span>
+            </a>
+            <a class="sidebar-item" href="{% url 'pending_transactions' %}">
+                <i class="bi bi-hourglass-split"></i>
+                <span>سندات قيد الانتظار</span>
+            </a>
+            <a class="sidebar-item" href="{% url 'password_change' %}">
+                <i class="bi bi-person me-2"></i>
+                تغيير كلمة المرور
+            </a>
+        </section>
+        <section class="sidebar-section">
+            <div class="sidebar-section-title">التعريفات</div>
+            <a class="sidebar-item" href="{% url 'item_list' %}">
+                <i class="bi bi-tags-fill"></i>
+                <span>الأصناف</span>
+            </a>
+            <a class="sidebar-item" href="{% url 'warehouse_list' %}">
+                <i class="bi bi-building-fill"></i>
+                <span>المخازن الرئيسية</span>
+            </a>
+            <a class="sidebar-item" href="{% url 'subwarehouse_list' %}">
+                <i class="bi bi-box-fill"></i>
+                <span>المخازن الفرعية</span>
+            </a>
+            <a class="sidebar-item" href="{% url 'itemcategory_list' %}">
+                <i class="bi bi-tags me-1"></i> فئات البنود
+            </a>
+            <a class="sidebar-item" href="{% url 'supplier_list' %}">
+                <i class="bi bi-truck"></i>
+                <span>الموردون</span>
+            </a>
+        </section>
+        <section class="sidebar-section">
+            <div class="sidebar-section-title">
+                <i class="bi bi-box-arrow-up me-1"></i> النماذج
+            </div>
+        <a class="sidebar-item" href="{% url 'transaction_create_addition' %}"><i class="bi bi-plus-circle me-1"></i>
+    نموذج 1: إذن إضافة</a>
+    <a class="sidebar-item" href="{% url 'transaction_create' %}"><i class="bi bi-box-arrow-up me-1"></i> نموذج 2:
+    طلب وإذن صرف</a>
+    <a class="sidebar-item" href="{% url 'employee_list' %}"><i class="bi bi-archive me-1"></i> نموذج 3: دفتر عهدة
+    مخزن</a>
+    <a class="sidebar-item" href="{% url 'employee_custody' %}"><i class="bi bi-journal-x me-1"></i> نموذج 4: دفتر
+    شطب</a>
+    <a class="sidebar-item" href="{% url 'employee_custody' %}"><i class="bi bi-journal me-1"></i> نموذج 5: يومية
+    مخزن</a>
+    <a class="sidebar-item" href="{% url 'employee_custody' %}"><i class="bi bi-clipboard-check me-1"></i> نموذج 6:
+    محضر جرد أصناف</a>
+    <a class="sidebar-item" href="{% url 'employee_custody' %}"><i class="bi bi-graph-up-arrow me-1"></i> نموذج 7:
+    كشف الزيادة والعجز</a>
+    <a class="sidebar-item" href="{% url 'transaction_create_return' %}"><i class="bi bi-arrow-return-left me-1"></i> نموذج 8: طلب ارتجاع أصناف</a>
+    <a class="sidebar-item" href="{% url 'transaction_create_transfer' %}"><i class="bi bi-arrow-left-right me-1"></i> نقل عهدة</a>
 <a class="sidebar-item" href="{% url 'employee_custody' %}"><i class="bi bi-exclamation-triangle me-1"></i>
 نموذج 9: الأصناف التالفة / المفقودة</a>
 <a class="sidebar-item" href="{% url 'employee_custody' %}"><i class="bi bi-file-person me-1"></i> نموذج 10: كشف

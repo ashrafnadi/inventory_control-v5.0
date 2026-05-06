@@ -4498,7 +4498,7 @@ def warehouse_list(request):
 
 @login_required
 def warehouse_create(request):
-    if request.session.get("user_type") not in ["inventory_admin"]:
+    if not request.user.is_superuser:
         return HttpResponseForbidden("ليس لديك صلاحية إضافة مخازن.")
     if request.method == "POST":
         form = WarehouseForm(request.POST)
@@ -4515,7 +4515,7 @@ def warehouse_create(request):
 
 @login_required
 def warehouse_update(request, pk):
-    if request.session.get("user_type") not in ["inventory_admin"]:
+    if not request.user.is_superuser:
         return HttpResponseForbidden("ليس لديك صلاحية تعديل المخازن.")
 
     warehouse = get_object_or_404(Warehouse, pk=pk)
@@ -4536,7 +4536,7 @@ def warehouse_update(request, pk):
 
 @login_required
 def warehouse_delete(request, pk):
-    if request.session.get("user_type") not in ["inventory_admin"]:
+    if not request.user.is_superuser:
         return HttpResponseForbidden("ليس لديك صلاحية حذف المخازن.")
     warehouse = get_object_or_404(Warehouse, pk=pk)
     if request.method == "POST":
@@ -4560,7 +4560,7 @@ def subwarehouse_list(request):
 @login_required
 def subwarehouse_create(request):
     """Create a new shared sub-warehouse."""
-    if request.session.get("user_type") not in ["inventory_admin"]:
+    if not request.user.is_superuser:
         return HttpResponseForbidden("ليس لديك صلاحية إضافة مخازن فرعية.")
 
     if request.method == "POST":
@@ -4581,17 +4581,10 @@ def subwarehouse_create(request):
 @login_required
 def subwarehouse_update(request, pk):
     """Update a shared sub-warehouse."""
-    if request.session.get("user_type") not in ["inventory_admin"]:
+    if not request.user.is_superuser:
         return HttpResponseForbidden("ليس لديك صلاحية تعديل المخازن الفرعية.")
 
     sub_warehouse = get_object_or_404(SubWarehouse, pk=pk)
-
-    if not (
-        request.user.profile.is_inventory_manager
-        or request.user.profile.is_faculty_manager
-        or request.session.get("user_type") == "administration_manager"
-    ):
-        return HttpResponseForbidden("ليس لديك صلاحية تعديل المخازن الفرعية.")
 
     if request.method == "POST":
         form = SubWarehouseForm(request.POST, instance=sub_warehouse)
@@ -4611,7 +4604,7 @@ def subwarehouse_update(request, pk):
 @login_required
 def subwarehouse_delete(request, pk):
     """Delete a shared sub-warehouse."""
-    if request.session.get("user_type") not in ["inventory_admin"]:
+    if not request.user.is_superuser:
         return HttpResponseForbidden("ليس لديك صلاحية حذف المخازن الفرعية.")
 
     sub_warehouse = get_object_or_404(SubWarehouse, pk=pk)
@@ -4648,11 +4641,8 @@ def itemcategory_list(request):
 @login_required
 def itemcategory_create(request):
     """Create category for user's faculty"""
-    if request.session.get("user_type") not in ["inventory_admin"]:
+    if not request.user.is_superuser:
         return HttpResponseForbidden("ليس لديك صلاحية إضافة فئات الأصناف.")
-
-    if not request.user.profile.faculty:
-        return HttpResponseForbidden("ليس لديك كليّة مرتبطة بحسابك.")
 
     if request.method == "POST":
         form = ItemCategoryForm(request.POST)
@@ -4674,7 +4664,7 @@ def itemcategory_create(request):
 @login_required
 def itemcategory_update(request, pk):
     """Update category and cascade sub_warehouse changes to related transactions."""
-    if request.session.get("user_type") not in ["inventory_admin"]:
+    if not request.user.is_superuser:
         return HttpResponseForbidden("ليس لديك صلاحية تعديل فئات الأصناف.")
 
     category = get_object_or_404(ItemCategory, pk=pk)
@@ -4750,7 +4740,7 @@ def itemcategory_update(request, pk):
 @login_required
 def itemcategory_delete(request, pk):
     """Delete category (only if it belongs to user's faculty)"""
-    if request.session.get("user_type") not in ["inventory_admin"]:
+    if not request.user.is_superuser:
         return HttpResponseForbidden("ليس لديك صلاحية حذف فئات الأصناف.")
 
     category = get_object_or_404(ItemCategory, pk=pk)
