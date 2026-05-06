@@ -570,17 +570,16 @@ def items_by_category(request):
 @login_required
 def item_history_view(request, item_id):
     """
-    Shows ALL transaction history for an item.
-    Hides 'REV-' reversal documents.
-    Keeps original reversed transactions with inverted signs.
-    IGNORES category/sub_warehouse mapping. Calculates running balance from raw transactions.
+    Shows ALL transaction history for an item (including REV- reversals).
+    Original reversed transactions keep their original sign.
+    Reversal transactions show opposite sign to cancel out correctly.
     """
     item = get_object_or_404(Item, id=item_id)
     user_faculty = getattr(getattr(request.user, "profile", None), "faculty", None)
     if not user_faculty:
         return HttpResponseForbidden("ليس لديك صلاحية.")
 
-    # EXCLUDE reversal documents (REV-...) from both querysets
+    # ✅ INCLUDE all transactions (including REV-) for accurate history & balance
     details_qs = (
         ItemTransactionDetails.objects.select_related(
             "transaction",
@@ -588,13 +587,7 @@ def item_history_view(request, item_id):
             "transaction__from_sub_warehouse",
             "transaction__to_sub_warehouse",
         )
-        .filter(
-            item=item,
-            transaction__faculty=user_faculty,
-        )
-        .exclude(
-            transaction__document_number__startswith="REV-"
-        )  # 🔑 Hide REV- documents
+        .filter(item=item, transaction__faculty=user_faculty)
         .order_by("transaction__created_at", "transaction__id", "id")
     )
 
@@ -615,6 +608,9 @@ def item_history_view(request, item_id):
         status = tx.approval_status
         is_deleted = tx.deleted
         is_reversed = tx.is_reversed
+        is_rev_doc = (
+            tx.document_number.startswith("REV-") if tx.document_number else False
+        )
 
         is_pending = status == ItemTransactions.APPROVAL_STATUS.PENDING
         is_cancelled = is_deleted or (
@@ -635,13 +631,23 @@ def item_history_view(request, item_id):
             total_cancelled_count += 1
             total_cancelled_qty += qty
 
-        # Balance calculation
+        # ✅ CORRECT SIGN LOGIC FOR BALANCE CALCULATION
         affects_balance = is_approved and not is_deleted and tx_type in ["A", "R", "D"]
 
         if affects_balance:
             balance_before = running_balance
-            base_sign = 1 if tx_type in ["A", "R"] else -1
-            actual_sign = -base_sign if is_reversed else base_sign
+            base_sign = 1 if tx_type in ["A", "R"] else -1  # A/R=+, D=-
+
+            if is_rev_doc:
+                # Reversal document: OPPOSITE sign of original
+                actual_sign = -base_sign
+            elif is_reversed:
+                # Original document that was reversed: KEEP original sign (negative for D)
+                # The REV- doc will cancel it out later
+                actual_sign = base_sign
+            else:
+                # Normal transaction
+                actual_sign = base_sign
 
             change = actual_sign * qty
             running_balance += change
@@ -656,7 +662,7 @@ def item_history_view(request, item_id):
             balance_after = running_balance
             change = 0
 
-        # Description
+        # ✅ CORRECT DESCRIPTIONS
         desc_map = {
             "A": "إضافة مخزنية",
             "D": "صرف/سحب",
@@ -664,8 +670,10 @@ def item_history_view(request, item_id):
             "T": "نقل عهدة",
         }
         qty_description = desc_map.get(tx_type, tx.get_transaction_type_display())
-        if is_reversed and affects_balance:
-            qty_description += " (معكوس)"
+        if is_rev_doc:
+            qty_description += " (سند عكس)"
+        elif is_reversed and affects_balance:
+            qty_description += " (تم عكسه)"
 
         transaction_history.append(
             {
@@ -674,6 +682,7 @@ def item_history_view(request, item_id):
                 "is_pending": is_pending,
                 "is_cancelled": is_cancelled,
                 "is_reversed": is_reversed,
+                "is_rev_doc": is_rev_doc,
                 "affects_balance": affects_balance,
                 "signed_qty": change,
                 "qty_description": qty_description,
@@ -685,10 +694,7 @@ def item_history_view(request, item_id):
 
     final_balance = running_balance
 
-    # EXACT SAME FILTER for aggregate to guarantee balance_matches = True
-    from django.db.models import Case, F, IntegerField, Q, Sum, Value, When
-    from django.db.models.functions import Coalesce
-
+    # ✅ EXACT SAME LOGIC for aggregate query (guarantees balance_matches = True)
     current_quantity = (
         ItemTransactionDetails.objects.filter(
             item=item,
@@ -696,30 +702,32 @@ def item_history_view(request, item_id):
             transaction__approval_status=ItemTransactions.APPROVAL_STATUS.APPROVED,
             transaction__deleted=False,
             transaction__transaction_type__in=["A", "D", "R"],
-        )
-        .exclude(transaction__document_number__startswith="REV-")  # 🔑 Match loop logic
-        .aggregate(
+        ).aggregate(
             net=Coalesce(
                 Sum(
                     Case(
+                        # Normal Addition/Return (+)
                         When(
                             Q(transaction__transaction_type__in=["A", "R"])
-                            & Q(transaction__is_reversed=False),
+                            & ~Q(transaction__document_number__startswith="REV-"),
                             then=F("approved_quantity"),
                         ),
+                        # Reversal of Addition/Return (-)
                         When(
                             Q(transaction__transaction_type__in=["A", "R"])
-                            & Q(transaction__is_reversed=True),
+                            & Q(transaction__document_number__startswith="REV-"),
                             then=-F("approved_quantity"),
                         ),
+                        # Normal Disbursement (-)
                         When(
                             Q(transaction__transaction_type="D")
-                            & Q(transaction__is_reversed=False),
+                            & ~Q(transaction__document_number__startswith="REV-"),
                             then=-F("approved_quantity"),
                         ),
+                        # Reversal of Disbursement (+)
                         When(
                             Q(transaction__transaction_type="D")
-                            & Q(transaction__is_reversed=True),
+                            & Q(transaction__document_number__startswith="REV-"),
                             then=F("approved_quantity"),
                         ),
                         default=Value(0),

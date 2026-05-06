@@ -4,7 +4,7 @@ Sync FacultyItemStock.cached_quantity with transaction history.
 ✅ Handles reversed transactions with sign inversion.
 ✅ Matches exact logic from item_history_view.
 """
-
+# uv run manage.py sync_faculty_stocks --faculty 1
 import logging
 
 from django.core.management.base import BaseCommand

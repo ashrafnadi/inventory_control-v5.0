@@ -10,25 +10,45 @@ from django.db.models import Case, F, IntegerField, Q, Sum, Value, When
 from django.db.models.functions import Coalesce
 from django.utils import timezone
 
+# ... (inside ItemTransactions class) ...
 from administration.models import Department, Faculty, InventoryYear
 
 logger = logging.getLogger(__name__)
 
 
+# inventory/models.py
+
+
 def calculate_authoritative_net_quantity(item, faculty, sub_warehouse=None):
     """
-    Authoritative quantity calculation matching item_history_view exactly.
-    Excludes REV- documents, handles reversals with sign inversion, clamps to >=0.
+    Authoritative quantity calculation that properly handles reversals.
+    - Excludes REV- documents
+    - Excludes original transactions where is_reversed=True
+    - Excludes reversal transactions (reversed_transaction__isnull=False)
     """
-    qs = ItemTransactionDetails.objects.filter(
-        item=item,
-        transaction__faculty=faculty,
-        transaction__approval_status=ItemTransactions.APPROVAL_STATUS.APPROVED,
-        transaction__deleted=False,
-        transaction__transaction_type__in=["A", "D", "R"],
-    ).exclude(transaction__document_number__startswith="REV-")
+    qs = (
+        ItemTransactionDetails.objects.filter(
+            item=item,
+            transaction__faculty=faculty,
+            transaction__approval_status=ItemTransactions.APPROVAL_STATUS.APPROVED,
+            transaction__deleted=False,
+            transaction__transaction_type__in=["A", "D", "R"],
+        )
+        .exclude(
+            # Exclude manual REV- documents
+            transaction__document_number__startswith="REV-"
+        )
+        .exclude(
+            # Exclude original transactions that have been reversed
+            transaction__is_reversed=True
+        )
+        .exclude(
+            # Exclude reversal transactions (they reference original via reversed_transaction)
+            transaction__reversed_transaction__isnull=False
+        )
+    )
 
-    # Strict sub_warehouse matching (prevents double-counting)
+    # Strict sub_warehouse matching
     if sub_warehouse:
         qs = qs.filter(
             Q(transaction__to_sub_warehouse=sub_warehouse)
@@ -960,18 +980,26 @@ class ItemTransactions(models.Model):
         return result
 
     def reverse_transaction(self, user, reason=""):
-        """Reverse this transaction and recalculate quantities."""
+        """
+        Reverse this transaction by marking it as reversed and creating an audit-only reversal record.
+        Does NOT create a new inventory-affecting transaction.
+        """
         if self.is_reversed:
             raise ValueError("هذا السند تم عكسه مسبقاً ولا يمكن عكسه مرة أخرى")
         if self.approval_status != self.APPROVAL_STATUS.APPROVED:
             raise ValueError("يمكن فقط عكس السندات المعتمدة")
 
         with db_transaction.atomic():
-            affected_items = self._get_affected_items()
-            logger.info(
-                f"ItemTransactions reverse_transaction: affected_items={affected_items}"
+            # Mark original as reversed
+            self.is_reversed = True
+            self.reversed_by = user
+            self.reversed_at = timezone.now()
+            self.notes = f"{self.notes or ''} | تم عكس السند بسبب: {reason}"
+            self.save(
+                update_fields=["is_reversed", "reversed_by", "reversed_at", "notes"]
             )
 
+            # Create SIMPLE reversal record for audit trail (NOT for inventory calculation)
             reversal = ItemTransactions.objects.create(
                 document_number=f"REV-{self.document_number}",
                 transaction_type=self.transaction_type,
@@ -991,8 +1019,12 @@ class ItemTransactions(models.Model):
                 approval_status=self.APPROVAL_STATUS.APPROVED,
                 created_by=user,
                 year=self.year,
+                # Mark reversal as non-inventory affecting
+                is_reversed=False,  # This is the reversal itself
+                reversed_transaction=self,  # Points back to original
             )
 
+            # Copy details for audit trail
             for detail in self.itemtransactiondetails_set.all():
                 ItemTransactionDetails.objects.create(
                     transaction=reversal,
@@ -1003,23 +1035,7 @@ class ItemTransactions(models.Model):
                     price=detail.price,
                 )
 
-            self.is_reversed = True
-            self.reversed_by = user
-            self.reversed_at = timezone.now()
-            self.reversed_transaction = reversal
-            self.notes = (
-                f"{self.notes or ''} | تم العكس بالسند {reversal.document_number}"
-            )
-            self.save(
-                update_fields=[
-                    "is_reversed",
-                    "reversed_by",
-                    "reversed_at",
-                    "reversed_transaction",
-                    "notes",
-                ]
-            )
-
+            # Log audit action
             TransactionAuditLog.objects.create(
                 transaction=reversal,
                 action=TransactionAuditLog.ACTION_TYPES.CREATE,
@@ -1027,6 +1043,9 @@ class ItemTransactions(models.Model):
                 transaction_snapshot=reversal.to_dict(),
                 details=f"تم عكس السند {self.document_number}: {reason}",
             )
+
+            # Recalculate affected items AFTER marking original as reversed
+            self._recalculate_affected_items()
 
             return reversal
 
@@ -1181,16 +1200,7 @@ class ItemTransactions(models.Model):
 
     def _recalculate_affected_items(self):
         """Auto-trigger recalculation after approval, deletion, or reversal."""
-        from django.db.models import Case, F, IntegerField, Q, Sum, Value, When
-        from django.db.models.functions import Coalesce
         from django.utils import timezone
-
-        from inventory.models import (
-            FacultyItemStock,
-            Item,
-            ItemTransactionDetails,
-            ItemTransactions,
-        )
 
         item_ids = list(
             self.itemtransactiondetails_set.values_list("item_id", flat=True)
@@ -1201,52 +1211,8 @@ class ItemTransactions(models.Model):
         for item_id in item_ids:
             item = Item.objects.get(id=item_id)
 
-            # 🔑 Same query as item_history_view
-            net = (
-                ItemTransactionDetails.objects.filter(
-                    item=item,
-                    transaction__faculty=self.faculty,
-                    transaction__approval_status=ItemTransactions.APPROVAL_STATUS.APPROVED,
-                    transaction__deleted=False,
-                    transaction__transaction_type__in=["A", "D", "R"],
-                )
-                .exclude(transaction__document_number__startswith="REV-")
-                .aggregate(
-                    net=Coalesce(
-                        Sum(
-                            Case(
-                                When(
-                                    Q(transaction__transaction_type__in=["A", "R"])
-                                    & Q(transaction__is_reversed=False),
-                                    then=F("approved_quantity"),
-                                ),
-                                When(
-                                    Q(transaction__transaction_type__in=["A", "R"])
-                                    & Q(transaction__is_reversed=True),
-                                    then=-F("approved_quantity"),
-                                ),
-                                When(
-                                    Q(transaction__transaction_type="D")
-                                    & Q(transaction__is_reversed=False),
-                                    then=-F("approved_quantity"),
-                                ),
-                                When(
-                                    Q(transaction__transaction_type="D")
-                                    & Q(transaction__is_reversed=True),
-                                    then=F("approved_quantity"),
-                                ),
-                                default=Value(0),
-                                output_field=IntegerField(),
-                            )
-                        ),
-                        Value(0),
-                    )
-                )["net"]
-                or 0
-            )
-
-            # CLAMP TO ZERO: Guarantees DB constraint is never violated
-            net = max(0, net)
+            # Use the updated calculate_authoritative_net_quantity function
+            net = calculate_authoritative_net_quantity(item, self.faculty)
 
             # Update ALL FacultyItemStock records for this faculty/item
             FacultyItemStock.objects.filter(faculty=self.faculty, item=item).update(
