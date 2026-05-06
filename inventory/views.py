@@ -579,7 +579,7 @@ def item_history_view(request, item_id):
     if not user_faculty:
         return HttpResponseForbidden("ليس لديك صلاحية.")
 
-    # ✅ INCLUDE all transactions (including REV-) for accurate history & balance
+    # INCLUDE all transactions (including REV-) for accurate history & balance
     details_qs = (
         ItemTransactionDetails.objects.select_related(
             "transaction",
@@ -631,7 +631,7 @@ def item_history_view(request, item_id):
             total_cancelled_count += 1
             total_cancelled_qty += qty
 
-        # ✅ CORRECT SIGN LOGIC FOR BALANCE CALCULATION
+        # CORRECT SIGN LOGIC FOR BALANCE CALCULATION
         affects_balance = is_approved and not is_deleted and tx_type in ["A", "R", "D"]
 
         if affects_balance:
@@ -662,7 +662,7 @@ def item_history_view(request, item_id):
             balance_after = running_balance
             change = 0
 
-        # ✅ CORRECT DESCRIPTIONS
+        # CORRECT DESCRIPTIONS
         desc_map = {
             "A": "إضافة مخزنية",
             "D": "صرف/سحب",
@@ -694,7 +694,7 @@ def item_history_view(request, item_id):
 
     final_balance = running_balance
 
-    # ✅ EXACT SAME LOGIC for aggregate query (guarantees balance_matches = True)
+    # EXACT SAME LOGIC for aggregate query (guarantees balance_matches = True)
     current_quantity = (
         ItemTransactionDetails.objects.filter(
             item=item,
@@ -2397,7 +2397,7 @@ def transaction_list_view(request):
                 "faculty",
             )
             .prefetch_related(
-                # ✅ Only prefetch items if needed for search/display
+                # Only prefetch items if needed for search/display
                 Prefetch(
                     "itemtransactiondetails_set",
                     queryset=ItemTransactionDetails.objects.select_related("item").only(
@@ -3686,7 +3686,7 @@ def get_employee_custody_data(employee, date_from=None, date_to=None, limit=None
                 deduct_qty -= deduct
 
             # B) Fallback: FIFO deduction for unlinked returns
-            # ✅ FIX: Removed castody_type check because return form forces "Warehouse"
+            # Removed castody_type check because return form forces "Warehouse"
             #         while items might be "Personal" or "Branch".
             if deduct_qty > 0:
                 for data in transaction_map.values():
@@ -5069,12 +5069,12 @@ def item_search_return(request):
 
     results = []
     for item in items:
-        # ✅ 1. Check if employee has this item in custody (net positive)
+        # 1. Check if employee has this item in custody (net positive)
         employee_qty = item.current_quantity_for_user(from_user)
         if employee_qty <= 0:
             continue  # Skip items employee doesn't own
 
-        # ✅ 2. Check destination warehouse stock (optional business rule)
+        # 2. Check destination warehouse stock (optional business rule)
         # For returns, we typically allow any item the employee owns,
         # but you can enforce that the warehouse must already track it:
         warehouse_stock = FacultyItemStock.objects.filter(
@@ -6093,7 +6093,7 @@ def admin_edit_custody_prices(request):
                     "castody_type": detail.transaction.castody_type,
                     "castody_type_display": detail.transaction.get_castody_type_display(),
                     "unit": detail.item.get_unit_display(),
-                    "detail_id": detail.id,  # ✅ Ensure this is always an integer
+                    "detail_id": detail.id,
                 }
 
         # PASS 2: Deduct RETURNS from the map
@@ -6134,7 +6134,7 @@ def admin_edit_custody_prices(request):
             if data["qty"] <= 0:
                 continue
 
-            # ✅ Ensure detail_id is valid integer before adding to list
+            # Ensure detail_id is valid integer before adding to list
             if data["detail_id"] and isinstance(data["detail_id"], int):
                 custody_records.append(
                     {
@@ -6160,7 +6160,7 @@ def admin_edit_custody_prices(request):
 
         with db_transaction.atomic():
             for rec in custody_records:
-                # ✅ Validate detail_id before using in query
+                # Validate detail_id before using in query
                 detail_id = rec.get("detail_id")
                 if not detail_id or not isinstance(detail_id, int):
                     continue
@@ -6182,7 +6182,6 @@ def admin_edit_custody_prices(request):
                     )
                     continue
 
-                # ✅ Safe query with validated ID
                 try:
                     detail = ItemTransactionDetails.objects.select_for_update().get(
                         id=detail_id
@@ -6340,7 +6339,7 @@ def admin_edit_transaction_header(request, transaction_id):
         {
             "form": form,
             "transaction": transaction,
-            "details": details,  # ✅ Passed for read-only display
+            "details": details,
             "page_title": f"تعديل رأس السند #{transaction.document_number}",
         },
     )

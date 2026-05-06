@@ -354,7 +354,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             searchTimeout = setTimeout(() => {
-                // ✅ Include BOTH from_user AND to_sub_warehouse in search URL
+                // Include BOTH from_user AND to_sub_warehouse in search URL
                 const url = `{% url 'item_search_return' %}?q=${encodeURIComponent(query)}&from_user=${encodeURIComponent(fromUserId)}&to_sub_warehouse=${encodeURIComponent(toSubWarehouseId)}`;
                 
                 fetch(url)
