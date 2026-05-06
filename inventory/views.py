@@ -4267,12 +4267,11 @@ def item_edit(request, item_id):
 
                 if new_sub_warehouse:
                     # Update sub_warehouse for ALL FacultyItemStock records of this item
-                    updated_count = FacultyItemStock.objects.filter(item=item).update(
-                        sub_warehouse=new_sub_warehouse
-                    )
-                    messages.info(
-                        request,
-                        f"تم تحديث المخزن الفرعي لـ {updated_count} سجل مخزون بناءً على الفئة الجديدة.",
+                    # updated_count = FacultyItemStock.objects.filter(item=item).update(
+                    #     sub_warehouse=new_sub_warehouse
+                    # )
+                    messages.success(
+                        request, "تم تحديث المخزن الفرعي بناءً على الفئة الجديدة."
                     )
                 else:
                     messages.warning(
