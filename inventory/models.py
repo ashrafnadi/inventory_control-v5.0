@@ -821,6 +821,11 @@ class ItemTransactions(models.Model):
             models.Index(fields=["faculty", "created_at"]),
             models.Index(fields=["faculty", "approval_status"]),
             models.Index(fields=["year", "created_at"]),
+            models.Index(fields=["year", "faculty", "-created_at"]),
+            models.Index(fields=["faculty", "approval_status", "-created_at"]),
+            models.Index(fields=["created_by", "faculty", "-created_at"]),
+            models.Index(fields=["document_number"]),
+            models.Index(fields=["notes"], name="idx_notes_search"),
         ]
         constraints = [
             models.UniqueConstraint(

@@ -14,10 +14,12 @@ from django.db import transaction
 from django.db import transaction as db_transaction
 from django.db.models import (
     Case,
+    Count,
     ExpressionWrapper,
     F,
     IntegerField,
     OuterRef,
+    Prefetch,
     Q,
     Subquery,
     Sum,
@@ -2352,9 +2354,11 @@ def transaction_edit_return_view(request, transaction_id):
 
 @login_required
 def transaction_list_view(request):
-    """List transactions with role-based filtering, approval status, and search."""
+    """Optimized list transactions with role-based filtering, search, and pagination."""
     user_type = request.session.get("user_type")
     user = request.user
+
+    # Cache open_year to avoid duplicate queries
     open_year = InventoryYear.get_open_year()
 
     # Ensure user has faculty
@@ -2362,13 +2366,14 @@ def transaction_list_view(request):
         messages.error(request, "ليس لديك كليّة مرتبطة بحسابك. يرجى الاتصال بالمسؤول.")
         return redirect("home")
 
+    user_faculty = user.profile.faculty
+
     try:
-        # BASE QUERYSET: Only include saved transactions with valid IDs
-        base_queryset = (
+        # STEP 1: Build base queryset with OPTIMIZED select_related/prefetch
+        base_qs = (
             ItemTransactions.objects.filter(
-                id__isnull=False,
                 year=open_year,
-                created_by__profile__faculty=user.profile.faculty,
+                deleted=False,
             )
             .select_related(
                 "created_by",
@@ -2380,81 +2385,67 @@ def transaction_list_view(request):
                 "to_user",
                 "inventory_user",
                 "approval_user",
+                "year",
+                "faculty",
             )
-            .prefetch_related("itemtransactiondetails_set__item")
-            .distinct()
+            .prefetch_related(
+                # ✅ Only prefetch items if needed for search/display
+                Prefetch(
+                    "itemtransactiondetails_set",
+                    queryset=ItemTransactionDetails.objects.select_related("item").only(
+                        "id", "transaction_id", "item_id", "approved_quantity"
+                    ),
+                    to_attr="details_cached",
+                )
+            )
         )
 
-        # ROLE-BASED FILTERING
+        # STEP 2: Apply ROLE-BASED filtering EARLY (reduces dataset size)
         if user_type == "administration_manager":
-            # Admin sees all transactions across ALL faculties
-            transactions = (
-                ItemTransactions.objects.filter(id__isnull=False, year=open_year)
-                .select_related(
-                    "created_by",
-                    "from_sub_warehouse",
-                    "to_sub_warehouse",
-                    "from_department",
-                    "to_department",
-                    "from_user",
-                    "to_user",
-                    "inventory_user",
-                    "approval_user",
-                )
-                .prefetch_related("itemtransactiondetails_set__item")
-                .distinct()
-            )
+            # Admin sees all transactions across ALL faculties for open year
+            qs = base_qs
         elif user_type == "faculty_manager":
-            # Faculty manager sees all transactions for their faculty
-            transactions = base_queryset.filter(
-                created_by__profile__faculty=user.profile.faculty
-            )
+            qs = base_qs.filter(faculty=user_faculty)
         elif user_type == "inventory_manager":
-            # Inventory manager sees pending + their own approved transactions in their faculty
-            transactions = base_queryset.filter(
+            qs = base_qs.filter(
                 Q(approval_status=ItemTransactions.APPROVAL_STATUS.PENDING)
                 | Q(approval_user=user),
-                created_by__profile__faculty=user.profile.faculty,
+                faculty=user_faculty,
             )
         elif user_type == "inventory_employee":
-            # Employees see only their own transactions
-            transactions = base_queryset.filter(created_by=user)
+            qs = base_qs.filter(created_by=user, faculty=user_faculty)
         else:
-            # Regular users see transactions they are involved in
-            transactions = base_queryset.filter(
-                Q(created_by=user) | Q(from_user=user) | Q(to_user=user)
+            # Regular users: transactions they created or are involved in
+            qs = base_qs.filter(
+                Q(created_by=user) | Q(from_user=user) | Q(to_user=user),
+                faculty=user_faculty,
             )
 
-        # PRE-CALCULATE STATISTICS FOR TEMPLATE
-        total_transactions = transactions.count()
-        pending_count = transactions.filter(
-            approval_status=ItemTransactions.APPROVAL_STATUS.PENDING
-        ).count()
-        approved_count = transactions.filter(
-            approval_status=ItemTransactions.APPROVAL_STATUS.APPROVED
-        ).count()
-        rejected_count = transactions.filter(
-            approval_status=ItemTransactions.APPROVAL_STATUS.REJECTED
-        ).count()
-        # APPROVAL STATUS FILTERING
+        # STEP 3: Apply filters (status, search, date) BEFORE counting
+        # Approval status filter
         approval_status = request.GET.get("approval_status")
         if approval_status and approval_status in dict(
             ItemTransactions.APPROVAL_STATUS.choices
         ):
-            transactions = transactions.filter(approval_status=approval_status)
+            qs = qs.filter(approval_status=approval_status)
 
-        # SEARCH FUNCTIONALITY
+        # Search filter - OPTIMIZED: avoid expensive joins when possible
         search_query = request.GET.get("search", "").strip()
         if search_query:
-            transactions = transactions.filter(
+            # First try simple fields (faster)
+            qs = qs.filter(
                 Q(document_number__icontains=search_query)
                 | Q(notes__icontains=search_query)
-                | Q(itemtransactiondetails__item__name__icontains=search_query)
                 | Q(created_by__first_name__icontains=search_query)
                 | Q(created_by__last_name__icontains=search_query)
-            ).distinct()
+            )
+            # Only add item name search if needed (more expensive)
+            if len(search_query) >= 3:  # Avoid short searches on item names
+                qs = qs.filter(
+                    Q(itemtransactiondetails__item__name__icontains=search_query)
+                ).distinct()  # Only use distinct when joining itemtransactiondetails
 
-        # DATE FILTERING (optional)
+        # Date range filter
         start_date = request.GET.get("start_date")
         end_date = request.GET.get("end_date")
         if start_date and end_date:
@@ -2465,44 +2456,55 @@ def transaction_list_view(request):
                 end_dt = timezone.make_aware(
                     datetime.strptime(end_date, "%Y-%m-%d")
                 ) + timedelta(days=1)
-                transactions = transactions.filter(created_at__range=(start_dt, end_dt))
+                qs = qs.filter(created_at__range=(start_dt, end_dt))
             except (ValueError, TypeError):
                 messages.warning(
                     request, "تنسيق التاريخ غير صحيح. سيتم عرض جميع السندات."
                 )
 
-        # ORDERING (most recent first)
-        transactions = transactions.filter(deleted=False).order_by("-created_at")
+        # STEP 4: Calculate statistics in SINGLE aggregate query (not 4 separate counts)
+        stats = qs.aggregate(
+            total=Count("id", distinct=True),
+            pending=Count(
+                "id",
+                filter=Q(approval_status=ItemTransactions.APPROVAL_STATUS.PENDING),
+                distinct=True,
+            ),
+            approved=Count(
+                "id",
+                filter=Q(approval_status=ItemTransactions.APPROVAL_STATUS.APPROVED),
+                distinct=True,
+            ),
+            rejected=Count(
+                "id",
+                filter=Q(approval_status=ItemTransactions.APPROVAL_STATUS.REJECTED),
+                distinct=True,
+            ),
+        )
 
-        # PAGINATION (20 items per page)
-        # paginator = Paginator(transactions, 10)
-        # page_number = request.GET.get("page")
-        # page_obj = paginator.get_page(page_number)
+        # STEP 5: Apply ordering
+        qs = qs.order_by("-created_at")
 
-        # PREPARE CONTEXT FOR TEMPLATE
+        # STEP 6: Prepare context
         context = {
-            "transactions": transactions,
+            "transactions": qs,
             "approval_status_choices": ItemTransactions.APPROVAL_STATUS.choices,
             "current_approval_status": approval_status,
             "search_query": search_query,
             "start_date": start_date,
             "end_date": end_date,
             "user_type": user_type,
-            "faculty_name": user.profile.faculty.name
-            if hasattr(user, "profile") and user.profile.faculty
-            else "غير معروف",
-            # STATISTICS FOR CARDS
-            "total_transactions": total_transactions,
-            "pending_count": pending_count,
-            "approved_count": approved_count,
-            "rejected_count": rejected_count,
+            "faculty_name": user_faculty.name,
+            "total_transactions": stats["total"] or 0,
+            "pending_count": stats["pending"] or 0,
+            "approved_count": stats["approved"] or 0,
+            "rejected_count": stats["rejected"] or 0,
             "open_year": open_year,
         }
 
         return render(request, "inventory/transaction_list.html", context)
 
     except Exception as e:
-        print(e)
         logger.error(f"Error in transaction_list_view: {str(e)}", exc_info=True)
         messages.error(
             request, "حدث خطأ أثناء تحميل قائمة السندات. يرجى المحاولة مرة أخرى."

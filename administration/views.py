@@ -2248,7 +2248,9 @@ def admin_user_import_excel(request):
 @login_required
 @user_passes_test(is_superuser)
 def admin_faculty_list(request):
-    faculties = Faculty.objects.all().order_by("name")
+    faculties = (
+        Faculty.objects.all().prefetch_related("department_set").order_by("name")
+    )
     return render(
         request, "administration/admin_faculty_list.html", {"faculties": faculties}
     )

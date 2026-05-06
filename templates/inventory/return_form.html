@@ -2,228 +2,219 @@
 {% extends "base.html" %}
 {% load static %}
 {% load widget_tweaks %}
-
-{% block title %}نموذج 8: طلب ارتجاع أصناف{% endblock title %}
-
+{% block title %}
+    نموذج 8: طلب ارتجاع أصناف
+{% endblock title %}
 {% block content %}
-<form method="post" id="return-form">
-    {% csrf_token %}
-    
-    <!-- Parent Form: ItemTransactions -->
-    <div class="card mb-4 overflow-visible">
-        <div class="card-header bg-primary text-white">
-            <h5 class="mb-0">نموذج 8: طلب ارتجاع أصناف</h5>
-        </div>
-        
-        <input type="hidden" name="approval_status" value="{{ form.approval_status.value|default:form.approval_status.initial }}" />
-        <input type="hidden" name="transaction_type" value="{{ form.transaction_type.value|default:form.transaction_type.initial }}" />
-        <input type="hidden" name="castody_type" value="{{ form.castody_type.value|default:form.castody_type.initial }}" />
-        
-        <div class="card-body overflow-visible">
-            <div class="row">
-                <!-- 1. document_number (Read-only) -->
-                <div class="col-md-3 mb-3">
-                    <label>رقم المستند</label>
-                    <input type="text" class="form-control" value="{{ form.instance.document_number|default:'سيتم الإنشاء تلقائياً' }}" readonly />
-                </div>
-                
-                <!-- 2. document_type -->
-                <div class="col-md-3 mb-3">
-                    {{ form.document_type.label_tag }}
-                    {{ form.document_type|add_class:"form-select" }}
-                    {% if form.document_type.errors %}
-                        <div class="text-danger mt-1">{{ form.document_type.errors }}</div>
-                    {% endif %}
-                </div>
-                
-                <!-- 3. from_department (HTMX) -->
-                <div class="col-md-3 mb-3">
-                    {{ form.from_department.label_tag }}
-                    <select name="from_department" id="id_from_department" class="form-select"
-                            hx-get="{% url 'from_department_users_select_return' %}"
-                            hx-trigger="change"
-                            hx-target="#from-user-container"
-                            hx-include="[name='from_department']"
-                            hx-indicator="#from-dept-spinner">
-                        <option value="">---------</option>
-                        {% for value, label in form.from_department.field.choices %}
-                            {% if value %}
-                                <option value="{{ value }}" {% if form.from_department.value == value|default_if_none:"" %}selected{% endif %}>
-                                    {{ label }}
-                                </option>
-                            {% endif %}
-                        {% endfor %}
-                    </select>
-                    <div id="from-dept-spinner" class="htmx-indicator hide">
-                        <small class="text-primary">جاري التحميل...</small>
+    <form method="post" id="return-form">
+        {% csrf_token %}
+        <!-- Parent Form: ItemTransactions -->
+        <div class="card mb-4 overflow-visible">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">نموذج 8: طلب ارتجاع أصناف</h5>
+            </div>
+            <input type="hidden"
+                   name="approval_status"
+                   value="{{ form.approval_status.value|default:form.approval_status.initial }}" />
+            <input type="hidden"
+                   name="transaction_type"
+                   value="{{ form.transaction_type.value|default:form.transaction_type.initial }}" />
+            <input type="hidden"
+                   name="castody_type"
+                   value="{{ form.castody_type.value|default:form.castody_type.initial }}" />
+            <div class="card-body overflow-visible">
+                <div class="row">
+                    <!-- 1. document_number (Read-only) -->
+                    <div class="col-md-3 mb-3">
+                        <label>رقم المستند</label>
+                        <input type="text"
+                               class="form-control"
+                               value="{{ form.instance.document_number|default:'سيتم الإنشاء تلقائياً' }}"
+                               readonly />
                     </div>
-                    {% if form.from_department.errors %}
-                        <div class="text-danger mt-1">{{ form.from_department.errors }}</div>
-                    {% endif %}
-                </div>
-                
-                <!-- 4. from_user (HTMX target) -->
-                <div class="col-md-3 mb-3">
-                    {{ form.from_user.label_tag }}
-                    <div id="from-user-container">
-                        {% if form.from_user.field.queryset.exists and form.from_department.value %}
-                            {{ form.from_user|add_class:"form-select" }}
-                        {% else %}
-                            <select class="form-select" disabled>
-                                <option>اختر القسم أولاً</option>
-                            </select>
-                        {% endif %}
+                    <!-- 2. document_type -->
+                    <div class="col-md-3 mb-3">
+                        {{ form.document_type.label_tag }}
+                        {{ form.document_type|add_class:"form-select" }}
+                        {% if form.document_type.errors %}<div class="text-danger mt-1">{{ form.document_type.errors }}</div>{% endif %}
                     </div>
-                    {% if form.from_user.errors %}
-                        <div class="text-danger mt-1">{{ form.from_user.errors }}</div>
-                    {% endif %}
-                </div>
-                
-                <!-- 5. to_sub_warehouse (FIXED: HTMX for inventory_user) -->
-                <div class="col-md-3 mb-3">
-                    {{ form.to_sub_warehouse.label_tag }}
-                    <select name="to_sub_warehouse" id="id_to_sub_warehouse" class="form-select"
-                            hx-get="{% url 'inventory_user_select_return' %}"
-                            hx-trigger="change"
-                            hx-target="#inventory-user-container"
-                            hx-include="[name='to_sub_warehouse']"
-                            hx-indicator="#to-wh-spinner">
-                        <option value="">---------</option>
-                        {% for value, label in form.to_sub_warehouse.field.choices %}
-                            {% if value %}
-                                <option value="{{ value }}" {% if form.to_sub_warehouse.value == value|default_if_none:"" %}selected{% endif %}>
-                                    {{ label }}
-                                </option>
-                            {% endif %}
-                        {% endfor %}
-                    </select>
-                    <div id="to-wh-spinner" class="htmx-indicator hide">
-                        <small class="text-primary">جاري التحميل...</small>
+                    <!-- 3. from_department (HTMX) -->
+                    <div class="col-md-3 mb-3">
+                        {{ form.from_department.label_tag }}
+                        <select name="from_department"
+                                id="id_from_department"
+                                class="form-select"
+                                hx-get="{% url 'from_department_users_select_return' %}"
+                                hx-trigger="change"
+                                hx-target="#from-user-container"
+                                hx-include="[name='from_department']"
+                                hx-indicator="#from-dept-spinner">
+                            <option value="">---------</option>
+                            {% for value, label in form.from_department.field.choices %}
+                                {% if value %}
+                                    <option value="{{ value }}"
+                                            {% if form.from_department.value == value|default_if_none:"" %}selected{% endif %}>
+                                        {{ label }}
+                                    </option>
+                                {% endif %}
+                            {% endfor %}
+                        </select>
+                        <div id="from-dept-spinner" class="htmx-indicator hide">
+                            <small class="text-primary">جاري التحميل...</small>
+                        </div>
+                        {% if form.from_department.errors %}<div class="text-danger mt-1">{{ form.from_department.errors }}</div>{% endif %}
                     </div>
-                    {% if form.to_sub_warehouse.errors %}
-                        <div class="text-danger mt-1">{{ form.to_sub_warehouse.errors }}</div>
-                    {% endif %}
-                </div>
-                
-                <!-- 6. inventory_user (HTMX target) -->
-                <div class="col-md-3 mb-3">
-                    {{ form.inventory_user.label_tag }}
-                    <div id="inventory-user-container">
-                        {% if form.inventory_user.field.queryset.exists %}
-                            {{ form.inventory_user|add_class:"form-select" }}
-                        {% else %}
-                            <div class="form-control text-muted" disabled>اختر المخزن الفرعي أولاً</div>
-                        {% endif %}
-                    </div>
-                    {% if form.inventory_user.errors %}
-                        <div class="text-danger mt-1">{{ form.inventory_user.errors }}</div>
-                    {% endif %}
-                </div>
-                
-                <!-- Other fields (loop, excluding handled ones) -->
-                {% for field in form %}
-                    {% if field.name not in "document_number document_type to_sub_warehouse from_department from_user inventory_user notes transaction_type castody_type to_warehouse created_by approval_status" %}
-                        <div class="col-md-3 mb-3">
-                            {{ field.label_tag }}
-                            {% if field.field.widget.input_type == 'select' %}
-                                {{ field|add_class:"form-select" }}
+                    <!-- 4. from_user (HTMX target) -->
+                    <div class="col-md-3 mb-3">
+                        {{ form.from_user.label_tag }}
+                        <div id="from-user-container">
+                            {% if form.from_user.field.queryset.exists and form.from_department.value %}
+                                {{ form.from_user|add_class:"form-select" }}
                             {% else %}
-                                {{ field|add_class:"form-control" }}
-                            {% endif %}
-                            {% if field.errors %}
-                                <div class="text-danger mt-1">{{ field.errors }}</div>
+                                <select class="form-select" disabled>
+                                    <option>اختر القسم أولاً</option>
+                                </select>
                             {% endif %}
                         </div>
-                    {% endif %}
-                {% endfor %}
-            </div>
-            
-            <!-- Notes field (full width) -->
-            <div class="row">
-                <div class="col-12 mb-3">
-                    {{ form.notes.label_tag }}
-                    {{ form.notes|add_class:"form-control" }}
-                    {% if form.notes.errors %}
-                        <div class="text-danger mt-1">{{ form.notes.errors }}</div>
-                    {% endif %}
+                        {% if form.from_user.errors %}<div class="text-danger mt-1">{{ form.from_user.errors }}</div>{% endif %}
+                    </div>
+                    <!-- 5. to_sub_warehouse (FIXED: HTMX for inventory_user) -->
+                    <div class="col-md-3 mb-3">
+                        {{ form.to_sub_warehouse.label_tag }}
+                        <select name="to_sub_warehouse"
+                                id="id_to_sub_warehouse"
+                                class="form-select"
+                                hx-get="{% url 'inventory_user_select_return' %}"
+                                hx-trigger="change"
+                                hx-target="#inventory-user-container"
+                                hx-include="[name='to_sub_warehouse']"
+                                hx-indicator="#to-wh-spinner">
+                            <option value="">---------</option>
+                            {% for value, label in form.to_sub_warehouse.field.choices %}
+                                {% if value %}
+                                    <option value="{{ value }}"
+                                            {% if form.to_sub_warehouse.value == value|default_if_none:"" %}selected{% endif %}>
+                                        {{ label }}
+                                    </option>
+                                {% endif %}
+                            {% endfor %}
+                        </select>
+                        <div id="to-wh-spinner" class="htmx-indicator hide">
+                            <small class="text-primary">جاري التحميل...</small>
+                        </div>
+                        {% if form.to_sub_warehouse.errors %}<div class="text-danger mt-1">{{ form.to_sub_warehouse.errors }}</div>{% endif %}
+                    </div>
+                    <!-- 6. inventory_user (HTMX target) -->
+                    <div class="col-md-3 mb-3">
+                        {{ form.inventory_user.label_tag }}
+                        <div id="inventory-user-container">
+                            {% if form.inventory_user.field.queryset.exists %}
+                                {{ form.inventory_user|add_class:"form-select" }}
+                            {% else %}
+                                <div class="form-control text-muted" disabled>اختر المخزن الفرعي أولاً</div>
+                            {% endif %}
+                        </div>
+                        {% if form.inventory_user.errors %}<div class="text-danger mt-1">{{ form.inventory_user.errors }}</div>{% endif %}
+                    </div>
+                    <!-- Other fields (loop, excluding handled ones) -->
+                    {% for field in form %}
+                        {% if field.name not in "document_number document_type to_sub_warehouse from_department from_user inventory_user notes transaction_type castody_type to_warehouse created_by approval_status" %}
+                            <div class="col-md-3 mb-3">
+                                {{ field.label_tag }}
+                                {% if field.field.widget.input_type == 'select' %}
+                                    {{ field|add_class:"form-select" }}
+                                {% else %}
+                                    {{ field|add_class:"form-control" }}
+                                {% endif %}
+                                {% if field.errors %}<div class="text-danger mt-1">{{ field.errors }}</div>{% endif %}
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+                <!-- Notes field (full width) -->
+                <div class="row">
+                    <div class="col-12 mb-3">
+                        {{ form.notes.label_tag }}
+                        {{ form.notes|add_class:"form-control" }}
+                        {% if form.notes.errors %}<div class="text-danger mt-1">{{ form.notes.errors }}</div>{% endif %}
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-    
-    <!-- Child Formset: ItemTransactionDetails -->
-    <div class="card mb-4 overflow-visible">
-        {{ details_formset.management_form }}
-        <div id="formset-config" data-prefix="{{ details_formset.prefix }}" class="hide"></div>
-        
-        <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">تفاصيل الأصناف</h5>
-            <button type="button" id="add-row" class="btn btn-light btn-sm">إضافة صنف +</button>
-        </div>
-        
-        <div class="card-body">
-            <div class="table-responsive overflow-visible">
-                <table class="table table-bordered form-table" id="details-table">
-                    <thead class="table-light">
-                        <tr>
-                            <th width="600px">الصنف</th>
-                            <th width="150px">الكمية المسترجعة</th>
-                            <th width="150px">الحالة</th>
-                            <th>ملاحظات</th>
-                            <th class="operations"></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for form in details_formset %}
-                            <tr class="form-row">
-                                {{ form.id }}
-                                <td>
-                                    {{ form.item }}
-                                    <input type="hidden" name="{{ details_formset.prefix }}-{{ forloop.counter0 }}-stock" class="item-stock" />
-                                    <input type="text" class="form-control form-control-sm item-search" placeholder="ابحث عن الصنف..." autocomplete="off" />
-                                </td>
-                                <td>
-                                    {{ form.approved_quantity|add_class:"form-control form-control-sm" }}
-                                    {% if form.approved_quantity.errors %}
-                                        <div class="text-danger small">{{ form.approved_quantity.errors }}</div>
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    {{ form.status|add_class:"form-select form-select-sm" }}
-                                </td>
-                                <td>
-                                    {{ form.notes|add_class:"form-control form-control-sm border-0 bg-transparent shadow-none" }}
-                                    {% if form.notes.errors %}
-                                        <div class="text-danger small">{{ form.notes.errors }}</div>
-                                    {% endif %}
-                                </td>
-                                <td class="text-center align-middle">
-                                    <div class="hide-delete">{{ form.DELETE }}</div>
-                                    <button type="button" class="btn btn-sm btn-link text-danger delete-row" title="حذف الصنف">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
-                                </td>
+        <!-- Child Formset: ItemTransactionDetails -->
+        <div class="card mb-4 overflow-visible">
+            {{ details_formset.management_form }}
+            <div id="formset-config"
+                 data-prefix="{{ details_formset.prefix }}"
+                 class="hide"></div>
+            <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">تفاصيل الأصناف</h5>
+                <button type="button" id="add-row" class="btn btn-light btn-sm">إضافة صنف +</button>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive overflow-visible">
+                    <table class="table table-bordered form-table" id="details-table">
+                        <thead class="table-light">
+                            <tr>
+                                <th width="600px">الصنف</th>
+                                <th width="150px">الكمية المسترجعة</th>
+                                <th width="150px">الحالة</th>
+                                <th>ملاحظات</th>
+                                <th class="operations"></th>
                             </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            {% for form in details_formset %}
+                                <tr class="form-row">
+                                    {{ form.id }}
+                                    <td>
+                                        {{ form.item }}
+                                        <input type="hidden"
+                                               name="{{ details_formset.prefix }}-{{ forloop.counter0 }}-stock"
+                                               class="item-stock" />
+                                        <input type="text"
+                                               class="form-control form-control-sm item-search"
+                                               placeholder="ابحث عن الصنف..."
+                                               autocomplete="off" />
+                                    </td>
+                                    <td>
+                                        {{ form.approved_quantity|add_class:"form-control form-control-sm" }}
+                                        {% if form.approved_quantity.errors %}
+                                            <div class="text-danger small">{{ form.approved_quantity.errors }}</div>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ form.status|add_class:"form-select form-select-sm" }}</td>
+                                    <td>
+                                        {{ form.notes|add_class:"form-control form-control-sm border-0 bg-transparent shadow-none" }}
+                                        {% if form.notes.errors %}<div class="text-danger small">{{ form.notes.errors }}</div>{% endif %}
+                                    </td>
+                                    <td class="text-center align-middle">
+                                        <div class="hide-delete">{{ form.DELETE }}</div>
+                                        <button type="button"
+                                                class="btn btn-sm btn-link text-danger delete-row"
+                                                title="حذف الصنف">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
-    </div>
-    
-    <!-- Hidden created_by -->
-    <input type="hidden" name="created_by" value="{{ request.user.id }}" />
-    
-    <!-- Submit buttons -->
-    <div class="d-flex justify-content-between">
-        <a href="{{ return_url|default:'/inventory/items/' }}" class="btn btn-secondary">إلغاء</a>
-        <button type="submit" class="btn btn-primary">حفظ</button>
-    </div>
-</form>
+        <!-- Hidden created_by -->
+        <input type="hidden" name="created_by" value="{{ request.user.id }}" />
+        <!-- Submit buttons -->
+        <div class="d-flex justify-content-between">
+            <a href="{{ return_url|default:'/inventory/items/' }}"
+               class="btn btn-secondary">إلغاء</a>
+            <button type="submit" class="btn btn-primary">حفظ</button>
+        </div>
+    </form>
 {% endblock content %}
-
 {% block scripts %}
-<script>
+    <script>
 document.addEventListener('DOMContentLoaded', function() {
     // Configuration
     const configDiv = document.getElementById('formset-config');
@@ -540,66 +531,111 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     // ================== ADD NEW ROW ==================
-    document.getElementById('add-row')?.addEventListener('click', function() {
-        const tbody = document.querySelector('#details-table tbody');
-        const rows = tbody.querySelectorAll('.form-row');
-        if (rows.length === 0) return;
-        
-        const newIndex = parseInt(totalFormsInput.value);
-        const lastRow = rows[rows.length - 1].cloneNode(true);
-        
-        // Update names/IDs for new row
-        lastRow.querySelectorAll('input, select, textarea').forEach(el => {
-            if (el.name) el.name = el.name.replace(/-\d+-(.+)/, `-${newIndex}-$1`);
-            if (el.id) el.id = el.id.replace(/-\d+-(.+)/, `-${newIndex}-$1`);
-            if (el.type === 'checkbox') el.checked = false;
-            else el.value = '';
-        });
-        
-        // Ensure stock input exists with correct name
-        const stockInput = lastRow.querySelector('.item-stock');
-        if (stockInput) {
-            stockInput.name = `${prefix}-${newIndex}-stock`;
-            stockInput.value = '';
-        } else {
-            const newStockInput = document.createElement('input');
-            newStockInput.type = 'hidden';
-            newStockInput.className = 'item-stock';
-            newStockInput.name = `${prefix}-${newIndex}-stock`;
-            lastRow.querySelector('td:first-child').appendChild(newStockInput);
-        }
-        
-        // Reset delete button
-        const deleteCell = lastRow.querySelector('td:last-child');
-        if (deleteCell) {
-            deleteCell.innerHTML = '';
-            const hiddenDiv = document.createElement('div');
-            hiddenDiv.className = 'hide-delete';
-            const chk = document.createElement('input');
-            chk.type = 'checkbox';
-            chk.name = `${prefix}-${newIndex}-DELETE`;
-            chk.id = `id_${prefix}-${newIndex}-DELETE`;
-            hiddenDiv.appendChild(chk);
-            deleteCell.appendChild(hiddenDiv);
+    document.getElementById('add-row')?.addEventListener('click', function () {
+            const tbody = document.querySelector('#details-table tbody');
+            const rows = tbody.querySelectorAll('.form-row');
+            if (rows.length === 0) {
+                console.error('No existing rows to clone');
+                return;
+            }
+
+            const newIndex = parseInt(totalFormsInput.value) || 0;
+            const lastRow = rows[rows.length - 1].cloneNode(true);
+
+            console.log(`Adding new row at index ${newIndex}`);
+
+            // Proper field name replacement
+            lastRow.querySelectorAll('input, select, textarea').forEach(el => {
+                if (el.name) {
+                    el.name = el.name.replace(new RegExp(`-(\\d+)-`, 'g'), `-${newIndex}-`);
+                }
+                if (el.id) {
+                    el.id = el.id.replace(/-(\d+)-/g, `-${newIndex}-`);
+                }
+
+                if (el.type === 'checkbox') {
+                    el.checked = false;
+                } else if (el.name && el.name.includes('price')) {
+                    el.value = el.value || '0.00';
+                } else if (el.name && el.name.includes('item')) {
+                    el.value = '';
+                } else if (el.name && el.name.includes('stock')) {
+                    el.value = '';
+                } else if (!el.name.includes('DELETE') && !el.name.includes('approved_quantity')) {
+                    el.value = '';
+                }
+            });
+
             
-            const btn = document.createElement('button');
-            btn.type = 'button';
-            btn.className = 'btn btn-sm btn-link text-danger delete-row';
-            btn.title = 'حذف الصنف';
-            btn.innerHTML = '<i class="bi bi-trash"></i>';
-            deleteCell.appendChild(btn);
-            attachDeleteListener(btn);
-        }
-        
-        // Clear dynamic content
-        lastRow.querySelectorAll('.search-dropdown, .text-danger, .text-warning, .text-muted.small').forEach(el => el.remove());
-        lastRow.classList.remove('table-danger', 'low-stock');
-        
-        tbody.appendChild(lastRow);
-        attachSearchToRow(lastRow);
-        totalFormsInput.value = newIndex + 1;
-        updateDeleteButtons();
-    });
+            // Reset search input
+            const searchInput = lastRow.querySelector('.item-search');
+            if (searchInput) {
+                searchInput.value = '';
+                searchInput.placeholder = "ابحث عن الصنف...";
+            }
+
+            // Ensure hidden item field is properly configured
+            const itemInput = lastRow.querySelector('input[name$="-item"]');
+            if (itemInput) {
+                itemInput.value = '';
+                itemInput.name = `${prefix}-${newIndex}-item`;
+            }
+
+            // Reset quantity and price fields
+            const qtyInput = lastRow.querySelector('input[name$="-approved_quantity"]');
+            if (qtyInput) {
+                qtyInput.value = '';
+                qtyInput.placeholder = "الكمية المسترجعة";
+                qtyInput.min = "1";
+            }
+
+            // Reset stock field
+            const stockInput = lastRow.querySelector('.item-stock');
+            if (stockInput) {
+                stockInput.name = `${prefix}-${newIndex}-stock`;
+                stockInput.value = '';
+            } else {
+                const newStockInput = document.createElement('input');
+                newStockInput.type = 'hidden';
+                newStockInput.className = 'item-stock';
+                newStockInput.name = `${prefix}-${newIndex}-stock`;
+                newStockInput.value = '';
+                lastRow.querySelector('td:first-child').appendChild(newStockInput);
+            }
+
+            // Reset delete functionality
+            const deleteCell = lastRow.querySelector('td:last-child');
+            if (deleteCell) {
+                deleteCell.innerHTML = '';
+                const hiddenDiv = document.createElement('div');
+                hiddenDiv.className = 'hide-delete';
+
+                const chk = document.createElement('input');
+                chk.type = 'checkbox';
+                chk.name = `${prefix}-${newIndex}-DELETE`;
+                chk.id = `id_${prefix}-${newIndex}-DELETE`;
+                chk.className = 'form-check-input';
+                hiddenDiv.appendChild(chk);
+
+                deleteCell.appendChild(hiddenDiv);
+
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'btn btn-sm btn-link text-danger delete-row';
+                btn.title = 'حذف الصنف';
+                btn.innerHTML = '<i class="bi bi-trash"></i>';
+                deleteCell.appendChild(btn);
+
+                attachDeleteListener(btn);  // Attach listener to new button
+            }
+
+            tbody.appendChild(lastRow);
+            attachSearchToRow(lastRow);
+            totalFormsInput.value = newIndex + 1;
+            updateDeleteButtons();
+
+            console.log('Row addition complete!');
+        });
     
     // Initialize delete buttons
     document.querySelectorAll('.delete-row').forEach(attachDeleteListener);
@@ -629,10 +665,9 @@ document.addEventListener('DOMContentLoaded', function() {
         subWarehouseSelect.dispatchEvent(event);
     }
 });
-</script>
-
-<!-- Search dropdown styles -->
-<style>
+    </script>
+    <!-- Search dropdown styles -->
+    <style>
 .search-dropdown {
     display: none;
     position: absolute;
@@ -670,5 +705,5 @@ document.addEventListener('DOMContentLoaded', function() {
 [data-theme="dark"] .search-suggestion:hover {
     background-color: var(--bg-table-row-hover, #3a3f44);
 }
-</style>
+    </style>
 {% endblock scripts %}
