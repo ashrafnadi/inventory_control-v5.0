@@ -280,11 +280,11 @@ urlpatterns = [
         views.admin_update_transaction_prices,
         name="admin_update_transaction_prices",
     ),
-    path(
-        "admin/faculty-stock/",
-        views.admin_faculty_stock_view,
-        name="admin_faculty_stock_view",
-    ),
+    # path(
+    #     "admin/faculty-stock/",
+    #     views.admin_faculty_stock_view,
+    #     name="admin_faculty_stock_view",
+    # ),
     path(
         "items/<int:item_id>/price-history/",
         views.get_item_price_history,

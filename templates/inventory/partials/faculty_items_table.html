@@ -12,6 +12,8 @@
                 <th class="text-center">صرف قيد الانتظار</th>
                 <th class="text-center">نقل قيد الانتظار</th>
                 <th class="text-center">إرجاع قيد الانتظار</th>
+                <th class="text-center" width="10%">الحد الأدنى</th>
+                <th class="text-center" width="10%">الحالة</th>
                 <th class="text-center" width="10%">الإجراءات</th>
             </tr>
         </thead>
@@ -57,6 +59,16 @@
                         {% endif %}
                     </td>
                     <td class="text-center">
+                        <span class="badge bg-success">{{ d.item_threshold }}</span>
+                    </td>
+                    <td class="text-center">
+                        {% if d.current_qty <= d.item_threshold %}
+                            <span class="badge bg-danger">⚠️ منخفض</span>
+                        {% else %}
+                            <span class="badge bg-success">✅ متوفر</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-center">
                         <a href="{% url 'admin_item_transaction_history' d.item.id %}?faculty_id={{ faculty.id }}"
                            class="btn btn-sm btn-outline-primary">
                             <i class="bi bi-clock-history"></i> سجل الحركات
@@ -71,16 +83,40 @@
         </tbody>
     </table>
 </div>
-<!-- Optional: Initialize DataTables if you use them -->
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    if (typeof $ !== 'undefined' && $.fn.DataTable) {
-        $('#faculty-items-table').DataTable({
-            language: { url: "{% static 'ar.json' %}" },
-            responsive: true,
-            pageLength: 25,
-            order: [[0, 'asc']]
-        });
-    }
-});
+    (function () {
+        if (window.__itemsDataTable) {
+            try { window.__itemsDataTable.destroy(); } catch (e) {}
+            window.__itemsDataTable = null;
+        }
+
+        function initializeItemsDataTable() {
+            const tableElement = document.getElementById('faculty-items-table');
+            if (!tableElement) return;
+
+            window.__itemsDataTable = $(tableElement).DataTable({
+                language: { url: "{% static 'ar.json' %}" },
+                paging: true,
+                pageLength: 10,
+                lengthMenu: [10, 25, 50, 100, -1],
+                searching: true,
+                ordering: true,
+                order: [[2, 'asc']],
+                responsive: true,
+                autoWidth: false,
+                rtl: true,
+                columnDefs: [
+                    { targets: [10], orderable: false },
+                    { className: 'text-right', targets: '_all' },
+                ],
+            });
+            console.log('Items DataTable initialized successfully');
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initializeItemsDataTable);
+        } else {
+            initializeItemsDataTable();
+        }
+    })();
 </script>

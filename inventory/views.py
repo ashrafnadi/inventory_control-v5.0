@@ -5960,40 +5960,40 @@ def admin_update_transaction_prices(request, transaction_id):
     )
 
 
-@login_required
-@user_passes_test(lambda u: u.is_superuser)
-def admin_faculty_stock_view(request):
-    """
-    Admin-only read-only view of item quantities per faculty.
-    Displays: Item, Category, Sub-Warehouse, Quantity, Limit, Status.
-    Strictly GET-based, no forms, no edit capabilities.
-    """
-    faculty_id = request.GET.get("faculty_id")
-    faculties = Faculty.objects.all().order_by("name")
-    selected_faculty = None
-    stock_items = []
+# @login_required
+# @user_passes_test(lambda u: u.is_superuser)
+# def admin_faculty_stock_view(request):
+#     """
+#     Admin-only read-only view of item quantities per faculty.
+#     Displays: Item, Category, Sub-Warehouse, Quantity, Limit, Status.
+#     Strictly GET-based, no forms, no edit capabilities.
+#     """
+#     faculty_id = request.GET.get("faculty_id")
+#     faculties = Faculty.objects.all().order_by("name")
+#     selected_faculty = None
+#     stock_items = []
 
-    if faculty_id and faculty_id.isdigit():
-        selected_faculty = get_object_or_404(Faculty, id=faculty_id)
-        # Efficient single query with all related data
-        stock_items = (
-            FacultyItemStock.objects.filter(faculty=selected_faculty)
-            .select_related(
-                "item", "item__category", "sub_warehouse", "sub_warehouse__warehouse"
-            )
-            .order_by("item__category__name", "sub_warehouse__name", "item__name")
-        )
+#     if faculty_id and faculty_id.isdigit():
+#         selected_faculty = get_object_or_404(Faculty, id=faculty_id)
+#         # Efficient single query with all related data
+#         stock_items = (
+#             FacultyItemStock.objects.filter(faculty=selected_faculty)
+#             .select_related(
+#                 "item", "item__category", "sub_warehouse", "sub_warehouse__warehouse"
+#             )
+#             .order_by("item__category__name", "sub_warehouse__name", "item__name")
+#         )
 
-    return render(
-        request,
-        "inventory/admin_faculty_stock.html",
-        {
-            "faculties": faculties,
-            "selected_faculty": selected_faculty,
-            "stock_items": stock_items,
-            "page_title": "مراقبة مخزون الكليات",
-        },
-    )
+#     return render(
+#         request,
+#         "inventory/admin_faculty_stock.html",
+#         {
+#             "faculties": faculties,
+#             "selected_faculty": selected_faculty,
+#             "stock_items": stock_items,
+#             "page_title": "مراقبة مخزون الكليات",
+#         },
+#     )
 
 
 @login_required
@@ -6430,6 +6430,7 @@ def htmx_load_faculty_items(request):
                 or 0,
                 "pending_ret": p.get(ItemTransactions.TRANSACTION_TYPES.Return, 0) or 0,
                 "sub_warehouse": stock.sub_warehouse,
+                "item_threshold": stock.item.limit_quantity,
             }
         )
 
