@@ -2,6 +2,8 @@
 from django import forms
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
+from django.db.models import Sum, Value
+from django.db.models.functions import Coalesce
 from django.forms import inlineformset_factory
 
 from .models import (
@@ -634,9 +636,6 @@ class ItemTransactionTransferForm(forms.ModelForm):
         return sub_warehouse
 
 
-# inventory/forms.py
-
-
 class ItemTransactionDetailsDisbursementForm(forms.ModelForm):
     class Meta:
         model = ItemTransactionDetails
@@ -697,10 +696,11 @@ class ItemTransactionDetailsDisbursementForm(forms.ModelForm):
             raise forms.ValidationError("يجب اختيار صنف")
         return item
 
-    # inventory/forms.py - Inside ItemTransactionDetailsDisbursementForm
-
     def clean_approved_quantity(self):
-        """Validate approved quantity against FacultyItemStock (faculty-isolated)."""
+        """
+        Validate approved quantity against PROJECTED available stock.
+        Projected = current stock - pending outgoing transactions.
+        """
         approved_qty = self.cleaned_data.get("approved_quantity")
         order_qty = self.cleaned_data.get("order_quantity")
         item = self.cleaned_data.get("item")
@@ -728,23 +728,51 @@ class ItemTransactionDetailsDisbursementForm(forms.ModelForm):
             except SubWarehouse.DoesNotExist:
                 pass
 
-        # DIRECT QUERY TO FacultyItemStock (Fast & Matches Admin Dashboard)
+        # 1. Get CURRENT stock from FacultyItemStock
         stock_record = FacultyItemStock.objects.filter(
             item=item, faculty=faculty, sub_warehouse=sub_warehouse
         ).first()
+        current_stock = stock_record.cached_quantity if stock_record else 0
 
-        available_stock = stock_record.cached_quantity if stock_record else 0
+        # 2. Calculate PENDING OUTGOING transactions for this item/warehouse
+        # (Disbursements + Transfers FROM this warehouse that are still PENDING)
+        pending_outgoing = (
+            ItemTransactionDetails.objects.filter(
+                item=item,
+                transaction__faculty=faculty,
+                transaction__approval_status=ItemTransactions.APPROVAL_STATUS.PENDING,
+                transaction__deleted=False,
+                transaction__transaction_type__in=[
+                    "D",
+                    "T",
+                ],  # Disbursement or Transfer
+                transaction__from_sub_warehouse=sub_warehouse,  # FROM this warehouse
+            )
+            # Exclude the current transaction being edited (if it exists)
+            .exclude(
+                transaction_id=self.instance.transaction_id
+                if self.instance.pk
+                else None
+            )
+            .aggregate(total=Coalesce(Sum("approved_quantity"), Value(0)))["total"]
+            or 0
+        )
 
-        # Validation
-        if approved_qty > available_stock:
+        # 3. Calculate PROJECTED available stock
+        projected_available = max(0, current_stock - pending_outgoing)
+
+        # 4. Validation against projected available
+        if approved_qty > projected_available:
             error_msg = (
                 f'الصنف "{item.name}": الكمية المنصرفة ({approved_qty}) '
-                f"تتجاوز الكمية المتاحة في المخزن ({available_stock})."
+                f"تتجاوز المتوفر المتوقع ({projected_available}). "
+                f"(حالي: {current_stock} - معلق صادر: {pending_outgoing})"
             )
             if sub_warehouse:
                 error_msg += f" (المخزن: {sub_warehouse.name})"
             raise forms.ValidationError(error_msg)
 
+        # Also validate against order quantity
         if order_qty and approved_qty > order_qty:
             raise forms.ValidationError(
                 "الكمية المنصرفة لا يمكن أن تتجاوز الكمية المطلوبة"

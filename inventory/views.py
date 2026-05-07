@@ -4874,7 +4874,8 @@ def to_department_users_select_transfer(request):
 @login_required
 def item_search_ajax(request):
     """
-    Search items with stock status and LATEST PRICE (for DISBURSEMENT).
+    Search items with stock status, pending quantities, and LATEST PRICE (for DISBURSEMENT).
+    Returns: current_qty, pending_in, pending_out, projected_qty for accurate validation.
     FILTERS: Items whose category belongs to the selected sub_warehouse.
     """
     try:
@@ -4888,34 +4889,27 @@ def item_search_ajax(request):
 
         query = request.GET.get("q", "").strip()
 
-        from inventory.models import FacultyItemStock, ItemCategory
+        from inventory.models import (
+            FacultyItemStock,
+            ItemCategory,
+            ItemTransactionDetails,
+        )
 
         # Get category IDs that belong to this sub_warehouse
-        # ItemCategory.sub_warehouse is ForeignKey (not M2M)
         valid_category_ids = ItemCategory.objects.filter(
             sub_warehouse_id=sub_warehouse_id
         ).values_list("id", flat=True)
 
         if not valid_category_ids:
-            # No categories linked to this sub_warehouse → no items to show
             return JsonResponse({"results": []})
 
-        # Efficient subquery for faculty-specific stock quantity
-        faculty_stock_sq = FacultyItemStock.objects.filter(
-            item=OuterRef("pk"),
-            sub_warehouse_id=sub_warehouse_id,
-            faculty=faculty,
-            cached_quantity__gt=0,
-        ).values("cached_quantity")[:1]
-
-        # Filter items: must have stock AND category belongs to sub_warehouse
+        # Base item search: items with stock in this faculty/warehouse AND valid category
         items_qs = (
             Item.objects.select_related("category")
             .filter(
                 category_id__in=valid_category_ids,
                 faculty_stocks__sub_warehouse_id=sub_warehouse_id,
                 faculty_stocks__faculty=faculty,
-                faculty_stocks__cached_quantity__gt=0,
             )
             .distinct()
         )
@@ -4929,41 +4923,100 @@ def item_search_ajax(request):
                     Q(name__icontains=query) | Q(category__name__icontains=query)
                 )
 
-        # Annotate with faculty-specific quantity and latest price
-        latest_price_subquery = (
+        # Annotate with CURRENT stock quantity
+        current_stock_sq = FacultyItemStock.objects.filter(
+            item=OuterRef("pk"),
+            sub_warehouse_id=sub_warehouse_id,
+            faculty=faculty,
+        ).values("cached_quantity")[:1]
+
+        # Annotate with PENDING IN (Additions, Returns, Transfers TO this warehouse)
+        pending_in_sq = (
+            ItemTransactionDetails.objects.filter(
+                item=OuterRef("pk"),
+                transaction__faculty=faculty,
+                transaction__approval_status=ItemTransactions.APPROVAL_STATUS.PENDING,
+                transaction__deleted=False,
+                transaction__transaction_type__in=["A", "R", "T"],
+                transaction__to_sub_warehouse_id=sub_warehouse_id,
+            )
+            .values("item")
+            .annotate(total=Sum("approved_quantity"))
+            .values("total")
+        )
+
+        # Annotate with PENDING OUT (Disbursements, Transfers FROM this warehouse)
+        pending_out_sq = (
+            ItemTransactionDetails.objects.filter(
+                item=OuterRef("pk"),
+                transaction__faculty=faculty,
+                transaction__approval_status=ItemTransactions.APPROVAL_STATUS.PENDING,
+                transaction__deleted=False,
+                transaction__transaction_type__in=["D", "T"],
+                transaction__from_sub_warehouse_id=sub_warehouse_id,
+            )
+            .values("item")
+            .annotate(total=Sum("approved_quantity"))
+            .values("total")
+        )
+
+        # Annotate with latest price
+        latest_price_sq = (
             ItemPriceHistory.objects.filter(item=OuterRef("pk"))
             .order_by("-date")
             .values("price")[:1]
         )
+
+        # Final annotation
         items_qs = items_qs.annotate(
-            latest_price=Subquery(latest_price_subquery),
-            faculty_qty=Coalesce(Subquery(faculty_stock_sq), Value(0)),
+            current_qty=Coalesce(
+                Subquery(current_stock_sq), Value(0), output_field=IntegerField()
+            ),
+            pending_in=Coalesce(
+                Subquery(pending_in_sq), Value(0), output_field=IntegerField()
+            ),
+            pending_out=Coalesce(
+                Subquery(pending_out_sq), Value(0), output_field=IntegerField()
+            ),
+            latest_price=Subquery(latest_price_sq),
         )
 
-        # BUILD RESULTS WITH PRICE INCLUDED
+        # BUILD RESULTS WITH ALL REQUIRED FIELDS
         results = []
-        for item in items_qs[:15]:  # Limit to 15 results for performance
+        for item in items_qs[:15]:  # Limit for performance
+            current_qty = item.current_qty or 0
+            pending_in = item.pending_in or 0
+            pending_out = item.pending_out or 0
+            projected_qty = current_qty + pending_in - pending_out
+
+            # Handle price
             price_value = None
             if item.latest_price is not None:
                 try:
                     price_value = float(item.latest_price)
                 except (TypeError, ValueError):
                     price_value = None
-
-            results.append(
-                {
-                    "id": item.id,
-                    "name": item.name,
-                    "full_name": f"{item.name} (#{item.id})"
-                    + (f" - {item.category.name}" if item.category else ""),
-                    "quantity": item.faculty_qty,
-                    "category": item.category.name if item.category else "بدون فئة",
-                    "unit": item.get_unit_display(),
-                    "price": price_value,
-                    "limit_quantity": item.limit_quantity,
-                    "is_low_stock": item.faculty_qty <= item.limit_quantity,
-                }
-            )
+            if projected_qty > 0:
+                results.append(
+                    {
+                        "id": item.id,
+                        "name": item.name,
+                        "full_name": f"{item.name} (#{item.id})"
+                        + (f" - {item.category.name}" if item.category else ""),
+                        "category": item.category.name if item.category else "بدون فئة",
+                        "unit": item.get_unit_display(),
+                        # ✅ FIELDS YOUR TEMPLATE JAVASCRIPT EXPECTS:
+                        "current_qty": current_qty,  # ✅ Current stock
+                        "pending_in": pending_in,  # ✅ Pending incoming
+                        "pending_out": pending_out,  # ✅ Pending outgoing
+                        "projected_qty": projected_qty,  # ✅ KEY: Projected available
+                        "price": price_value,  # ✅ For price pre-fill
+                        "limit_quantity": item.limit_quantity,
+                        "is_low_stock": projected_qty <= item.limit_quantity
+                        and projected_qty > 0,
+                        "is_out_of_stock": projected_qty <= 0,
+                    }
+                )
 
         return JsonResponse({"results": results})
 
@@ -5751,24 +5804,18 @@ def transaction_reverse_view(request, transaction_id):
 
 @login_required
 def item_search(request):
-    """Search items with faculty-isolated stock quantities."""
+    """Search items with faculty-isolated stock quantities AND pending transactions."""
     query = request.GET.get("q", "").strip()
     warehouse_id = request.GET.get("warehouse")
     faculty_id = request.GET.get("faculty")
-
-    print(f"item search faculty_id: {faculty_id}")
-    print(f"item search warehouse_id: {warehouse_id}")
-    print(f"item search query: {query}")
 
     if not query or len(query) < 2:
         return JsonResponse({"results": []})
 
     if not faculty_id:
-        # Fallback: use user's faculty if not provided
         faculty_id = getattr(getattr(request.user, "profile", None), "faculty_id", None)
-
-    if not faculty_id:
-        return JsonResponse({"error": "Faculty not specified"}, status=400)
+        if not faculty_id:
+            return JsonResponse({"error": "Faculty not specified"}, status=400)
 
     # Base item search
     items = (
@@ -5779,26 +5826,58 @@ def item_search(request):
 
     results = []
     for item in items:
-        # Use authoritative calculation with faculty filter
-        stock = FacultyItemStock.objects.filter(
+        # ✅ 1. Get CURRENT stock from FacultyItemStock
+        stock_qs = FacultyItemStock.objects.filter(
             item=item,
             faculty_id=faculty_id,
         )
-
         if warehouse_id:
-            stock = stock.filter(sub_warehouse_id=warehouse_id)
+            stock_qs = stock_qs.filter(sub_warehouse_id=warehouse_id)
 
-        # Get quantity using your authoritative logic
-        quantity = (
-            stock.aggregate(qty=Coalesce(Sum("cached_quantity"), Value(0)))["qty"] or 0
+        current_qty = (
+            stock_qs.aggregate(qty=Coalesce(Sum("cached_quantity"), Value(0)))["qty"]
+            or 0
         )
-        print(f"item search quantity: {quantity}")
-        print(f"item search item: {item}")
-        print(f"item search stock: {stock}")
-        # Get latest price
-        latest_price = item.itempricehistory_set.order_by("-date").first()
-        price = float(latest_price.price) if latest_price else 0
+        current_qty = int(current_qty) if current_qty is not None else 0
 
+        # ✅ 2. Calculate PENDING IN (Additions, Returns, Transfers TO this warehouse)
+        pending_in = (
+            ItemTransactionDetails.objects.filter(
+                item=item,
+                transaction__faculty_id=faculty_id,
+                transaction__approval_status=ItemTransactions.APPROVAL_STATUS.PENDING,
+                transaction__deleted=False,
+                transaction__transaction_type__in=["A", "R", "T"],
+                transaction__to_sub_warehouse_id=warehouse_id,
+            ).aggregate(total=Coalesce(Sum("approved_quantity"), Value(0)))["total"]
+            or 0
+        )
+        pending_in = int(pending_in) if pending_in is not None else 0
+
+        # ✅ 3. Calculate PENDING OUT (Disbursements, Transfers FROM this warehouse)
+        pending_out = (
+            ItemTransactionDetails.objects.filter(
+                item=item,
+                transaction__faculty_id=faculty_id,
+                transaction__approval_status=ItemTransactions.APPROVAL_STATUS.PENDING,
+                transaction__deleted=False,
+                transaction__transaction_type__in=["D", "T"],
+                transaction__from_sub_warehouse_id=warehouse_id,
+            ).aggregate(total=Coalesce(Sum("approved_quantity"), Value(0)))["total"]
+            or 0
+        )
+        pending_out = int(pending_out) if pending_out is not None else 0
+
+        # ✅ 4. Calculate PROJECTED = current + pending_in - pending_out
+        projected_qty = current_qty + pending_in - pending_out
+
+        # ✅ 5. Get latest price
+        latest_price = item.itempricehistory_set.order_by("-date").first()
+        price = (
+            float(latest_price.price) if latest_price and latest_price.price else 0.0
+        )
+
+        # ✅ CORRECT: Use the fields we actually calculated
         results.append(
             {
                 "id": item.id,
@@ -5806,10 +5885,15 @@ def item_search(request):
                 "code": item.code or "-",
                 "category": item.category.name if item.category else "-",
                 "unit": item.get_unit_display(),
-                "quantity": quantity,
-                "price": price,
-                "is_low_stock": quantity <= item.limit_quantity and quantity > 0,
-                "is_out_of_stock": quantity <= 0,
+                # ✅ Fields your template JavaScript expects:
+                "current_qty": current_qty,  # ✅ Current stock
+                "pending_in": pending_in,  # ✅ Pending incoming
+                "pending_out": pending_out,  # ✅ Pending outgoing
+                "projected_qty": projected_qty,  # ✅ Projected available (KEY FIELD)
+                "price": price,  # ✅ Price for pre-fill (plain float)
+                "is_low_stock": projected_qty <= item.limit_quantity
+                and projected_qty > 0,
+                "is_out_of_stock": projected_qty <= 0,
             }
         )
 

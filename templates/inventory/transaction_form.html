@@ -2,64 +2,94 @@
 {% extends "base.html" %}
 {% load static %}
 {% load widget_tweaks %}
+{% block title %}
+    نموذج 2: طلب وإذن صرف
+{% endblock title %}
 {% block content %}
     <style>
-    /* Search dropdown styling */
-    .search-dropdown {
-        display: none;
-        position: absolute;
-        top: 100%;
-        left: 0;
-        right: 0;
-        z-index: 1000;
-        background: var(--bg-card, white);
-        border: 1px solid var(--border-color, #ddd);
-        border-radius: 4px;
-        box-shadow: var(--shadow, 0 4px 6px rgba(0, 0, 0, 0.1));
-        max-height: 300px;
-        overflow-y: auto;
-    }
+/* Search dropdown styling */
+.search-dropdown {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    background: var(--bg-card, white);
+    border: 1px solid var(--border-color, #ddd);
+    border-radius: 4px;
+    box-shadow: var(--shadow, 0 4px 6px rgba(0, 0, 0, 0.1));
+    max-height: 300px;
+    overflow-y: auto;
+}
 
-    .search-suggestion {
-        padding: 8px 12px;
-        cursor: pointer;
-        border-bottom: 1px solid var(--border-color, #eee);
-        transition: background-color 0.2s;
-    }
+.search-suggestion {
+    padding: 8px 12px;
+    cursor: pointer;
+    border-bottom: 1px solid var(--border-color, #eee);
+    transition: background-color 0.2s;
+}
 
-    .search-suggestion:hover {
-        background-color: var(--bg-table-row-hover, #f8f9fa);
-    }
+.search-suggestion:hover {
+    background-color: var(--bg-table-row-hover, #f8f9fa);
+}
 
-    .search-suggestion:last-child {
-        border-bottom: none;
-    }
+.search-suggestion:last-child {
+    border-bottom: none;
+}
 
-    /* Dark mode compatibility */
-    [data-theme="dark"] .search-dropdown {
-        background: var(--bg-card, #2d3136);
-        border-color: var(--border-color, #495057);
-    }
+/* Dark mode compatibility */
+[data-theme="dark"] .search-dropdown {
+    background: var(--bg-card, #2d3136);
+    border-color: var(--border-color, #495057);
+}
 
-    [data-theme="dark"] .search-suggestion {
-        border-color: var(--border-color, #3a3f44);
-        color: var(--text-primary, #f8f9fa);
-    }
+[data-theme="dark"] .search-suggestion {
+    border-color: var(--border-color, #3a3f44);
+    color: var(--text-primary, #f8f9fa);
+}
 
-    [data-theme="dark"] .search-suggestion:hover {
-        background-color: var(--bg-table-row-hover, #3a3f44);
-    }
+[data-theme="dark"] .search-suggestion:hover {
+    background-color: var(--bg-table-row-hover, #3a3f44);
+}
 
-    /* Price field styling */
-    .price-input {
-        text-align: left !important;
-        direction: ltr !important;
-    }
+/* Price field styling */
+.price-input {
+    text-align: left !important;
+    direction: ltr !important;
+}
 
-    .price-input::placeholder {
-        text-align: right;
-        direction: rtl;
-    }
+.price-input::placeholder {
+    text-align: right;
+    direction: rtl;
+}
+
+/* Pending quantity badges */
+.pending-badge {
+    font-size: 0.75rem;
+    margin: 0 2px;
+    padding: 2px 6px;
+    border-radius: 3px;
+}
+
+.pending-in {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.pending-out {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+.projected-qty {
+    font-weight: 600;
+    color: var(--text-primary, #212529);
+}
+
+[data-theme="dark"] .projected-qty {
+    color: var(--text-primary, #f8f9fa);
+}
     </style>
     <form method="post"
           data-editing="{{ editing|default:'false'|lower }}"
@@ -308,647 +338,715 @@
 {% endblock content %}
 {% block scripts %}
     <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        // CONFIGURATION
-        const urlConfig = document.getElementById('url-config');
-        if (!urlConfig) { console.error('Missing #url-config'); return; }
-        const itemSearchUrl = urlConfig.dataset.itemSearchUrl;
-        const getItemNameUrl = urlConfig.dataset.getItemNameUrl;
-        const serverSelectedToUser = urlConfig.dataset.selectedToUser || '';
+        document.addEventListener('DOMContentLoaded', function () {
+            // CONFIGURATION
+            const urlConfig = document.getElementById('url-config');
+            if (!urlConfig) { console.error('Missing #url-config'); return; }
+            const itemSearchUrl = urlConfig.dataset.itemSearchUrl;
+            const getItemNameUrl = urlConfig.dataset.getItemNameUrl;
+            const serverSelectedToUser = urlConfig.dataset.selectedToUser || '';
 
-        const configDiv = document.getElementById('formset-config');
-        if (!configDiv) { console.error('Missing #formset-config'); return; }
-        const prefix = configDiv.dataset.prefix;
-        const totalFormsInput = document.getElementById('id_' + prefix + '-TOTAL_FORMS');
-        if (!totalFormsInput) { console.error(`id_${prefix}-TOTAL_FORMS not found`); return; }
+            const configDiv = document.getElementById('formset-config');
+            if (!configDiv) { console.error('Missing #formset-config'); return; }
+            const prefix = configDiv.dataset.prefix;
+            const totalFormsInput = document.getElementById('id_' + prefix + '-TOTAL_FORMS');
+            if (!totalFormsInput) { console.error(`id_${prefix}-TOTAL_FORMS not found`); return; }
 
-        const form = document.querySelector('form');
-        const isEditing = form ? form.dataset.editing === 'true' : false;
-        const hasPostErrors = form ? form.dataset.hasErrors === 'true' : false;
+            const form = document.querySelector('form');
+            const isEditing = form ? form.dataset.editing === 'true' : false;
+            const hasPostErrors = form ? form.dataset.hasErrors === 'true' : false;
 
-        // HTMX headers
-        document.querySelectorAll('[hx-get]').forEach(el => {
-            el.setAttribute('hx-headers', '{"X-CSRFToken": "{{ csrf_token }}"}');
-        });
-
-        // HTMX AFTER-SWAP: restore selected values for to_user
-        document.body.addEventListener('htmx:afterSwap', function (event) {
-            const targetId = event.detail.target.id;
-            if (targetId === 'to-user-container' && serverSelectedToUser) {
-                const sel = event.detail.target.querySelector('select');
-                if (sel) sel.value = serverSelectedToUser;
-            }
-        });
-
-        // CUSTODY TYPE TOGGLING
-        function toggleCustodyFields(isInit = false) {
-            const custodySelect = document.getElementById('id_castody_type');
-            const toWarehouseContainer = document.getElementById('to-sub-warehouse-container');
-            const toDepartmentLabel = document.querySelector('label[for="id_to_department"]');
-            const toUserLabel = document.querySelector('label[for="id_to_user"]');
-            if (!custodySelect || !toWarehouseContainer || !toDepartmentLabel || !toUserLabel) return;
-
-            const toDepartmentContainer = toDepartmentLabel.closest('.col-md-3');
-            const toUserContainer = toUserLabel.closest('.col-md-3');
-            const custodyValue = custodySelect.value;
-
-            if (custodyValue === 'W') {
-                toWarehouseContainer.style.display = '';
-                toDepartmentContainer.style.display = 'none';
-                toUserContainer.style.display = 'none';
-                if (!isInit) {
-                    const toDept = document.getElementById('id_to_department');
-                    const toUserContainerEl = document.getElementById('to-user-container');
-                    if (toDept) toDept.value = '';
-                    if (toUserContainerEl) {
-                        toUserContainerEl.innerHTML = '<select class="form-select" disabled><option>اختر القسم أولاً</option></select>';
-                    }
-                }
-            } else if (custodyValue === 'P' || custodyValue === 'B') {
-                toWarehouseContainer.style.display = 'none';
-                toDepartmentContainer.style.display = '';
-                toUserContainer.style.display = '';
-                if (!isInit) {
-                    const toWare = document.getElementById('id_to_sub_warehouse');
-                    if (toWare) toWare.value = '';
-                }
-            }
-        }
-
-        // CLEAR ALL SELECTED ITEMS
-        function clearAllSelectedItems() {
-            document.querySelectorAll('#details-table .form-row:not(.deleted-row)').forEach(row => {
-                const itemInput = row.querySelector('input[name$="-item"]');
-                const searchInput = row.querySelector('.item-search');
-                const stockInput = row.querySelector('.item-stock');
-                const priceInput = row.querySelector('input[name$="-price"]');
-                if (itemInput) itemInput.value = '';
-                if (searchInput) searchInput.value = '';
-                if (stockInput) stockInput.value = '';
-                if (priceInput) priceInput.value = '';
-                row.classList.remove('table-danger', 'low-stock');
-                row.querySelectorAll('.stock-error, .low-stock-warning').forEach(el => el.remove());
+            // HTMX headers
+            document.querySelectorAll('[hx-get]').forEach(el => {
+                el.setAttribute('hx-headers', '{"X-CSRFToken": "{{ csrf_token }}"}');
             });
-        }
 
-        // WAREHOUSE CHANGE → WARN + CLEAR
-        const fromWarehouseSelect = document.getElementById('id_from_sub_warehouse');
-        if (fromWarehouseSelect) {
-            fromWarehouseSelect.dataset.previousValue = fromWarehouseSelect.value;
-            fromWarehouseSelect.addEventListener('change', function () {
-                const hasSelectedItems = Array.from(
-                    document.querySelectorAll('#details-table .form-row:not(.deleted-row)')
-                ).some(row => row.querySelector('input[name$="-item"]')?.value.trim());
-
-                if (hasSelectedItems) {
-                    const confirmed = confirm('تغيير المخزن الفرعي سيؤدي إلى مسح جميع الأصناف المختارة.\nهل تريد المتابعة؟');
-                    if (!confirmed) {
-                        this.value = this.dataset.previousValue || '';
-                        return;
-                    }
-                    clearAllSelectedItems();
-                }
-                this.dataset.previousValue = this.value;
-            });
-        }
-
-        // DELETE BUTTONS
-        function updateDeleteButtons() {
-            const visibleRows = document.querySelectorAll('#details-table tbody .form-row:not(.deleted-row)');
-            const deleteButtons = document.querySelectorAll('.delete-row');
-            const shouldDisable = visibleRows.length <= 1;
-            deleteButtons.forEach(btn => {
-                btn.disabled = shouldDisable;
-                btn.classList.toggle('disabled', shouldDisable);
-            });
-        }
-
-        function attachDeleteListener(button) {
-            button.addEventListener('click', function () {
-                if (!confirm('هل أنت متأكد من حذف هذا الصنف؟')) return;
-                const row = this.closest('tr');
-                if (!row) return;
-                const deleteCheckbox = row.querySelector('input[type="checkbox"][name$="-DELETE"]');
-                if (deleteCheckbox) {
-                    deleteCheckbox.checked = true;
-                    row.style.display = 'none';
-                    row.classList.add('deleted-row');
-                } else {
-                    row.remove();
-                    totalFormsInput.value = Math.max(0, (parseInt(totalFormsInput.value) || 0) - 1);
-                }
-                updateDeleteButtons();
-            });
-        }
-
-        // QUANTITY AUTO-FILL
-        function setupQuantityAutoFill(row) {
-            const orderInput = row.querySelector('input[name$="-order_quantity"]');
-            const approvedInput = row.querySelector('input[name$="-approved_quantity"]');
-            const stockInput = row.querySelector('.item-stock');
-            if (!orderInput || !approvedInput) return;
-
-            function updateApproved() {
-                const orderQty = parseInt(orderInput.value) || 0;
-                const stockQty = parseInt(stockInput?.value) || Infinity;
-                const maxAllowed = Math.min(orderQty, stockQty);
-                if (approvedInput.value === '' || parseInt(approvedInput.value) > maxAllowed) {
-                    approvedInput.value = maxAllowed >= 0 ? maxAllowed : 0;
-                }
-                validateStock();
-            }
-            function validateApproved() {
-                const orderQty = parseInt(orderInput.value) || 0;
-                const approvedQty = parseInt(approvedInput.value) || 0;
-                if (approvedQty > orderQty) approvedInput.value = orderQty;
-                validateStock();
-            }
-            orderInput.addEventListener('input', updateApproved);
-            approvedInput.addEventListener('input', validateApproved);
-        }
-
-        // STOCK VALIDATION
-        function validateStock() {
-            let hasErrors = false;
-            document.querySelectorAll('.form-row').forEach(row => {
-                if (row.classList.contains('deleted-row') || row.style.display === 'none') return;
-
-                const itemInput = row.querySelector('input[name$="-item"]');
-                const stockInput = row.querySelector('.item-stock');
-                const qtyInput = row.querySelector('input[name$="-approved_quantity"]');
-                const orderInput = row.querySelector('input[name$="-order_quantity"]');
-
-                row.classList.remove('table-danger', 'low-stock');
-                row.querySelectorAll('.low-stock-warning, .stock-error').forEach(el => el.remove());
-
-                if (!itemInput?.value || !stockInput?.value || !qtyInput || !orderInput) return;
-
-                const stock = parseInt(stockInput.value) || 0;
-                const approved = parseInt(qtyInput.value) || 0;
-                const ordered = parseInt(orderInput.value) || 0;
-
-                function addError(cell, msg) {
-                    hasErrors = true;
-                    row.classList.add('table-danger');
-                    const el = document.createElement('div');
-                    el.className = 'stock-error text-danger small mt-1';
-                    el.textContent = msg;
-                    cell.appendChild(el);
-                }
-
-                if (approved > 0 && stock <= 0) {
-                    addError(qtyInput.closest('td'), 'الصنف نافد (الكمية المتاحة: 0)');
-                } else if (approved > stock) {
-                    addError(qtyInput.closest('td'), `الكمية المنصرفة (${approved}) تتجاوز الكمية المتاحة (${stock})`);
-                } else if (ordered > stock) {
-                    addError(orderInput.closest('td'), `الكمية المطلوبة (${ordered}) تتجاوز الكمية المتاحة (${stock})`);
-                } else if (stock > 0 && stock <= 10) {
-                    row.classList.add('low-stock');
-                    const approvedCell = qtyInput.closest('td');
-                    if (!approvedCell.querySelector('.low-stock-warning')) {
-                        const warn = document.createElement('div');
-                        warn.className = 'low-stock-warning text-warning small';
-                        warn.textContent = `تحذير: الكمية المتبقية ${stock}`;
-                        approvedCell.appendChild(warn);
-                    }
+            // HTMX AFTER-SWAP: restore selected values for to_user
+            document.body.addEventListener('htmx:afterSwap', function (event) {
+                const targetId = event.detail.target.id;
+                if (targetId === 'to-user-container' && serverSelectedToUser) {
+                    const sel = event.detail.target.querySelector('select');
+                    if (sel) sel.value = serverSelectedToUser;
                 }
             });
-            return hasErrors;
-        }
 
-        // SUBMIT VALIDATION
-        function validateBeforeSubmit() {
-            if (isEditing) return true;
+            // CUSTODY TYPE TOGGLING
+            function toggleCustodyFields(isInit = false) {
+                const custodySelect = document.getElementById('id_castody_type');
+                const toWarehouseContainer = document.getElementById('to-sub-warehouse-container');
+                const toDepartmentLabel = document.querySelector('label[for="id_to_department"]');
+                const toUserLabel = document.querySelector('label[for="id_to_user"]');
+                if (!custodySelect || !toWarehouseContainer || !toDepartmentLabel || !toUserLabel) return;
 
-            const warehouseId = document.getElementById('id_from_sub_warehouse')?.value;
-            if (!warehouseId) {
-                alert('يجب اختيار المخزن الفرعي أولاً قبل الحفظ.');
-                return false;
-            }
+                const toDepartmentContainer = toDepartmentLabel.closest('.col-md-3');
+                const toUserContainer = toUserLabel.closest('.col-md-3');
+                const custodyValue = custodySelect.value;
 
-            const visibleRows = document.querySelectorAll('#details-table .form-row:not(.deleted-row)');
-            if (visibleRows.length === 0) {
-                alert('يجب إضافة صنف واحد على الأقل قبل الحفظ.');
-                return false;
-            }
-
-            let hasErrors = false;
-
-            visibleRows.forEach(row => {
-                const itemInput = row.querySelector('input[name$="-item"]');
-                const searchInput = row.querySelector('.item-search');
-                const orderInput = row.querySelector('input[name$="-order_quantity"]');
-                const approvedInput = row.querySelector('input[name$="-approved_quantity"]');
-                const td = row.querySelector('td:first-child');
-
-                row.querySelectorAll('.stock-error').forEach(el => el.remove());
-                row.classList.remove('table-danger');
-
-                const hasSearchText = searchInput && searchInput.value.trim();
-                const hasItemId = itemInput && itemInput.value.trim();
-
-                if (hasSearchText && !hasItemId) {
-                    hasErrors = true;
-                    row.classList.add('table-danger');
-                    const err = document.createElement('div');
-                    err.className = 'stock-error text-danger small mt-1';
-                    err.textContent = 'يرجى اختيار الصنف من قائمة البحث (لم يتم تحديد الصنف)';
-                    td.appendChild(err);
-                } else if (!hasItemId) {
-                    hasErrors = true;
-                    row.classList.add('table-danger');
-                    const err = document.createElement('div');
-                    err.className = 'stock-error text-danger small mt-1';
-                    err.textContent = 'يجب اختيار صنف';
-                    td.appendChild(err);
-                }
-
-                if (orderInput) {
-                    const orderQty = parseInt(orderInput.value) || 0;
-                    if (orderQty <= 0) {
-                        hasErrors = true;
-                        row.classList.add('table-danger');
-                        const orderCell = orderInput.closest('td');
-                        if (!orderCell.querySelector('.stock-error')) {
-                            const err = document.createElement('div');
-                            err.className = 'stock-error text-danger small mt-1';
-                            err.textContent = 'الكمية المطلوبة يجب أن تكون أكبر من 0';
-                            orderCell.appendChild(err);
+                if (custodyValue === 'W') {
+                    toWarehouseContainer.style.display = '';
+                    toDepartmentContainer.style.display = 'none';
+                    toUserContainer.style.display = 'none';
+                    if (!isInit) {
+                        const toDept = document.getElementById('id_to_department');
+                        const toUserContainerEl = document.getElementById('to-user-container');
+                        if (toDept) toDept.value = '';
+                        if (toUserContainerEl) {
+                            toUserContainerEl.innerHTML = '<select class="form-select" disabled><option>اختر القسم أولاً</option></select>';
                         }
                     }
-                }
-
-                if (approvedInput) {
-                    const approvedQty = parseInt(approvedInput.value) || 0;
-                    if (approvedQty <= 0) {
-                        hasErrors = true;
-                        row.classList.add('table-danger');
-                        const approvedCell = approvedInput.closest('td');
-                        if (!approvedCell.querySelector('.stock-error')) {
-                            const err = document.createElement('div');
-                            err.className = 'stock-error text-danger small mt-1';
-                            err.textContent = 'الكمية المنصرفة يجب أن تكون أكبر من 0';
-                            approvedCell.appendChild(err);
-                        }
+                } else if (custodyValue === 'P' || custodyValue === 'B') {
+                    toWarehouseContainer.style.display = 'none';
+                    toDepartmentContainer.style.display = '';
+                    toUserContainer.style.display = '';
+                    if (!isInit) {
+                        const toWare = document.getElementById('id_to_sub_warehouse');
+                        if (toWare) toWare.value = '';
                     }
                 }
-            });
-
-            if (hasErrors) {
-                alert('يرجى تصحيح الأخطاء في تفاصيل الأصناف قبل الحفظ.');
-                return false;
             }
 
-            const hasStockErrors = validateStock();
-            const errorRows = document.querySelectorAll('.form-row.table-danger:not(.deleted-row)');
-            if (hasStockErrors || errorRows.length > 0) {
-                alert('لا يمكن الحفظ: توجد أصناف بكميات تتجاوز الكمية المتاحة في المخزون أو نافدة.');
-                return false;
-            }
-
-            return true;
-        }
-
-        //  ITEM SEARCH WITH PRICE PRE-FILL
-        function attachSearchToRow(row) {
-            const searchInput = row.querySelector('.item-search');
-            const hiddenInput = row.querySelector('input[name$="-item"]');
-            const stockInput = row.querySelector('.item-stock');
-            const priceInput = row.querySelector('input[name$="-price"]');
-
-            if (!searchInput || !hiddenInput) return;
-
-            let searchTimeout;
-
-            const existingDropdown = searchInput.parentNode.querySelector('.search-dropdown');
-            if (existingDropdown) existingDropdown.remove();
-
-            const suggestionsContainer = document.createElement('div');
-            suggestionsContainer.className = 'search-dropdown';
-            searchInput.parentNode.style.position = 'relative';
-            searchInput.parentNode.appendChild(suggestionsContainer);
-
-            searchInput.addEventListener('input', function () {
-                clearTimeout(searchTimeout);
-                if (hiddenInput.value) {
-                    hiddenInput.value = '';
-                    if (stockInput) stockInput.value = '';
-                    if (priceInput) priceInput.value = '';
-                }
-
-                const query = this.value.trim();
-                const warehouseEl = document.getElementById('id_from_sub_warehouse');
-                const facultyEl = document.getElementById('id_faculty');
-
-                const warehouseId = warehouseEl ? warehouseEl.value : null;
-                const facultyId = facultyEl ? facultyEl.value : null;
-
-                if (!warehouseId || !facultyId) {
-                    suggestionsContainer.innerHTML = '<div class="search-suggestion"><span class="theme-text-muted">يرجى اختيار الكلية والمخزن أولاً</span></div>';
-                    suggestionsContainer.style.display = 'block';
-                    return;
-                }
-                if (!query) { suggestionsContainer.style.display = 'none'; return; }
-
-                searchTimeout = setTimeout(() => {
-                    const url = `${itemSearchUrl}?q=${encodeURIComponent(query)}&warehouse=${encodeURIComponent(warehouseId)}&faculty=${encodeURIComponent(facultyId)}`;
-                    fetch(url, {
-                        headers: {
-                            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
-                            'Accept': 'application/json'
-                        }
-                    })
-                        .then(res => { if (!res.ok) throw new Error(`HTTP ${res.status}`); return res.json(); })
-                        .then(data => {
-                            suggestionsContainer.innerHTML = '';
-                            if (data.results && data.results.length > 0) {
-                                data.results.forEach(item => {
-                                    const div = document.createElement('div');
-                                    div.className = 'search-suggestion';
-                                    const priceBadge = (item.price > 0)
-                                        ? `<span class="badge bg-success">${item.price.toFixed(2)} ج.م</span>`
-                                        : `<span class="badge bg-secondary">بدون سعر</span>`;
-                                    const stockBadge = item.is_low_stock
-                                        ? `<span class="badge bg-warning text-dark">منخفض</span>` : '';
-                                    div.innerHTML = `
-                                ${item.name}
-                                <small class="text-muted d-block mt-1">
-                                    ${item.category} • ${item.quantity} ${item.unit}
-                                    ${priceBadge} ${stockBadge}
-                                </small>`;
-                                    div.addEventListener('click', () => {
-                                        hiddenInput.value = item.id;
-                                        searchInput.value = item.name;
-                                        if (stockInput && item.quantity !== undefined) stockInput.value = item.quantity;
-
-                                        //  PRE-FILL PRICE FROM SEARCH RESULT
-                                        if (priceInput && item.price !== undefined) {
-                                            priceInput.value = item.price > 0 ? item.price.toFixed(2) : '';
-                                        }
-
-                                        row.classList.remove('table-danger');
-                                        row.querySelector('td:first-child').querySelectorAll('.stock-error').forEach(el => el.remove());
-                                        suggestionsContainer.style.display = 'none';
-                                        suggestionsContainer.innerHTML = '';
-                                        searchInput.blur();
-                                        validateStock();
-                                    });
-                                    div.addEventListener('mouseenter', () => div.style.backgroundColor = 'var(--bg-table-row-hover, #f8f9fa)');
-                                    div.addEventListener('mouseleave', () => div.style.backgroundColor = '');
-                                    suggestionsContainer.appendChild(div);
-                                });
-                                suggestionsContainer.style.display = 'block';
-                            } else {
-                                suggestionsContainer.innerHTML = '<div class="search-suggestion"><span class="theme-text-muted">لا توجد أصناف في هذا المخزن تطابق البحث</span></div>';
-                                suggestionsContainer.style.display = 'block';
-                            }
-                        })
-                        .catch(err => {
-                            suggestionsContainer.innerHTML = `<div class="search-suggestion"><span class="theme-text-danger">خطأ في البحث: ${err.message}</span></div>`;
-                            suggestionsContainer.style.display = 'block';
-                        });
-                }, 300);
-            });
-
-            document.addEventListener('click', e => {
-                if (!row.contains(e.target)) suggestionsContainer.style.display = 'none';
-            });
-
-            setupQuantityAutoFill(row);
-        }
-
-        function buildItemLookupUrl(itemId, options = {}) {
-            const params = new URLSearchParams({ item_id: itemId });
-            const warehouseId = document.getElementById('id_from_sub_warehouse')?.value;
-            const facultyId = document.getElementById('id_faculty')?.value;
-            if (warehouseId) params.set('sub_warehouse_id', warehouseId);
-            if (facultyId) params.set('faculty_id', facultyId);
-            if (options.includePrice) params.set('include_price', 'true');
-            return `${getItemNameUrl}?${params.toString()}`;
-        }
-
-        // RESTORE ITEM NAMES + PRICES FOR EXISTING ROWS
-        function restoreItemNamesAndPrices() {
-            document.querySelectorAll('.form-row').forEach(row => {
-                const itemInput = row.querySelector('input[name$="-item"]');
-                const searchInput = row.querySelector('.item-search');
-                const stockInput = row.querySelector('.item-stock');
-                const priceInput = row.querySelector('input[name$="-price"]');
-
-                if (!itemInput?.value || !searchInput) return;
-                const itemId = itemInput.value.trim();
-                if (!itemId || isNaN(itemId)) return;
-
-                // Restore name
-                if (itemInput.dataset.itemName) {
-                    searchInput.value = itemInput.dataset.itemName;
-                } else {
-                    fetch(buildItemLookupUrl(itemId), {
-                        headers: {
-                            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
-                            'Accept': 'application/json'
-                        }
-                    })
-                        .then(res => { if (!res.ok) throw new Error(`HTTP ${res.status}`); return res.json(); })
-                        .then(data => {
-                            if (data.name) {
-                                searchInput.value = data.name;
-                                itemInput.dataset.itemName = data.name;
-                                if (data.quantity !== undefined && stockInput) {
-                                    stockInput.value = data.quantity;
-                                    validateStock();
-                                }
-                            }
-                        })
-                        .catch(() => {
-                            searchInput.value = `خطأ في تحميل الصنف #${itemId}`;
-                            searchInput.classList.add('text-danger');
-                        });
-                }
-
-                //  Restore price if not already set by user
-                if (priceInput && !priceInput.value && !itemInput.dataset.priceSet) {
-                    fetch(buildItemLookupUrl(itemId, { includePrice: true }), {
-                        headers: {
-                            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
-                            'Accept': 'application/json'
-                        }
-                    })
-                        .then(res => res.json())
-                        .then(data => {
-                            if (data.price > 0 && !priceInput.value) {
-                                priceInput.value = data.price.toFixed(2);
-                                itemInput.dataset.priceSet = 'true'; // Mark as restored
-                            }
-                        })
-                        .catch(() => {
-                            // Silent fail - user can still enter price manually
-                        });
-                }
-            });
-        }
-
-        // INITIALIZE
-        toggleCustodyFields(true);
-        const castodySelect = document.getElementById('id_castody_type');
-        if (castodySelect) {
-            castodySelect.addEventListener('change', () => toggleCustodyFields(false));
-        }
-
-        // FORM SUBMIT
-        if (form) {
-            form.addEventListener('submit', function (e) {
-                const tbody = document.querySelector('#details-table tbody');
-                let removed = 0;
-                tbody.querySelectorAll('.form-row').forEach(row => {
-                    if (row.classList.contains('deleted-row')) return;
+            // CLEAR ALL SELECTED ITEMS
+            function clearAllSelectedItems() {
+                document.querySelectorAll('#details-table .form-row:not(.deleted-row)').forEach(row => {
                     const itemInput = row.querySelector('input[name$="-item"]');
                     const searchInput = row.querySelector('.item-search');
-                    const idInput = row.querySelector('input[name$="-id"]');
-                    const isNewRow = !idInput || !idInput.value.trim();
-                    const isBlank = !itemInput?.value.trim() && !searchInput?.value.trim();
-                    if (isNewRow && isBlank) { row.remove(); removed++; }
+                    const stockInput = row.querySelector('.item-stock');
+                    const priceInput = row.querySelector('input[name$="-price"]');
+                    if (itemInput) itemInput.value = '';
+                    if (searchInput) searchInput.value = '';
+                    if (stockInput) stockInput.value = '';
+                    if (priceInput) priceInput.value = '';
+                    row.classList.remove('table-danger', 'low-stock');
+                    row.querySelectorAll('.stock-error, .low-stock-warning').forEach(el => el.remove());
                 });
-                if (removed > 0) {
-                    totalFormsInput.value = Math.max(0, (parseInt(totalFormsInput.value) || 0) - removed);
-                }
-                if (!validateBeforeSubmit()) e.preventDefault();
-            });
-        }
-
-        // INITIALIZE EXISTING ROWS
-        document.querySelectorAll('#details-table .form-row').forEach(row => {
-            if (!row.querySelector('.item-stock')) {
-                const s = document.createElement('input');
-                s.type = 'hidden';
-                s.className = 'item-stock';
-                s.value = '';
-                const ii = row.querySelector('input[name$="-item"]');
-                if (ii) s.name = `${prefix}-${ii.name.split('-')[1]}-stock`;
-                row.querySelector('td:first-child').appendChild(s);
             }
-            attachSearchToRow(row);
-        });
 
-        restoreItemNamesAndPrices(); //  Restores names AND prices
+            // WAREHOUSE CHANGE → WARN + CLEAR
+            const fromWarehouseSelect = document.getElementById('id_from_sub_warehouse');
+            if (fromWarehouseSelect) {
+                fromWarehouseSelect.dataset.previousValue = fromWarehouseSelect.value;
+                fromWarehouseSelect.addEventListener('change', function () {
+                    const hasSelectedItems = Array.from(
+                        document.querySelectorAll('#details-table .form-row:not(.deleted-row)')
+                    ).some(row => row.querySelector('input[name$="-item"]')?.value.trim());
 
-        // HTMX CHANGE-EVENT DISPATCH for department → user
-        if (!hasPostErrors) {
-            const departmentSelect = document.getElementById('id_to_department');
-            if (departmentSelect && departmentSelect.value) {
-                const userContainer = document.getElementById('to-user-container');
-                const isPlaceholder = userContainer?.querySelector('select[disabled]');
-                if (isPlaceholder) {
-                    departmentSelect.dispatchEvent(new Event('change'));
-                }
+                    if (hasSelectedItems) {
+                        const confirmed = confirm('تغيير المخزن الفرعي سيؤدي إلى مسح جميع الأصناف المختارة.\nهل تريد المتابعة؟');
+                        if (!confirmed) {
+                            this.value = this.dataset.previousValue || '';
+                            return;
+                        }
+                        clearAllSelectedItems();
+                    }
+                    this.dataset.previousValue = this.value;
+                });
             }
-        }
 
-        // ADD NEW ROW 
-        const addRowBtn = document.getElementById('add-row');
-        if (addRowBtn) {
-            addRowBtn.addEventListener('click', function () {
-                const tbody = document.querySelector('#details-table tbody');
-                const rows = tbody.querySelectorAll('.form-row:not(.deleted-row)');
-                if (rows.length === 0) return;
+            // DELETE BUTTONS
+            function updateDeleteButtons() {
+                const visibleRows = document.querySelectorAll('#details-table tbody .form-row:not(.deleted-row)');
+                const deleteButtons = document.querySelectorAll('.delete-row');
+                const shouldDisable = visibleRows.length <= 1;
+                deleteButtons.forEach(btn => {
+                    btn.disabled = shouldDisable;
+                    btn.classList.toggle('disabled', shouldDisable);
+                });
+            }
 
-                const newIndex = parseInt(totalFormsInput.value) || 0;
-                const lastRow = rows[rows.length - 1].cloneNode(true);
+            function attachDeleteListener(button) {
+                button.addEventListener('click', function () {
+                    if (!confirm('هل أنت متأكد من حذف هذا الصنف؟')) return;
+                    const row = this.closest('tr');
+                    if (!row) return;
+                    const deleteCheckbox = row.querySelector('input[type="checkbox"][name$="-DELETE"]');
+                    if (deleteCheckbox) {
+                        deleteCheckbox.checked = true;
+                        row.style.display = 'none';
+                        row.classList.add('deleted-row');
+                    } else {
+                        row.remove();
+                        totalFormsInput.value = Math.max(0, (parseInt(totalFormsInput.value) || 0) - 1);
+                    }
+                    updateDeleteButtons();
+                });
+            }
 
-                lastRow.querySelectorAll('input, select, textarea').forEach(el => {
-                    if (el.name) el.name = el.name.replace(/-(\d+)-/g, `-${newIndex}-`);
-                    if (el.id) el.id = el.id.replace(/-(\d+)-/g, `-${newIndex}-`);
-                    if (el.type === 'checkbox') {
-                        el.checked = false;
-                    } else if (!el.name.includes('item') && !el.name.includes('stock') && !el.name.includes('price')) {
-                        el.value = '';
+            // QUANTITY AUTO-FILL WITH PROJECTED QTY
+            function setupQuantityAutoFill(row) {
+                const orderInput = row.querySelector('input[name$="-order_quantity"]');
+                const approvedInput = row.querySelector('input[name$="-approved_quantity"]');
+                const stockInput = row.querySelector('.item-stock');
+                if (!orderInput || !approvedInput) return;
+
+                function updateApproved() {
+                    const orderQty = parseInt(orderInput.value) || 0;
+                    // ✅ Use projected quantity for max allowed
+                    const projectedQty = parseInt(stockInput?.dataset.projectedQty) || parseInt(stockInput?.value) || Infinity;
+                    const maxAllowed = Math.min(orderQty, projectedQty);
+                    
+                    if (approvedInput.value === '' || parseInt(approvedInput.value) > maxAllowed) {
+                        approvedInput.value = maxAllowed >= 0 ? maxAllowed : 0;
+                    }
+                    validateStock();
+                }
+                
+                function validateApproved() {
+                    const orderQty = parseInt(orderInput.value) || 0;
+                    const approvedQty = parseInt(approvedInput.value) || 0;
+                    // ✅ Use projected quantity for validation
+                    const projectedQty = parseInt(stockInput?.dataset.projectedQty) || Infinity;
+                    
+                    if (approvedQty > orderQty) approvedInput.value = orderQty;
+                    if (approvedQty > projectedQty) approvedInput.value = projectedQty;
+                    
+                    validateStock();
+                }
+                
+                orderInput.addEventListener('input', updateApproved);
+                approvedInput.addEventListener('input', validateApproved);
+            }
+
+            // ✅ ENHANCED STOCK VALIDATION WITH PROJECTED QTY
+            function validateStock() {
+                let hasErrors = false;
+                
+                document.querySelectorAll('.form-row').forEach(row => {
+                    if (row.classList.contains('deleted-row') || row.style.display === 'none') return;
+
+                    const itemInput = row.querySelector('input[name$="-item"]');
+                    const stockInput = row.querySelector('.item-stock');
+                    const qtyInput = row.querySelector('input[name$="-approved_quantity"]');
+                    const orderInput = row.querySelector('input[name$="-order_quantity"]');
+
+                    // Clear previous errors
+                    row.classList.remove('table-danger', 'low-stock');
+                    row.querySelectorAll('.low-stock-warning, .stock-error').forEach(el => el.remove());
+
+                    if (!itemInput?.value || !stockInput?.value || !qtyInput || !orderInput) return;
+
+                    // ✅ Use projected quantity from dataset (set when item was selected)
+                    const projectedQty = parseInt(stockInput.dataset.projectedQty) || parseInt(stockInput.value) || 0;
+                    const currentQty = parseInt(stockInput.dataset.currentQty) || projectedQty;
+                    const pendingIn = parseInt(stockInput.dataset.pendingIn) || 0;
+                    const pendingOut = parseInt(stockInput.dataset.pendingOut) || 0;
+                    
+                    const approved = parseInt(qtyInput.value) || 0;
+                    const ordered = parseInt(orderInput.value) || 0;
+
+                    function addError(cell, msg) {
+                        hasErrors = true;
+                        row.classList.add('table-danger');
+                        const el = document.createElement('div');
+                        el.className = 'stock-error text-danger small mt-1';
+                        el.textContent = msg;
+                        cell.appendChild(el);
+                    }
+
+                    // ✅ CRITICAL: Validate against PROJECTED quantity (not just current)
+                    if (approved > 0 && projectedQty <= 0) {
+                        addError(qtyInput.closest('td'), `الصنف نافد (المتوفر بعد الحركات المعلقة: ${projectedQty})`);
+                    } else if (approved > projectedQty) {
+                        addError(qtyInput.closest('td'), 
+                            `الكمية المنصرفة (${approved}) تتجاوز المتوفر (${projectedQty})\n` +
+                            `(حالي: ${currentQty} + إضافة: ${pendingIn} - صرف: ${pendingOut} = ${projectedQty})`
+                        );
+                    } else if (ordered > projectedQty) {
+                        addError(orderInput.closest('td'), 
+                            `الكمية المطلوبة (${ordered}) تتجاوز المتوفر (${projectedQty})\n` +
+                            `(حالي: ${currentQty} + إضافة: ${pendingIn} - صرف: ${pendingOut} = ${projectedQty})`
+                        );
+                    } else if (projectedQty > 0 && projectedQty <= 10) {
+                        // Low stock warning based on projected quantity
+                        row.classList.add('low-stock');
+                        const approvedCell = qtyInput.closest('td');
+                        if (!approvedCell.querySelector('.low-stock-warning')) {
+                            const warn = document.createElement('div');
+                            warn.className = 'low-stock-warning text-warning small';
+                            warn.textContent = `تحذير: المتبقي المتوقع ${projectedQty} (حالي: ${currentQty})`;
+                            approvedCell.appendChild(warn);
+                        }
+                    }
+                });
+                
+                return hasErrors;
+            }
+
+            // SUBMIT VALIDATION
+            function validateBeforeSubmit() {
+                if (isEditing) return true;
+
+                const warehouseId = document.getElementById('id_from_sub_warehouse')?.value;
+                if (!warehouseId) {
+                    alert('يجب اختيار المخزن الفرعي أولاً قبل الحفظ.');
+                    return false;
+                }
+
+                const visibleRows = document.querySelectorAll('#details-table .form-row:not(.deleted-row)');
+                if (visibleRows.length === 0) {
+                    alert('يجب إضافة صنف واحد على الأقل قبل الحفظ.');
+                    return false;
+                }
+
+                let hasErrors = false;
+
+                visibleRows.forEach(row => {
+                    const itemInput = row.querySelector('input[name$="-item"]');
+                    const searchInput = row.querySelector('.item-search');
+                    const orderInput = row.querySelector('input[name$="-order_quantity"]');
+                    const approvedInput = row.querySelector('input[name$="-approved_quantity"]');
+                    const td = row.querySelector('td:first-child');
+
+                    row.querySelectorAll('.stock-error').forEach(el => el.remove());
+                    row.classList.remove('table-danger');
+
+                    const hasSearchText = searchInput && searchInput.value.trim();
+                    const hasItemId = itemInput && itemInput.value.trim();
+
+                    if (hasSearchText && !hasItemId) {
+                        hasErrors = true;
+                        row.classList.add('table-danger');
+                        const err = document.createElement('div');
+                        err.className = 'stock-error text-danger small mt-1';
+                        err.textContent = 'يرجى اختيار الصنف من قائمة البحث (لم يتم تحديد الصنف)';
+                        td.appendChild(err);
+                    } else if (!hasItemId) {
+                        hasErrors = true;
+                        row.classList.add('table-danger');
+                        const err = document.createElement('div');
+                        err.className = 'stock-error text-danger small mt-1';
+                        err.textContent = 'يجب اختيار صنف';
+                        td.appendChild(err);
+                    }
+
+                    if (orderInput) {
+                        const orderQty = parseInt(orderInput.value) || 0;
+                        if (orderQty <= 0) {
+                            hasErrors = true;
+                            row.classList.add('table-danger');
+                            const orderCell = orderInput.closest('td');
+                            if (!orderCell.querySelector('.stock-error')) {
+                                const err = document.createElement('div');
+                                err.className = 'stock-error text-danger small mt-1';
+                                err.textContent = 'الكمية المطلوبة يجب أن تكون أكبر من 0';
+                                orderCell.appendChild(err);
+                            }
+                        }
+                    }
+
+                    if (approvedInput) {
+                        const approvedQty = parseInt(approvedInput.value) || 0;
+                        if (approvedQty <= 0) {
+                            hasErrors = true;
+                            row.classList.add('table-danger');
+                            const approvedCell = approvedInput.closest('td');
+                            if (!approvedCell.querySelector('.stock-error')) {
+                                const err = document.createElement('div');
+                                err.className = 'stock-error text-danger small mt-1';
+                                err.textContent = 'الكمية المنصرفة يجب أن تكون أكبر من 0';
+                                approvedCell.appendChild(err);
+                            }
+                        }
                     }
                 });
 
-                const itemHidden = lastRow.querySelector('input[name$="-item"]');
-                const orderQty = lastRow.querySelector('input[name$="-order_quantity"]');
-                const approvedQty = lastRow.querySelector('input[name$="-approved_quantity"]');
-                const priceInput = lastRow.querySelector('input[name$="-price"]'); //  Handle price
-                if (itemHidden) itemHidden.value = '';
-                if (orderQty) orderQty.value = '';
-                if (approvedQty) approvedQty.value = '';
-                if (priceInput) {
-                    priceInput.value = ''; //  Clear price for new row
-                    priceInput.dataset.priceSet = ''; //  Reset price-set flag
+                if (hasErrors) {
+                    alert('يرجى تصحيح الأخطاء في تفاصيل الأصناف قبل الحفظ.');
+                    return false;
                 }
 
-                const stockInput = lastRow.querySelector('.item-stock');
-                if (stockInput) {
-                    stockInput.name = `${prefix}-${newIndex}-stock`;
-                    stockInput.value = '';
-                } else {
-                    const ns = document.createElement('input');
-                    ns.type = 'hidden';
-                    ns.className = 'item-stock';
-                    ns.name = `${prefix}-${newIndex}-stock`;
-                    ns.value = '';
-                    lastRow.querySelector('td:first-child').appendChild(ns);
+                const hasStockErrors = validateStock();
+                const errorRows = document.querySelectorAll('.form-row.table-danger:not(.deleted-row)');
+                if (hasStockErrors || errorRows.length > 0) {
+                    alert('لا يمكن الحفظ: توجد أصناف بكميات تتجاوز الكمية المتاحة في المخزون أو نافدة.');
+                    return false;
                 }
 
-                const searchInput = lastRow.querySelector('.item-search');
-                if (searchInput) {
-                    searchInput.value = '';
-                    searchInput.placeholder = 'ابحث عن الصنف...';
+                return true;
+            }
+
+
+            function attachSearchToRow(row) {
+                const searchInput = row.querySelector('.item-search');
+                const hiddenInput = row.querySelector('input[name$="-item"]');
+                const stockInput = row.querySelector('.item-stock');
+                const priceInput = row.querySelector('input[name$="-price"]');
+
+                if (!searchInput || !hiddenInput) return;
+
+                let searchTimeout;
+                let isSelecting = false; // 🔑 Flag to prevent input event interference
+
+                const existingDropdown = searchInput.parentNode.querySelector('.search-dropdown');
+                if (existingDropdown) existingDropdown.remove();
+
+                const suggestionsContainer = document.createElement('div');
+                suggestionsContainer.className = 'search-dropdown';
+                searchInput.parentNode.style.position = 'relative';
+                searchInput.parentNode.appendChild(suggestionsContainer);
+
+                searchInput.addEventListener('input', function () {
+                    // 🔑 Skip clearing if we just selected an item
+                    if (isSelecting) return;
+                    
+                    clearTimeout(searchTimeout);
+                    if (hiddenInput.value) {
+                        hiddenInput.value = '';
+                        if (stockInput) stockInput.value = '';
+                        if (priceInput) priceInput.value = '';
+                    }
+
+                    const query = this.value.trim();
+                    const warehouseEl = document.getElementById('id_from_sub_warehouse');
+                    const facultyEl = document.getElementById('id_faculty');
+                    const warehouseId = warehouseEl ? warehouseEl.value : null;
+                    const facultyId = facultyEl ? facultyEl.value : null;
+
+                    if (!warehouseId || !facultyId) {
+                        suggestionsContainer.innerHTML = '<div class="search-suggestion"><span class="theme-text-muted">يرجى اختيار الكلية والمخزن أولاً</span></div>';
+                        suggestionsContainer.style.display = 'block';
+                        return;
+                    }
+                    if (!query) { suggestionsContainer.style.display = 'none'; return; }
+
+                    searchTimeout = setTimeout(() => {
+                        const url = `${itemSearchUrl}?q=${encodeURIComponent(query)}&warehouse=${encodeURIComponent(warehouseId)}&faculty=${encodeURIComponent(facultyId)}`;
+                        fetch(url, {
+                            headers: {
+                                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                                'Accept': 'application/json'
+                            }
+                        })
+                            .then(res => { if (!res.ok) throw new Error(`HTTP ${res.status}`); return res.json(); })
+                            .then(data => {
+                                suggestionsContainer.innerHTML = '';
+                                if (data.results && data.results.length > 0) {
+                                    data.results.forEach(item => {
+                                        const div = document.createElement('div');
+                                        div.className = 'search-suggestion';
+                                        
+                                        const pendingDisplay = item.pending_in > 0 || item.pending_out > 0 
+                                            ? `<small class="text-muted d-block mt-1">
+                                                ${item.pending_in > 0 ? `<span class="pending-badge pending-in">+${item.pending_in} إضافة</span>` : ''}
+                                                ${item.pending_out > 0 ? `<span class="pending-badge pending-out">-${item.pending_out} صرف</span>` : ''}
+                                            </small>`
+                                            : '';
+
+                                        const priceBadge = (item.price > 0)
+                                            ? `<span class="badge bg-success">${item.price.toFixed(2)} ج.م</span>`
+                                            : `<span class="badge bg-secondary">بدون سعر</span>`;
+
+                                        const stockStatus = item.is_out_of_stock 
+                                            ? `<span class="badge bg-danger">نافد</span>`
+                                            : item.is_low_stock 
+                                                ? `<span class="badge bg-warning text-dark">منخفض</span>` 
+                                                : `<span class="badge bg-success">متوفر</span>`;
+
+                                        div.innerHTML = `
+                                            <strong class="projected-qty">متوفر: ${item.projected_qty}</strong>
+                                            <small class="text-muted d-block">
+                                                ${item.name} • ${item.category} • ${item.unit}
+                                                <br>
+                                                (حالي: ${item.current_qty} ${pendingDisplay})
+                                                ${priceBadge} ${stockStatus}
+                                            </small>
+                                        `;
+                                        
+                                        div.addEventListener('click', (e) => {
+                                            e.stopPropagation(); // 🔑 Prevent bubbling
+                                            isSelecting = true;  // 🔑 Block input event clearing
+                                            
+                                            hiddenInput.value = item.id;
+                                            searchInput.value = item.name;
+                                            
+                                            if (stockInput && item.projected_qty !== undefined) {
+                                                stockInput.value = item.projected_qty;
+                                                stockInput.dataset.currentQty = item.current_qty;
+                                                stockInput.dataset.pendingIn = item.pending_in;
+                                                stockInput.dataset.pendingOut = item.pending_out;
+                                                stockInput.dataset.projectedQty = item.projected_qty;
+                                            }
+                                            
+                                            if (priceInput && item.price !== undefined) {
+                                                priceInput.value = item.price > 0 ? item.price.toFixed(2) : '';
+                                            }
+                                            
+                                            row.classList.remove('table-danger');
+                                            row.querySelector('td:first-child').querySelectorAll('.stock-error').forEach(el => el.remove());
+                                            searchInput.title = `متوفر: ${item.projected_qty} (حالي: ${item.current_qty} +إضافة: ${item.pending_in} -صرف: ${item.pending_out})`;
+                                            
+                                            // 🔑 IMMEDIATELY HIDE & CLEAR DROPDOWN
+                                            suggestionsContainer.style.display = 'none';
+                                            suggestionsContainer.innerHTML = '';
+                                            searchInput.blur(); // Remove focus to prevent reopening
+                                            validateStock();
+                                            
+                                            // 🔑 Re-enable input event after a short delay
+                                            setTimeout(() => { isSelecting = false; }, 100);
+                                        });
+                                        
+                                        div.addEventListener('mouseenter', () => div.style.backgroundColor = 'var(--bg-table-row-hover, #f8f9fa)');
+                                        div.addEventListener('mouseleave', () => div.style.backgroundColor = '');
+                                        suggestionsContainer.appendChild(div);
+                                    });
+                                    suggestionsContainer.style.display = 'block';
+                                } else {
+                                    suggestionsContainer.innerHTML = '<div class="search-suggestion"><span class="theme-text-muted">لا توجد أصناف في هذا المخزن تطابق البحث</span></div>';
+                                    suggestionsContainer.style.display = 'block';
+                                }
+                            })
+                            .catch(err => {
+                                suggestionsContainer.innerHTML = `<div class="search-suggestion"><span class="theme-text-danger">خطأ في البحث: ${err.message}</span></div>`;
+                                suggestionsContainer.style.display = 'block';
+                            });
+                    }, 300);
+                });
+
+                // Close dropdown when clicking outside
+                document.addEventListener('click', e => {
+                    if (!row.contains(e.target)) suggestionsContainer.style.display = 'none';
+                });
+
+                setupQuantityAutoFill(row);
+            }
+
+
+            function buildItemLookupUrl(itemId, options = {}) {
+                const params = new URLSearchParams({ item_id: itemId });
+                const warehouseId = document.getElementById('id_from_sub_warehouse')?.value;
+                const facultyId = document.getElementById('id_faculty')?.value;
+                if (warehouseId) params.set('sub_warehouse_id', warehouseId);
+                if (facultyId) params.set('faculty_id', facultyId);
+                if (options.includePrice) params.set('include_price', 'true');
+                return `${getItemNameUrl}?${params.toString()}`;
+            }
+
+            // RESTORE ITEM NAMES + PRICES FOR EXISTING ROWS
+            function restoreItemNamesAndPrices() {
+                document.querySelectorAll('.form-row').forEach(row => {
+                    const itemInput = row.querySelector('input[name$="-item"]');
+                    const searchInput = row.querySelector('.item-search');
+                    const stockInput = row.querySelector('.item-stock');
+                    const priceInput = row.querySelector('input[name$="-price"]');
+
+                    if (!itemInput?.value || !searchInput) return;
+                    const itemId = itemInput.value.trim();
+                    if (!itemId || isNaN(itemId)) return;
+
+                    // Restore name
+                    if (itemInput.dataset.itemName) {
+                        searchInput.value = itemInput.dataset.itemName;
+                    } else {
+                        fetch(buildItemLookupUrl(itemId), {
+                            headers: {
+                                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                                'Accept': 'application/json'
+                            }
+                        })
+                            .then(res => { if (!res.ok) throw new Error(`HTTP ${res.status}`); return res.json(); })
+                            .then(data => {
+                                if (data.name) {
+                                    searchInput.value = data.name;
+                                    itemInput.dataset.itemName = data.name;
+                                    if (data.quantity !== undefined && stockInput) {
+                                        stockInput.value = data.quantity;
+                                        validateStock();
+                                    }
+                                }
+                            })
+                            .catch(() => {
+                                searchInput.value = `خطأ في تحميل الصنف #${itemId}`;
+                                searchInput.classList.add('text-danger');
+                            });
+                    }
+
+                    // Restore price if not already set by user
+                    if (priceInput && !priceInput.value && !itemInput.dataset.priceSet) {
+                        fetch(buildItemLookupUrl(itemId, { includePrice: true }), {
+                            headers: {
+                                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                                'Accept': 'application/json'
+                            }
+                        })
+                            .then(res => res.json())
+                            .then(data => {
+                                if (data.price > 0 && !priceInput.value) {
+                                    priceInput.value = data.price.toFixed(2);
+                                    itemInput.dataset.priceSet = 'true'; // Mark as restored
+                                }
+                            })
+                            .catch(() => {
+                                // Silent fail - user can still enter price manually
+                            });
+                    }
+                });
+            }
+
+            // INITIALIZE
+            toggleCustodyFields(true);
+            const castodySelect = document.getElementById('id_castody_type');
+            if (castodySelect) {
+                castodySelect.addEventListener('change', () => toggleCustodyFields(false));
+            }
+
+            // FORM SUBMIT
+            if (form) {
+                form.addEventListener('submit', function (e) {
+                    const tbody = document.querySelector('#details-table tbody');
+                    let removed = 0;
+                    tbody.querySelectorAll('.form-row').forEach(row => {
+                        if (row.classList.contains('deleted-row')) return;
+                        const itemInput = row.querySelector('input[name$="-item"]');
+                        const searchInput = row.querySelector('.item-search');
+                        const idInput = row.querySelector('input[name$="-id"]');
+                        const isNewRow = !idInput || !idInput.value.trim();
+                        const isBlank = !itemInput?.value.trim() && !searchInput?.value.trim();
+                        if (isNewRow && isBlank) { row.remove(); removed++; }
+                    });
+                    if (removed > 0) {
+                        totalFormsInput.value = Math.max(0, (parseInt(totalFormsInput.value) || 0) - removed);
+                    }
+                    if (!validateBeforeSubmit()) e.preventDefault();
+                });
+            }
+
+            // INITIALIZE EXISTING ROWS
+            document.querySelectorAll('#details-table .form-row').forEach(row => {
+                if (!row.querySelector('.item-stock')) {
+                    const s = document.createElement('input');
+                    s.type = 'hidden';
+                    s.className = 'item-stock';
+                    s.value = '';
+                    const ii = row.querySelector('input[name$="-item"]');
+                    if (ii) s.name = `${prefix}-${ii.name.split('-')[1]}-stock`;
+                    row.querySelector('td:first-child').appendChild(s);
                 }
-
-                //  Clear all dynamic elements for new row
-                lastRow.querySelectorAll('.stock-error, .low-stock-warning, .search-dropdown, .text-warning, .text-muted.small').forEach(el => el.remove());
-                lastRow.classList.remove('table-danger', 'low-stock', 'deleted-row');
-                lastRow.style.display = '';
-
-                const deleteCell = lastRow.querySelector('td:last-child');
-                if (deleteCell) {
-                    deleteCell.innerHTML = '';
-                    const hiddenDiv = document.createElement('div');
-                    hiddenDiv.className = 'hide-delete';
-                    const chk = document.createElement('input');
-                    chk.type = 'checkbox';
-                    chk.name = `${prefix}-${newIndex}-DELETE`;
-                    chk.id = `id_${prefix}-${newIndex}-DELETE`;
-                    chk.className = 'form-check-input';
-                    hiddenDiv.appendChild(chk);
-                    deleteCell.appendChild(hiddenDiv);
-                    const btn = document.createElement('button');
-                    btn.type = 'button';
-                    btn.className = 'btn btn-sm btn-link text-danger delete-row';
-                    btn.title = 'حذف الصنف';
-                    btn.innerHTML = '<i class="bi bi-trash"></i>';
-                    deleteCell.appendChild(btn);
-                    attachDeleteListener(btn);
-                }
-
-                tbody.appendChild(lastRow);
-                attachSearchToRow(lastRow);
-                totalFormsInput.value = newIndex + 1;
-                updateDeleteButtons();
+                attachSearchToRow(row);
             });
-        }
 
-        document.querySelectorAll('.delete-row').forEach(attachDeleteListener);
-        updateDeleteButtons();
+            restoreItemNamesAndPrices(); // Restores names AND prices
 
-        // HTMX EVENT HANDLERS
-        document.body.addEventListener('htmx:beforeRequest', function (event) {
-            const el = document.getElementById(event.detail.elt.getAttribute('hx-indicator'));
-            if (el) el.classList.remove('hide');
-        });
-        document.body.addEventListener('htmx:afterRequest', function (event) {
-            const el = document.getElementById(event.detail.elt.getAttribute('hx-indicator'));
-            if (el) el.classList.add('hide');
-        });
-        document.body.addEventListener('htmx:error', function (event) {
-            console.error('HTMX error:', event.detail.error);
-            const el = document.getElementById(event.detail.elt.getAttribute('hx-indicator'));
-            if (el) el.classList.add('hide');
-            alert('حدث خطأ أثناء التحميل. يرجى المحاولة مرة أخرى.');
-        });
+            // HTMX CHANGE-EVENT DISPATCH for department → user
+            if (!hasPostErrors) {
+                const departmentSelect = document.getElementById('id_to_department');
+                if (departmentSelect && departmentSelect.value) {
+                    const userContainer = document.getElementById('to-user-container');
+                    const isPlaceholder = userContainer?.querySelector('select[disabled]');
+                    if (isPlaceholder) {
+                        departmentSelect.dispatchEvent(new Event('change'));
+                    }
+                }
+            }
 
-        console.log(`Ready | prefix: ${prefix} | editing: ${isEditing} | hasPostErrors: ${hasPostErrors} | forms: ${totalFormsInput.value}`);
-    });
+            // ADD NEW ROW 
+            const addRowBtn = document.getElementById('add-row');
+            if (addRowBtn) {
+                addRowBtn.addEventListener('click', function () {
+                    const tbody = document.querySelector('#details-table tbody');
+                    const rows = tbody.querySelectorAll('.form-row:not(.deleted-row)');
+                    if (rows.length === 0) return;
+
+                    const newIndex = parseInt(totalFormsInput.value) || 0;
+                    const lastRow = rows[rows.length - 1].cloneNode(true);
+
+                    lastRow.querySelectorAll('input, select, textarea').forEach(el => {
+                        if (el.name) el.name = el.name.replace(/-(\d+)-/g, `-${newIndex}-`);
+                        if (el.id) el.id = el.id.replace(/-(\d+)-/g, `-${newIndex}-`);
+                        if (el.type === 'checkbox') {
+                            el.checked = false;
+                        } else if (!el.name.includes('item') && !el.name.includes('stock') && !el.name.includes('price')) {
+                            el.value = '';
+                        }
+                    });
+
+                    const itemHidden = lastRow.querySelector('input[name$="-item"]');
+                    const orderQty = lastRow.querySelector('input[name$="-order_quantity"]');
+                    const approvedQty = lastRow.querySelector('input[name$="-approved_quantity"]');
+                    const priceInput = lastRow.querySelector('input[name$="-price"]');
+                    if (itemHidden) itemHidden.value = '';
+                    if (orderQty) orderQty.value = '';
+                    if (approvedQty) approvedQty.value = '';
+                    if (priceInput) {
+                        priceInput.value = ''; // Clear price for new row
+                        priceInput.dataset.priceSet = ''; // Reset price-set flag
+                    }
+
+                    const stockInput = lastRow.querySelector('.item-stock');
+                    if (stockInput) {
+                        stockInput.name = `${prefix}-${newIndex}-stock`;
+                        stockInput.value = '';
+                        // Clear dataset attributes for new row
+                        delete stockInput.dataset.currentQty;
+                        delete stockInput.dataset.pendingIn;
+                        delete stockInput.dataset.pendingOut;
+                        delete stockInput.dataset.projectedQty;
+                    } else {
+                        const ns = document.createElement('input');
+                        ns.type = 'hidden';
+                        ns.className = 'item-stock';
+                        ns.name = `${prefix}-${newIndex}-stock`;
+                        ns.value = '';
+                        lastRow.querySelector('td:first-child').appendChild(ns);
+                    }
+
+                    const searchInput = lastRow.querySelector('.item-search');
+                    if (searchInput) {
+                        searchInput.value = '';
+                        searchInput.placeholder = 'ابحث عن الصنف...';
+                    }
+
+                    // Clear all dynamic elements for new row
+                    lastRow.querySelectorAll('.stock-error, .low-stock-warning, .search-dropdown, .text-warning, .text-muted.small').forEach(el => el.remove());
+                    lastRow.classList.remove('table-danger', 'low-stock', 'deleted-row');
+                    lastRow.style.display = '';
+
+                    const deleteCell = lastRow.querySelector('td:last-child');
+                    if (deleteCell) {
+                        deleteCell.innerHTML = '';
+                        const hiddenDiv = document.createElement('div');
+                        hiddenDiv.className = 'hide-delete';
+                        const chk = document.createElement('input');
+                        chk.type = 'checkbox';
+                        chk.name = `${prefix}-${newIndex}-DELETE`;
+                        chk.id = `id_${prefix}-${newIndex}-DELETE`;
+                        chk.className = 'form-check-input';
+                        hiddenDiv.appendChild(chk);
+                        deleteCell.appendChild(hiddenDiv);
+                        const btn = document.createElement('button');
+                        btn.type = 'button';
+                        btn.className = 'btn btn-sm btn-link text-danger delete-row';
+                        btn.title = 'حذف الصنف';
+                        btn.innerHTML = '<i class="bi bi-trash"></i>';
+                        deleteCell.appendChild(btn);
+                        attachDeleteListener(btn);
+                    }
+
+                    tbody.appendChild(lastRow);
+                    attachSearchToRow(lastRow);
+                    totalFormsInput.value = newIndex + 1;
+                    updateDeleteButtons();
+                });
+            }
+
+            document.querySelectorAll('.delete-row').forEach(attachDeleteListener);
+            updateDeleteButtons();
+
+            // HTMX EVENT HANDLERS
+            document.body.addEventListener('htmx:beforeRequest', function (event) {
+                const el = document.getElementById(event.detail.elt.getAttribute('hx-indicator'));
+                if (el) el.classList.remove('hide');
+            });
+            document.body.addEventListener('htmx:afterRequest', function (event) {
+                const el = document.getElementById(event.detail.elt.getAttribute('hx-indicator'));
+                if (el) el.classList.add('hide');
+            });
+            document.body.addEventListener('htmx:error', function (event) {
+                console.error('HTMX error:', event.detail.error);
+                const el = document.getElementById(event.detail.elt.getAttribute('hx-indicator'));
+                if (el) el.classList.add('hide');
+                alert('حدث خطأ أثناء التحميل. يرجى المحاولة مرة أخرى.');
+            });
+
+            console.log(`Ready | prefix: ${prefix} | editing: ${isEditing} | hasPostErrors: ${hasPostErrors} | forms: ${totalFormsInput.value}`);
+        });
     </script>
 {% endblock scripts %}
