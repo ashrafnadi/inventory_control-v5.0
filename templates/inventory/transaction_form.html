@@ -480,7 +480,7 @@
 
                 function updateApproved() {
                     const orderQty = parseInt(orderInput.value) || 0;
-                    // ✅ Use projected quantity for max allowed
+                    // Use projected quantity for max allowed
                     const projectedQty = parseInt(stockInput?.dataset.projectedQty) || parseInt(stockInput?.value) || Infinity;
                     const maxAllowed = Math.min(orderQty, projectedQty);
                     
@@ -493,7 +493,7 @@
                 function validateApproved() {
                     const orderQty = parseInt(orderInput.value) || 0;
                     const approvedQty = parseInt(approvedInput.value) || 0;
-                    // ✅ Use projected quantity for validation
+                    // Use projected quantity for validation
                     const projectedQty = parseInt(stockInput?.dataset.projectedQty) || Infinity;
                     
                     if (approvedQty > orderQty) approvedInput.value = orderQty;
@@ -506,7 +506,7 @@
                 approvedInput.addEventListener('input', validateApproved);
             }
 
-            // ✅ ENHANCED STOCK VALIDATION WITH PROJECTED QTY
+            // ENHANCED STOCK VALIDATION WITH PROJECTED QTY
             function validateStock() {
                 let hasErrors = false;
                 
@@ -524,7 +524,7 @@
 
                     if (!itemInput?.value || !stockInput?.value || !qtyInput || !orderInput) return;
 
-                    // ✅ Use projected quantity from dataset (set when item was selected)
+                    // Use projected quantity from dataset (set when item was selected)
                     const projectedQty = parseInt(stockInput.dataset.projectedQty) || parseInt(stockInput.value) || 0;
                     const currentQty = parseInt(stockInput.dataset.currentQty) || projectedQty;
                     const pendingIn = parseInt(stockInput.dataset.pendingIn) || 0;
@@ -542,7 +542,7 @@
                         cell.appendChild(el);
                     }
 
-                    // ✅ CRITICAL: Validate against PROJECTED quantity (not just current)
+                    // Validate against PROJECTED quantity (not just current)
                     if (approved > 0 && projectedQty <= 0) {
                         addError(qtyInput.closest('td'), `الصنف نافد (المتوفر بعد الحركات المعلقة: ${projectedQty})`);
                     } else if (approved > projectedQty) {

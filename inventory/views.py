@@ -5005,12 +5005,11 @@ def item_search_ajax(request):
                         + (f" - {item.category.name}" if item.category else ""),
                         "category": item.category.name if item.category else "بدون فئة",
                         "unit": item.get_unit_display(),
-                        # ✅ FIELDS YOUR TEMPLATE JAVASCRIPT EXPECTS:
-                        "current_qty": current_qty,  # ✅ Current stock
-                        "pending_in": pending_in,  # ✅ Pending incoming
-                        "pending_out": pending_out,  # ✅ Pending outgoing
-                        "projected_qty": projected_qty,  # ✅ KEY: Projected available
-                        "price": price_value,  # ✅ For price pre-fill
+                        "current_qty": current_qty,
+                        "pending_in": pending_in,
+                        "pending_out": pending_out,
+                        "projected_qty": projected_qty,
+                        "price": price_value,
                         "limit_quantity": item.limit_quantity,
                         "is_low_stock": projected_qty <= item.limit_quantity
                         and projected_qty > 0,
@@ -5826,7 +5825,7 @@ def item_search(request):
 
     results = []
     for item in items:
-        # ✅ 1. Get CURRENT stock from FacultyItemStock
+        # 1. Get CURRENT stock from FacultyItemStock
         stock_qs = FacultyItemStock.objects.filter(
             item=item,
             faculty_id=faculty_id,
@@ -5840,7 +5839,7 @@ def item_search(request):
         )
         current_qty = int(current_qty) if current_qty is not None else 0
 
-        # ✅ 2. Calculate PENDING IN (Additions, Returns, Transfers TO this warehouse)
+        # 2. Calculate PENDING IN (Additions, Returns, Transfers TO this warehouse)
         pending_in = (
             ItemTransactionDetails.objects.filter(
                 item=item,
@@ -5854,7 +5853,7 @@ def item_search(request):
         )
         pending_in = int(pending_in) if pending_in is not None else 0
 
-        # ✅ 3. Calculate PENDING OUT (Disbursements, Transfers FROM this warehouse)
+        # 3. Calculate PENDING OUT (Disbursements, Transfers FROM this warehouse)
         pending_out = (
             ItemTransactionDetails.objects.filter(
                 item=item,
@@ -5868,16 +5867,16 @@ def item_search(request):
         )
         pending_out = int(pending_out) if pending_out is not None else 0
 
-        # ✅ 4. Calculate PROJECTED = current + pending_in - pending_out
+        # 4. Calculate PROJECTED = current + pending_in - pending_out
         projected_qty = current_qty + pending_in - pending_out
 
-        # ✅ 5. Get latest price
+        # 5. Get latest price
         latest_price = item.itempricehistory_set.order_by("-date").first()
         price = (
             float(latest_price.price) if latest_price and latest_price.price else 0.0
         )
 
-        # ✅ CORRECT: Use the fields we actually calculated
+        # CORRECT: Use the fields we actually calculated
         results.append(
             {
                 "id": item.id,
@@ -5885,12 +5884,11 @@ def item_search(request):
                 "code": item.code or "-",
                 "category": item.category.name if item.category else "-",
                 "unit": item.get_unit_display(),
-                # ✅ Fields your template JavaScript expects:
-                "current_qty": current_qty,  # ✅ Current stock
-                "pending_in": pending_in,  # ✅ Pending incoming
-                "pending_out": pending_out,  # ✅ Pending outgoing
-                "projected_qty": projected_qty,  # ✅ Projected available (KEY FIELD)
-                "price": price,  # ✅ Price for pre-fill (plain float)
+                "current_qty": current_qty,
+                "pending_in": pending_in,
+                "pending_out": pending_out,
+                "projected_qty": projected_qty,
+                "price": price,
                 "is_low_stock": projected_qty <= item.limit_quantity
                 and projected_qty > 0,
                 "is_out_of_stock": projected_qty <= 0,
