@@ -82,7 +82,12 @@ A robust, Django-based web application designed to manage inventory and warehous
     Using **uv** (Recommended):
 
     ```bash
-    uv sync
+    # for development
+    uv sync --no-group windows --no-group linux
+    # for production on windows
+    uv sync --no-dev --group windows
+    # for production on linux
+    uv sync --no-dev --group linux
     ```
 
     Using **pip**:
@@ -96,7 +101,11 @@ A robust, Django-based web application designed to manage inventory and warehous
     pip install -r pyproject.toml
     ```
 
-3. **Configure Environment Variables**
+
+    
+
+    
+ 3. **Configure Environment Variables**
     Create a `.env` file in the root directory.
 
     **Development (SQLite — no database setup needed):**

@@ -23,12 +23,14 @@ INSTALLED_APPS = [
     "widget_tweaks",
     "crispy_forms",
     "crispy_bootstrap5",
-    "debug_toolbar",
-    "django_extensions",
     "django.contrib.humanize",
     "administration.apps.AdministrationConfig",
     "inventory.apps.InventoryConfig",
 ]
+
+if DEBUG:
+    INSTALLED_APPS.append("debug_toolbar")
+    INSTALLED_APPS.append("django_extensions")
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -40,10 +42,12 @@ MIDDLEWARE = [
     "inventory.middleware.SessionTimeoutMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "debug_toolbar.middleware.DebugToolbarMiddleware",
     "django_htmx.middleware.HtmxMiddleware",
     "inventory.middleware.InventoryPermissionMiddleware",
 ]
+
+if DEBUG:
+    MIDDLEWARE.append("debug_toolbar.middleware.DebugToolbarMiddleware")
 
 ROOT_URLCONF = "core.urls"
 

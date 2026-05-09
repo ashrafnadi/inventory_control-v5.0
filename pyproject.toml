@@ -8,7 +8,6 @@ dependencies = [
     "crispy-bootstrap5>=2025.6",
     "django>=6.0",
     "django-crispy-forms>=2.5",
-    "django-extensions>=4.1",
     "django-htmx>=1.27.0",
     "django-widget-tweaks>=1.5.0",
     "openpyxl>=3.1.5",
@@ -16,21 +15,27 @@ dependencies = [
     "psycopg2-binary>=2.9.11",
     "python-dateutil>=2.9.0.post0",
     "python-decouple>=3.8",
-    # for linux
-    "python-magic>=0.4.27",
-    # for windows
-    #"python-magic-bin>=0.4.14",
     "reportlab>=4.4.5",
-    "ruff>=0.14.8",
-    # for windows
-    "waitress>=3.0.2",
-    # for linux
-    #gunicorn>=23.0.0,
     "weasyprint>=67.0",
     "whitenoise>=6.11.0",
     "ipykernel>=7.1.0",
-    "django-debug-toolbar>=6.1.0",
     "faker>=38.2.0",
-    "djlint>=1.36.4",
     "tqdm>=4.67.3",
+]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.15.12",
+    "django-debug-toolbar>=6.1.0",
+    "djlint>=1.36.4",
+    "django-extensions>=4.1",
+]
+windows = [
+    "waitress>=3.0.2",
+    "python-magic-bin>=0.4.14",
+]
+
+linux = [
+    "python-magic>=0.4.27",
+    "gunicorn>=23.0.0",
 ]
