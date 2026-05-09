@@ -29,6 +29,7 @@ dev = [
     "django-debug-toolbar>=6.1.0",
     "djlint>=1.36.4",
     "django-extensions>=4.1",
+    "django-schema-viewer>=0.5.3",
 ]
 windows = [
     "waitress>=3.0.2",

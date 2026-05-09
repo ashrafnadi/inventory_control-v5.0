@@ -79,7 +79,7 @@ A robust, Django-based web application designed to manage inventory and warehous
 
 2. **Set up the environment**
 
-    Using **uv** (Recommended):
+    Using **uv** :
 
     ```bash
     # for development
@@ -89,20 +89,6 @@ A robust, Django-based web application designed to manage inventory and warehous
     # for production on linux
     uv sync --no-dev --group linux
     ```
-
-    Using **pip**:
-
-    ```bash
-    python -m venv .venv
-    # linux/macOS
-    source .venv/bin/activate
-    # Windows
-    .venv\Scripts\activate
-    pip install -r pyproject.toml
-    ```
-
-
-    
 
     
  3. **Configure Environment Variables**
@@ -157,13 +143,26 @@ A robust, Django-based web application designed to manage inventory and warehous
 
 ## 📁 Project Structure
 
-* `core/`: Application entry point, settings, and global configurations.
-* `inventory/`: Core engine managing items, warehouses, multi-step transactions, and auditing.
-* `administration/`: Governance layer managing the University hierarchy (Faculties, Departments) and extended user profiles.
-* `templates/`: UI layer with clean, modular HTML components.
-* `static/`: Production-ready assets (CSS, JS, Images).
-* `SQL/`: Database initialization and migration scripts.
-* `documentation/`: Project diagrams (ERD) and technical notes.
+```text
+inventory_control-v5.0/
+├── .gitignore
+├── README.md
+├── administration/
+├── backups/
+├── core/
+├── documentation/
+├── imports/
+├── inventory/
+├── logs/
+├── manage.py
+├── pyproject.toml
+├── run_server.py
+├── sql/
+├── static/
+├── templates/
+└── uv.lock
+```
+
 
 ## 🤝 Credits
 

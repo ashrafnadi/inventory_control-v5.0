@@ -31,6 +31,7 @@ INSTALLED_APPS = [
 if DEBUG:
     INSTALLED_APPS.append("debug_toolbar")
     INSTALLED_APPS.append("django_extensions")
+    INSTALLED_APPS.append("schema_viewer")
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
