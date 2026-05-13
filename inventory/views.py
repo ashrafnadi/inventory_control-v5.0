@@ -3751,7 +3751,7 @@ def get_employee_custody_data(employee, date_from=None, date_to=None, limit=None
 
     # Sort items chronologically within each custody type
     for key in custody_data:
-        custody_data[key]["items"].sort(key=lambda x: x["last_date"] or datetime.min)
+        custody_data[key]["items"].sort(key=lambda x: x["item"].name)
         custody_data[key]["total_value"] = float(custody_data[key]["total_value"])
         custody_data[key]["total_quantity"] = int(custody_data[key]["total_quantity"])
 
