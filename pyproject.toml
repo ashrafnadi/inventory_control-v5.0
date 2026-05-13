@@ -1,6 +1,6 @@
 [project]
 name = "inventory-control"
-version = "0.1.0"
+version = "5.0.0"
 description = "Django-based web application designed to manage inventory and warehouse operations efficiently. Built for Benha University (GSCC)"
 readme = "README.md"
 requires-python = ">=3.13.7"
